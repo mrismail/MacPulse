@@ -10,6 +10,9 @@ struct MacPulseApp: App {
     )
 
     init() {
+        if LaunchDiagnostics.runIfRequested(arguments: ProcessInfo.processInfo.arguments) {
+            exit(0)
+        }
         Log.logger(.app).info("MacPulse launched")
     }
 
