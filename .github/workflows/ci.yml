@@ -100,6 +100,15 @@ jobs:
               sys.exit(1)
           PY
 
+      - name: Sandbox process-access probe (Phase 3 spike, ADR-009)
+        run: |
+          for config in Release Debug; do
+            if [ "$config" = Release ]; then APP=build-release/Build/Products/Release/MacPulse.app; else APP=build/Build/Products/Debug/MacPulse.app; fi
+            LINE=$("$APP/Contents/MacOS/MacPulse" --macpulse-process-access-probe | grep '^MACPULSE_PROCESS_PROBE ' || true)
+            echo "$config: $LINE"
+            echo "::notice title=Process probe ($config)::${LINE#MACPULSE_PROCESS_PROBE }"
+          done
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
