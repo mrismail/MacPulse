@@ -23,8 +23,10 @@ public struct IOKitPowerSourceEvents: PowerSourceEventSource {
 }
 
 /// Owns the run-loop source and the callback context for one subscription.
-/// Mutated only on creation and termination; `@unchecked Sendable` because CF types
-/// are not annotated, and the run-loop calls are thread-safe.
+///
+/// The callback runs on the main thread. Teardown is also performed on the main
+/// thread, so the context pointer can never be released while a callback is using it.
+/// `@unchecked Sendable` because CF types are not annotated; `source` is guarded by a lock.
 private final class Registration: @unchecked Sendable {
     let continuation: AsyncStream<Void>.Continuation
     private var source: CFRunLoopSource?
@@ -45,17 +47,24 @@ private final class Registration: @unchecked Sendable {
             return false
         }
         lock.withLock { source = runLoopSource }
-        CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .defaultMode)
+        // Common modes keep events flowing while menus are open or windows are resized.
+        CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
         return true
     }
 
     func deactivate() {
+        DispatchQueue.main.async {
+            self.deactivateOnMain()
+        }
+    }
+
+    private func deactivateOnMain() {
         let removed: CFRunLoopSource? = lock.withLock {
             defer { source = nil }
             return source
         }
         guard let removed else { return }
-        CFRunLoopRemoveSource(CFRunLoopGetMain(), removed, .defaultMode)
+        CFRunLoopRemoveSource(CFRunLoopGetMain(), removed, .commonModes)
         CFRunLoopSourceInvalidate(removed)
         // Balance passRetained in activate().
         Unmanaged.passUnretained(self).release()
