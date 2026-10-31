@@ -50,7 +50,7 @@ public final class BatteryViewModel {
             historyError = nil
         } catch {
             let appError = AppError.wrapping(error, userMessage: "Couldn't load battery history.")
-            Log.logger(.battery).error("\(appError.description, privacy: .public)")
+            Log.logger(.battery).log(appError, context: "Battery history")
             historyError = appError
         }
     }

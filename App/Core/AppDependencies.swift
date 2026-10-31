@@ -26,42 +26,58 @@ public struct AppDependencies: Sendable {
         )
     }
 
-    /// Deterministic fake services. Used by previews and UI tests.
-    public static func preview() -> AppDependencies {
-        AppDependencies(
-            systemInfo: PreviewSystemInfoRepository(),
-            battery: PreviewBatteryMonitor()
-        )
-    }
-
-    /// Chooses the container from launch arguments. UI tests launch the app with
-    /// `-MacPulseUseFakeServices` so they never depend on the test machine's hardware.
+    /// Chooses the container from launch arguments. In Debug builds, UI tests launch the
+    /// app with `-MacPulseUseFakeServices` so they never depend on the test machine's
+    /// hardware. Release builds always use live services.
     public static func forLaunch(arguments: [String]) -> AppDependencies {
-        arguments.contains(LaunchArgument.useFakeServices) ? .preview() : .live()
+        #if DEBUG
+            if arguments.contains(LaunchArgument.useFakeServices) {
+                return .preview()
+            }
+        #endif
+        return .live()
     }
 
     private static func makeLiveBatteryMonitor() -> BatteryMonitor {
         let logger = Log.logger(.battery)
         let history: any BatteryHistoryRepository
+        var isPersistent = true
         do {
             let directory = try JSONLinesBatteryHistoryStore.defaultDirectory()
             history = JSONLinesBatteryHistoryStore(directory: directory)
         } catch {
-            logger.error("Battery history unavailable, keeping it in memory: \(String(describing: error), privacy: .public)")
+            logger.log(
+                AppError.wrapping(error, userMessage: "Battery history can't be saved."),
+                context: "Battery history store"
+            )
             history = InMemoryBatteryHistoryRepository()
+            isPersistent = false
         }
         return BatteryMonitor(
             source: IOKitBatteryReadingSource(),
             history: history,
             powerEvents: IOKitPowerSourceEvents(),
+            configuration: .init(historyIsPersistent: isPersistent),
             // Tolerance lets macOS coalesce the wake-up with other timers to save energy.
             sleep: { try await Task.sleep(for: $0, tolerance: .seconds(10)) },
             reportError: { error in
-                Log.logger(.battery).error("\(error.description, privacy: .public)")
+                Log.logger(.battery).log(error, context: "Battery monitor")
             }
         )
     }
 }
+
+#if DEBUG
+    extension AppDependencies {
+        /// Deterministic fake services. Used by previews and UI tests (Debug only).
+        public static func preview() -> AppDependencies {
+            AppDependencies(
+                systemInfo: PreviewSystemInfoRepository(),
+                battery: PreviewBatteryMonitor()
+            )
+        }
+    }
+#endif
 
 public enum LaunchArgument {
     public static let useFakeServices = "-MacPulseUseFakeServices"
