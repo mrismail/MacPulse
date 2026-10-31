@@ -43,11 +43,16 @@ public struct RootView: View {
     private func detail(for section: SidebarSection) -> some View {
         switch section {
         case .overview:
-            OverviewView(viewModel: model.overview) {
-                model.coordinator.select(.battery)
+            OverviewView(
+                viewModel: model.overview,
+                openBattery: { model.coordinator.select(.battery) },
+                openEnergy: { model.coordinator.select(.energy) }
+            )
+        case .battery:
+            BatteryView(viewModel: model.battery, energy: model.energy) {
+                model.coordinator.select(.energy)
             }
-        case .battery: BatteryView(viewModel: model.battery)
-        case .energy: EnergyView()
+        case .energy: EnergyView(viewModel: model.energy)
         case .spaceAnalyzer: SpaceAnalyzerView()
         case .duplicateFinder: DuplicateFinderView()
         case .cleaner: CleanerView()

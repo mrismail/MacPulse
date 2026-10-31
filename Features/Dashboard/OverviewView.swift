@@ -5,10 +5,16 @@ import SwiftUI
 public struct OverviewView: View {
     private let viewModel: OverviewViewModel
     private let openBattery: () -> Void
+    private let openEnergy: () -> Void
 
-    public init(viewModel: OverviewViewModel, openBattery: @escaping () -> Void = {}) {
+    public init(
+        viewModel: OverviewViewModel,
+        openBattery: @escaping () -> Void = {},
+        openEnergy: @escaping () -> Void = {}
+    ) {
         self.viewModel = viewModel
         self.openBattery = openBattery
+        self.openEnergy = openEnergy
     }
 
     public var body: some View {
@@ -22,6 +28,7 @@ public struct OverviewView: View {
                     spacing: Spacing.medium
                 ) {
                     batteryCard
+                    energyCard
                     storageCard
                     thisMacCard
                 }
@@ -44,6 +51,7 @@ public struct OverviewView: View {
         .navigationTitle("Overview")
         .task { await viewModel.load() }
         .task { await viewModel.observeBattery() }
+        .task { await viewModel.observeEnergy() }
     }
 
     private var recommendationsCard: some View {
@@ -89,6 +97,26 @@ public struct OverviewView: View {
         }
     }
 
+    private var energyCard: some View {
+        Card("Energy", systemImage: "bolt.horizontal.circle") {
+            if viewModel.topApps.isEmpty {
+                Text("Measuring app activity…").foregroundStyle(.secondary)
+            } else {
+                ForEach(viewModel.topApps) { app in
+                    HStack {
+                        Text(app.displayName).lineLimit(1)
+                        Spacer()
+                        ImpactBadge(impact: app.impact)
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+            }
+            Button("Show Energy Details", action: openEnergy)
+                .buttonStyle(.link)
+                .accessibilityIdentifier("overview.openEnergy")
+        }
+    }
+
     private var storageCard: some View {
         Card("Storage", systemImage: "internaldrive") {
             MetricValueView("Available", metric: viewModel.storageAvailableBytes) {
@@ -126,7 +154,8 @@ public struct OverviewView: View {
         static var previews: some View {
             OverviewView(viewModel: OverviewViewModel(
                 systemInfoRepository: PreviewSystemInfoRepository(),
-                batteryMonitor: PreviewBatteryMonitor()
+                batteryMonitor: PreviewBatteryMonitor(),
+                energyMonitor: PreviewEnergyMonitor()
             ))
             .frame(width: 800, height: 700)
         }
