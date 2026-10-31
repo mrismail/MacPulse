@@ -33,7 +33,8 @@ let package = Package(
         .target(
             name: "MacPulseInfrastructure",
             dependencies: ["MacPulseDomain", "MacPulseShared"],
-            path: "Infrastructure"
+            path: "Infrastructure",
+            linkerSettings: [.linkedFramework("IOKit")]
         ),
 
         // Screens and view models (MVVM). Depends on Domain protocols, never on Infrastructure.
