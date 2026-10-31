@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "phase/**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build, test and launch
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain versions
+        run: |
+          sw_vers
+          xcodebuild -version
+          swift --version
+
+      - name: Build package (warnings are errors)
+        run: swift build -Xswiftc -warnings-as-errors
+
+      - name: Run unit and integration tests
+        run: swift test --parallel
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build app
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project MacPulse.xcodeproj \
+            -scheme MacPulse \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            -derivedDataPath build \
+            build 2>&1 | tee xcodebuild.log | grep -E "(warning|error):|\*\* BUILD" \
+            || { echo "::error::xcodebuild failed"; grep -E "error:" xcodebuild.log; exit 1; }
+          test -d build/Build/Products/Debug/MacPulse.app
+
+      - name: Verify sandbox entitlement
+        run: |
+          codesign -d --entitlements - --xml build/Build/Products/Debug/MacPulse.app > entitlements.plist
+          plutil -p entitlements.plist
+          grep -q "com.apple.security.app-sandbox" entitlements.plist
+
+      - name: Smoke test — app launches and stays running
+        run: |
+          APP=build/Build/Products/Debug/MacPulse.app/Contents/MacOS/MacPulse
+          "$APP" &
+          PID=$!
+          sleep 10
+          if kill -0 "$PID" 2>/dev/null; then
+            echo "MacPulse is running (pid $PID)"
+            kill "$PID"
+          else
+            wait "$PID"; echo "MacPulse exited early with status $?"
+            exit 1
+          fi
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: xcodebuild.log
+          if-no-files-found: ignore
