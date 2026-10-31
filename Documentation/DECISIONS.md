@@ -195,4 +195,28 @@ App Store is out of scope.
   sandbox container. Earlier development history in the container is not migrated
   (pre-release data only).
 - Phase 3 can use per-app billed energy, footprint, disk I/O and wake-ups for the
-  current user's processes (to be confirmed by the probe in CI and on a real Mac).
+  current user's processes. **Confirmed in CI (non-sandboxed Release, macOS 15.8.2):**
+  `proc_pid_rusage` succeeded for 193/193 same-user processes (0 when sandboxed);
+  root/system processes still EPERM. Billed energy was 0 on the CI virtual machine.
+
+## ADR-011 — Estimating an app's battery impact
+
+**Date:** 2026-11-01 · **Status:** Accepted
+
+**Context.** macOS does not publish Activity Monitor's "Energy Impact" formula. The
+spec forbids presenting CPU % as battery consumption.
+
+**Decision.**
+- Per-app CPU %, memory, threads, disk and wake-ups are shown as measured values.
+- "Battery impact" (Low / Moderate / High) is **always labeled an estimate** with its basis:
+  - If macOS reported billed energy for the interval (`ri_billed_energy`), impact uses the
+    average power macOS attributes to the app (High ≥ 2 W, Moderate ≥ 0.4 W).
+  - Otherwise it uses CPU (High ≥ 50 % of a core, Moderate ≥ 10 %), and says so.
+  - One basis is used for all apps in an interval so the ranking is consistent.
+- Helper processes are grouped under their outermost `.app` bundle.
+- Drain alerts fire only for sustained use (every interval in the window, default 10 min
+  at ≥ 50 % CPU), on battery by default; macOS notifications are opt-in and permission is
+  requested only when the user enables them; 30 min cooldown per app.
+
+**Open.** Whether billed energy is non-zero on Intel Macs (owner's MacBook) — run
+`MacPulse --macpulse-process-access-probe` and check `ownBilledEnergyNonZero`.

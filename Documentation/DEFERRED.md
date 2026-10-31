@@ -7,6 +7,8 @@ appear. Each has a target phase and a reason. Update this file whenever scope mo
 |---|---|---|---|
 | Battery screen "process activity table" | §3 Battery screen | Phase 3 (Energy) | Delivered in Phase 3 (Energy). |
 | Configurable battery monitoring frequency | §3 Settings | Phase 7 | Fixed at 60 s with 10 s timer tolerance until the Settings work. |
+| Configurable process monitoring frequency | §2 Module B "configurable monitoring" | Phase 7 | Fixed: 60 s background, 10 s while the Energy screen is visible. Alert thresholds *are* configurable now. |
+| Ending an app from MacPulse | Spec non-goal | Not planned | Spec forbids automatic termination; a manual "Quit" button may be considered with the owner later. |
 | Configurable data retention | §3 Settings | Phase 7 | Fixed at 30 days (`BatteryMonitor.Configuration.defaultHistoryRetentionDays`). |
 | Monitoring while the app is closed | §2 Module A history | Phase 7 | Requires a login item / menu-bar companion (`SMAppService`). History is recorded only while MacPulse runs. |
 | Overview "recent scans and cleanup activity" | §3 Overview | Phases 4–6 | No scans exist yet; the Overview shows battery recommendations meanwhile. |
