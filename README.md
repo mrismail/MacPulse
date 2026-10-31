@@ -52,4 +52,5 @@ See [Documentation/ARCHITECTURE.md](Documentation/ARCHITECTURE.md) and
 ## Privacy
 
 MacPulse never uploads file names, file contents or usage data, needs no account and
-does not ask for administrator access.
+does not ask for administrator access. It is distributed as a signed, notarized direct
+download with the Hardened Runtime and no special entitlements (see ADR-010).

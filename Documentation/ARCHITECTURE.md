@@ -93,7 +93,7 @@ a tooltip explanation and VoiceOver hint.
 
 CI (`.github/workflows/ci.yml`, macOS runner, on PRs and `main`) builds the package with
 warnings as errors, runs unit + integration tests, generates the Xcode project, builds
-the app and runs the UI tests, checks the entitlements are exactly the sandbox, launches
+the app and runs the UI tests, checks the Release build has no entitlements and the Hardened Runtime, launches
 the app for 10 seconds and builds the Release configuration.
 
 ## Battery monitoring (Phase 2)

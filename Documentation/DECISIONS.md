@@ -18,7 +18,7 @@ Requires Xcode 16 or later (Swift 6 tools).
 
 ## ADR-002 — App Sandbox enabled
 
-**Date:** 2026-10-31 · **Status:** Accepted (chosen by product owner)
+**Date:** 2026-10-31 · **Status:** Superseded by ADR-010 (2026-11-01)
 
 **Context.** Direct distribution allows a non-sandboxed app; the App Sandbox keeps the
 Mac App Store open and limits what the app can touch.
@@ -138,7 +138,7 @@ Phase 7, when the UI text is stable; see `DEFERRED.md`.
 
 ## ADR-009 — Process monitoring inside the App Sandbox (Phase 3 spike)
 
-**Date:** 2026-10-31 · **Status:** Measured; design decision pending owner choice
+**Date:** 2026-10-31 · **Status:** Measured; decided in ADR-010
 
 **Method.** `MacPulse --macpulse-process-access-probe` runs in the signed, sandboxed
 Release and Debug apps in CI (macOS 15.8.2) and prints counts and errno only.
@@ -166,3 +166,33 @@ Release and Debug apps in CI (macOS 15.8.2) and prints counts and errno only.
   requesting admin for this).
 - Open: run the probe on a real Mac (owner's Intel MacBook, macOS 26) to confirm, and to
   see whether billed energy is non-zero on Intel at all.
+
+## ADR-010 — No App Sandbox; Developer ID distribution
+
+**Date:** 2026-11-01 · **Status:** Accepted (chosen by product owner after ADR-009)
+
+**Context.** ADR-009 measured that the sandbox blocks `proc_pid_rusage` for every other
+process, which removes per-app energy accounting, memory footprint and disk I/O — the
+best data for "which app drains my battery". The original spec (§8) already targets
+direct download with Developer ID signing and notarization.
+
+**Decision.** Ship without the App Sandbox. Keep the Hardened Runtime. The app has **no
+entitlements**; CI fails if any appear in the Release build or if the Hardened Runtime
+flag is missing. Distribution: signed and notarized direct download (Phase 8). The Mac
+App Store is out of scope.
+
+**Guardrails that replace the sandbox's protection** (all enforced in code review and CI):
+- No network access code paths; no admin rights; no private APIs.
+- Process monitoring is read-only (no signals, no `task_for_pid`); root/system
+  processes stay unread.
+- File access in Phases 4–6 goes only to folders the user selects or to documented
+  user-level locations, and macOS privacy prompts (TCC) are respected; Full Disk Access
+  is never required.
+- Deletion stays user-confirmed and Trash-first (unchanged).
+
+**Consequences.**
+- History now lives in `~/Library/Application Support/MacPulse/History/` instead of the
+  sandbox container. Earlier development history in the container is not migrated
+  (pre-release data only).
+- Phase 3 can use per-app billed energy, footprint, disk I/O and wake-ups for the
+  current user's processes (to be confirmed by the probe in CI and on a real Mac).
