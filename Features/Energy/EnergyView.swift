@@ -285,6 +285,7 @@ private struct AppDetail: View {
                 .font(.caption)
             }
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("energy.detail")
     }
 }

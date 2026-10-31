@@ -327,6 +327,7 @@ private struct TopAppsCard: View {
                 .buttonStyle(.link)
                 .accessibilityIdentifier("battery.openEnergy")
         }
+        .accessibilityElement(children: .contain)  // keep the children's own identifiers
         .accessibilityIdentifier("battery.topApps")
         .task { await energy.observe(detailed: false) }
     }
