@@ -25,6 +25,15 @@ open MacPulse.xcodeproj    # then ⌘R
 
 Run `xcodegen generate` again whenever `project.yml` changes.
 
+## Diagnostics
+
+```sh
+MACPULSE_DIAGNOSTICS=1 MacPulse.app/Contents/MacOS/MacPulse --macpulse-process-access-probe
+MACPULSE_DIAGNOSTICS=1 MacPulse.app/Contents/MacOS/MacPulse --macpulse-overhead-benchmark
+```
+
+Both print one JSON line (counts and timings only, no process names) and exit.
+
 ## Tests
 
 ```sh
@@ -52,5 +61,7 @@ See [Documentation/ARCHITECTURE.md](Documentation/ARCHITECTURE.md) and
 ## Privacy
 
 MacPulse never uploads file names, file contents or usage data, needs no account and
-does not ask for administrator access. It is distributed as a signed, notarized direct
-download with the Hardened Runtime and no special entitlements (see ADR-010).
+does not ask for administrator access. It runs with the Hardened Runtime and no special
+entitlements, and will be distributed as a Developer ID–signed, notarized download
+(Phase 8; see ADR-010). To find battery-draining apps it reads the list of your running
+processes and their CPU, memory and energy use — what Activity Monitor shows.

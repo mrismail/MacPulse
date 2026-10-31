@@ -7,6 +7,9 @@ appear. Each has a target phase and a reason. Update this file whenever scope mo
 |---|---|---|---|
 | Battery screen "process activity table" | §3 Battery screen | Phase 3 (Energy) | Delivered in Phase 3 (Energy). |
 | Configurable battery monitoring frequency | §3 Settings | Phase 7 | Fixed at 60 s with 10 s timer tolerance until the Settings work. |
+| Full process table on the Battery screen | §3 Battery screen | Phase 7 | The Battery screen shows the top 5 apps with a link to the full Energy table. |
+| Alert/notification settings in the Settings screen | §3 Settings "Notifications" | Phase 7 | Alert settings live on the Energy screen next to what they control; Settings gets a Notifications section with the other preferences. |
+| Rewriting Phase 3 history so every commit builds | Review (team lead) | Not planned | Several early Phase 3 commits failed tests on their own (fixture crash, identifier bug, misplaced tests). History is already pushed and reviewed; it is kept as is and the rule applies going forward. |
 | Configurable process monitoring frequency | §2 Module B "configurable monitoring" | Phase 7 | Fixed: 60 s background, 10 s while the Energy screen is visible. Alert thresholds *are* configurable now. |
 | Ending an app from MacPulse | Spec non-goal | Not planned | Spec forbids automatic termination; a manual "Quit" button may be considered with the owner later. |
 | Configurable data retention | §3 Settings | Phase 7 | Fixed at 30 days (`BatteryMonitor.Configuration.defaultHistoryRetentionDays`). |
@@ -24,5 +27,5 @@ appear. Each has a target phase and a reason. Update this file whenever scope mo
   (user Trash, other apps' caches, TCC-protected folders)? Capability matrix before Phase 4.
 - **Apple silicon fixture:** only Intel real-hardware data exists so far
   (`BatteryFixtures.realIntelMacBookPro16`); add an Apple silicon capture when available.
-- **Phase 8:** Apple Developer Program enrolment; moving from ad-hoc to Team ID signing
-  changes the container's code requirement (plan history migration).
+- **Phase 8:** Apple Developer Program enrolment, Developer ID signing and notarization.
+  Do one trial notarization early (Phase 4) to catch surprises.

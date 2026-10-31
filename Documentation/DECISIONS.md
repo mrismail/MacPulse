@@ -62,7 +62,7 @@ dependency, easy to inspect and to delete, and trivially testable with a temp
 directory. SwiftData's model contexts add concurrency friction under Swift 6 strict
 checking for no benefit at this size.
 
-**Consequences.** Files are created 0600 / directory 0700 inside the sandbox container.
+**Consequences.** Files are created 0600 / directory 0700 in `~/Library/Application Support/MacPulse/History` (was the sandbox container until ADR-010).
 Corrupt lines are skipped, not fatal. If later phases need richer queries (process
 history in Phase 3), revisit with SQLite behind the same protocol style.
 
@@ -85,11 +85,11 @@ registry value is range-checked; out-of-range values show as Unavailable with th
 raw figure in the tooltip. On Apple silicon `MaxCapacity` is a percentage, so the
 full-charge capacity comes from `AppleRawMaxCapacity` / `NominalChargeCapacity`.
 
-**Sandbox:** IOPS and IORegistry property reads are expected to need no entitlement.
-This is **not yet verified**: `swift test` binaries are not sandboxed and the CI runner
-has no battery. Verification (Phase 2 acceptance) = run the signed, sandboxed
-`MacPulse.app` on a MacBook and compare the Battery screen with System Settings →
-Battery and `ioreg -rc AppleSmartBattery`; record the result here.
+**Access:** IOPS and IORegistry property reads need no entitlement (the app has none,
+ADR-010). Real-hardware verification is still open: compare the Battery screen on a
+MacBook with System Settings → Battery and `ioreg -rc AppleSmartBattery`. The owner's
+Intel MacBook Pro 16 capture (2026-10-31) is now a test fixture and exposed one bug
+(stale fully-charged flag, fixed in PR #3).
 
 **Health condition:** `BatteryHealth` values other than "Good" ("Fair", "Poor") and any
 `BatteryHealthCondition` are shown as needing service, never as Normal.
@@ -122,8 +122,8 @@ says which. History stores only MacPulse's own estimate.
   `-MacPulseUseFakeServices`. CI builds the Release configuration.
 - `AppError` is logged with `Logger.log(_:context:)`: kind and user message public,
   technical detail private (it may contain file paths and therefore the user name).
-- CI fails if the app has any entitlement other than `app-sandbox` (and Debug's
-  `get-task-allow`). New entitlements require an ADR.
+- CI fails if the Release app has any entitlement at all (ADR-010; previously only
+  `app-sandbox` was allowed). New entitlements require an ADR.
 
 ## ADR-008 — Localization groundwork
 
@@ -181,10 +181,14 @@ entitlements**; CI fails if any appear in the Release build or if the Hardened R
 flag is missing. Distribution: signed and notarized direct download (Phase 8). The Mac
 App Store is out of scope.
 
-**Guardrails that replace the sandbox's protection** (all enforced in code review and CI):
-- No network access code paths; no admin rights; no private APIs.
+**Guardrails that replace the sandbox's protection** (CI-enforced where marked):
+- No network access code paths; no admin rights; no private APIs. **CI:** source scan
+  for networking/process-control/privilege APIs and an `nm` check of the Release binary
+  for `socket`, `connect`, `task_for_pid`, `kill`, `ptrace`.
 - Process monitoring is read-only (no signals, no `task_for_pid`); root/system
-  processes stay unread.
+  processes stay unread. **CI:** the Release probe must report process access working
+  and the app unsandboxed, and must stay silent without `MACPULSE_DIAGNOSTICS=1`.
+- Zero entitlements and the Hardened Runtime flag. **CI:** Release signing check.
 - File access in Phases 4–6 goes only to folders the user selects or to documented
   user-level locations, and macOS privacy prompts (TCC) are respected; Full Disk Access
   is never required.
@@ -194,6 +198,8 @@ App Store is out of scope.
 - History now lives in `~/Library/Application Support/MacPulse/History/` instead of the
   sandbox container. Earlier development history in the container is not migrated
   (pre-release data only).
+- Signing today is ad-hoc. Developer ID signing and notarization are Phase 8 work; the
+  README says "will be".
 - Phase 3 can use per-app billed energy, footprint, disk I/O and wake-ups for the
   current user's processes. **Confirmed in CI (non-sandboxed Release, macOS 15.8.2):**
   `proc_pid_rusage` succeeded for 193/193 same-user processes (0 when sandboxed);
@@ -207,7 +213,8 @@ App Store is out of scope.
 spec forbids presenting CPU % as battery consumption.
 
 **Decision.**
-- Per-app CPU %, memory, threads, disk and wake-ups are shown as measured values.
+- Per-app CPU %, memory, disk and idle wake-ups are shown as measured values. CPU is per
+  core (100 % = one core); System CPU is all cores together; both are labelled.
 - "Battery impact" (Low / Moderate / High) is **always labeled an estimate** with its basis:
   - If macOS reported billed energy for the interval (`ri_billed_energy`), impact uses the
     average power macOS attributes to the app (High ≥ 2 W, Moderate ≥ 0.4 W).
@@ -220,3 +227,22 @@ spec forbids presenting CPU % as battery consumption.
 
 **Open.** Whether billed energy is non-zero on Intel Macs (owner's MacBook) — run
 `MacPulse --macpulse-process-access-probe` and check `ownBilledEnergyNonZero`.
+
+## ADR-012 — Monitoring overhead budget (Phase 3 acceptance evidence)
+
+**Date:** 2026-11-01 · **Status:** Accepted
+
+**Context.** Spec Phase 3: monitoring "does not significantly increase battery
+consumption itself". Measuring inside the parallel test run counted other tests' CPU.
+
+**Decision.** `MACPULSE_DIAGNOSTICS=1 MacPulse --macpulse-overhead-benchmark` runs 30
+real samples (process read + aggregation) in the Release app alone and reports its own
+CPU time and wake-ups via `proc_pid_rusage`. CI fails above **15 ms CPU per sample**.
+
+**First result (CI, macOS 15.8 arm64 VM, 279 user processes):** 4.1 ms CPU per sample →
+**0.007 % of one core** at the 60 s background rate, **0.04 %** at the 10 s rate used
+only while the Energy window is active; 0.03 wake-ups per sample; 6 MB footprint.
+Timers use 5–10 s tolerance so macOS can coalesce wake-ups.
+
+**Open.** Repeat on the owner's Intel MacBook and a one-hour on-battery run with
+Activity Monitor's Energy tab, and record the numbers here.
