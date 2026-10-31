@@ -1,8 +1,10 @@
 name: CI
 
 on:
+  # PR branches are covered by the pull_request event; running on push as well would
+  # double the (paid) macOS minutes for every PR commit.
   push:
-    branches: [main, "phase/**"]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -14,7 +16,7 @@ jobs:
   build-and-test:
     name: Build, test and launch
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 40
 
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +39,7 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
-      - name: Build app
+      - name: Build app and run UI tests
         run: |
           set -o pipefail
           xcodebuild \
@@ -46,15 +48,26 @@ jobs:
             -configuration Debug \
             -destination 'platform=macOS' \
             -derivedDataPath build \
-            build 2>&1 | tee xcodebuild.log | grep -E "(warning|error):|\*\* BUILD" \
-            || { echo "::error::xcodebuild failed"; grep -E "error:" xcodebuild.log; exit 1; }
+            -resultBundlePath build/UITests.xcresult \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=YES \
+            test 2>&1 | tee xcodebuild.log | grep -E "(warning|error):|Test Case|\*\* TEST" \
+            || { echo "::error::xcodebuild test failed"; grep -E "error:|failed" xcodebuild.log | head -50; exit 1; }
           test -d build/Build/Products/Debug/MacPulse.app
 
-      - name: Verify sandbox entitlement
+      - name: Verify entitlements are exactly the sandbox
         run: |
           codesign -d --entitlements - --xml build/Build/Products/Debug/MacPulse.app > entitlements.plist
           plutil -p entitlements.plist
-          grep -q "com.apple.security.app-sandbox" entitlements.plist
+          # Every entitlement must be on this list; anything new needs an ADR first.
+          ALLOWED="com.apple.security.app-sandbox com.apple.security.get-task-allow"
+          FOUND=$(plutil -convert json -o - entitlements.plist | python3 -c 'import json,sys; print(" ".join(json.load(sys.stdin).keys()))')
+          for key in $FOUND; do
+            case " $ALLOWED " in
+              *" $key "*) ;;
+              *) echo "::error::Unexpected entitlement $key"; exit 1 ;;
+            esac
+          done
+          plutil -extract com.apple.security.app-sandbox raw entitlements.plist | grep -q true
 
       - name: Smoke test — app launches and stays running
         run: |
@@ -70,10 +83,19 @@ jobs:
             exit 1
           fi
 
-      - name: Upload build log
+      - name: Build Release configuration
+        run: |
+          set -o pipefail
+          xcodebuild -project MacPulse.xcodeproj -scheme MacPulse -configuration Release \
+            -destination 'platform=macOS' -derivedDataPath build-release \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=YES build 2>&1 | tail -5
+
+      - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: xcodebuild-log
-          path: xcodebuild.log
+          name: test-results
+          path: |
+            xcodebuild.log
+            build/UITests.xcresult
           if-no-files-found: ignore
