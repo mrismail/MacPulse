@@ -8,6 +8,8 @@
 - Make small, focused commits as you work: one logical change each (model, service,
   view, tests, docs). Every commit must build and keep tests passing on its own.
 - Merge PRs with a merge commit (not squash) so the small commits stay on `main`.
+- Shells here can't run Swift: push in small batches and treat a red CI batch as a blocker.
+  Monitoring work must keep the CI overhead budget (ADR-012).
 - Never merge a PR before CI is green. `main` is protected.
 - Never claim something is verified unless a test or recorded evidence proves it.
 - Record any scope moved to a later phase in `Documentation/DEFERRED.md`.
