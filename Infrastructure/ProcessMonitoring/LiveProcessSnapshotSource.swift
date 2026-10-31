@@ -1,14 +1,17 @@
+import AppKit
 import Darwin
 import Foundation
 import MacPulseDomain
 
 /// Reads the current user's processes with public, documented APIs:
-/// `sysctl(KERN_PROC_ALL)`, `proc_pidinfo`, `proc_pid_rusage`, `proc_pidpath` and
-/// `host_statistics`. Read-only: never signals, never attaches to a process, no admin rights.
+/// `sysctl(KERN_PROC_ALL)`, `proc_pid_rusage` (falling back to `proc_pidinfo`),
+/// `proc_pidpath` and `host_statistics`. Read-only: never signals, never attaches to a
+/// process, no admin rights.
 ///
 /// Processes of other users (root and system daemons) are counted but not read.
 public actor LiveProcessSnapshotSource: ProcessSnapshotSource {
     private struct PathInfo: Sendable {
+        let shortName: String
         let executablePath: String?
         let appBundlePath: String?
         let name: String
@@ -17,7 +20,8 @@ public actor LiveProcessSnapshotSource: ProcessSnapshotSource {
     private let timebase: MachTimebase
     private let userID: uid_t
     private let ownPID: pid_t
-    /// Per-process path and name, cached by identity (paths don't change for a process).
+    /// Per-process path and name, cached by identity. Re-read if the short name changes
+    /// (a process that `exec`s keeps its pid and start time, e.g. xpcproxy → service).
     private var pathCache: [ProcessIdentity: PathInfo] = [:]
     private var displayNameCache: [String: String] = [:]
 
@@ -27,7 +31,7 @@ public actor LiveProcessSnapshotSource: ProcessSnapshotSource {
         ownPID = getpid()
     }
 
-    public func snapshot(at timestamp: Date) -> ProcessSnapshot {
+    public func snapshot(at timestamp: Date) async -> ProcessSnapshot {
         let table = ProcessTable.entries()
         var samples: [ProcessSample] = []
         samples.reserveCapacity(table.count)
@@ -40,19 +44,9 @@ public actor LiveProcessSnapshotSource: ProcessSnapshotSource {
                 continue
             }
             let identity = ProcessIdentity(pid: entry.pid, startTime: entry.startTimeMicroseconds)
-            let usage = ProcessTable.resourceUsage(of: entry.pid)
-            let task = ProcessTable.taskInfo(of: entry.pid)
-
-            let cpuTicks: UInt64
-            if let task {
-                cpuTicks = task.pti_total_user + task.pti_total_system
-            } else if let usage {
-                cpuTicks = usage.ri_user_time + usage.ri_system_time
-            } else {
-                // Exited between listing and reading, or not readable.
-                continue
+            guard let counters = readCounters(of: entry.pid) else {
+                continue  // exited between listing and reading
             }
-
             seen.insert(identity)
             let path = pathInfo(for: identity, shortName: entry.shortName)
             samples.append(ProcessSample(
@@ -61,14 +55,14 @@ public actor LiveProcessSnapshotSource: ProcessSnapshotSource {
                 parentPID: entry.parentPID,
                 executablePath: path.executablePath,
                 appBundlePath: path.appBundlePath,
-                cpuTimeNanoseconds: timebase.nanoseconds(fromTicks: cpuTicks),
-                residentBytes: task.map { UInt64($0.pti_resident_size) },
-                footprintBytes: usage.map { $0.ri_phys_footprint },
-                threadCount: task.map { Int($0.pti_threadnum) },
-                billedEnergyNanojoules: usage.map { $0.ri_billed_energy },
-                diskReadBytes: usage.map { $0.ri_diskio_bytesread },
-                diskWrittenBytes: usage.map { $0.ri_diskio_byteswritten },
-                wakeups: usage.map { $0.ri_interrupt_wkups + $0.ri_pkg_idle_wkups }
+                cpuTimeNanoseconds: timebase.nanoseconds(fromTicks: counters.cpuTicks),
+                residentBytes: counters.resident,
+                footprintBytes: counters.footprint,
+                threadCount: counters.threads,
+                billedEnergyNanojoules: counters.billedEnergy,
+                diskReadBytes: counters.diskRead,
+                diskWrittenBytes: counters.diskWritten,
+                wakeups: counters.idleWakeups
             ))
         }
 
@@ -79,6 +73,8 @@ public actor LiveProcessSnapshotSource: ProcessSnapshotSource {
         let ticks = ProcessTable.hostCPUTicks()
         return ProcessSnapshot(
             timestamp: timestamp,
+            awakeUptime: ProcessInfo.processInfo.systemUptime,
+            memoryPressure: ProcessTable.memoryPressureLevel().flatMap { MemoryPressureLevel(rawValue: Int($0)) },
             processes: samples,
             unreadableProcessCount: unreadable,
             systemCPU: ticks.map {
@@ -91,17 +87,60 @@ public actor LiveProcessSnapshotSource: ProcessSnapshotSource {
             },
             logicalCPUCount: ProcessInfo.processInfo.activeProcessorCount,
             ownPID: ownPID,
-            appDisplayNames: displayNames(for: bundles)
+            appDisplayNames: await displayNames(for: bundles)
         )
     }
 
+    // MARK: Counters
+
+    private struct Counters {
+        var cpuTicks: UInt64
+        var resident: UInt64?
+        var footprint: UInt64?
+        var threads: Int?
+        var billedEnergy: UInt64?
+        var diskRead: UInt64?
+        var diskWritten: UInt64?
+        /// Package idle wake-ups — the figure Activity Monitor shows as "Idle Wake Ups".
+        /// (Interrupt wake-ups already include these, so the two are never added.)
+        var idleWakeups: UInt64?
+    }
+
+    /// One `proc_pid_rusage` call gives CPU, memory, energy, disk and wake-ups.
+    /// `proc_pidinfo` is only used if rusage is refused.
+    private func readCounters(of pid: pid_t) -> Counters? {
+        if let usage = ProcessTable.resourceUsage(of: pid) {
+            return Counters(
+                cpuTicks: usage.ri_user_time + usage.ri_system_time,
+                resident: usage.ri_resident_size,
+                footprint: usage.ri_phys_footprint,
+                threads: nil,
+                billedEnergy: usage.ri_billed_energy,
+                diskRead: usage.ri_diskio_bytesread,
+                diskWritten: usage.ri_diskio_byteswritten,
+                idleWakeups: usage.ri_pkg_idle_wkups
+            )
+        }
+        if let task = ProcessTable.taskInfo(of: pid) {
+            return Counters(
+                cpuTicks: task.pti_total_user + task.pti_total_system,
+                resident: task.pti_resident_size,
+                threads: Int(task.pti_threadnum)
+            )
+        }
+        return nil
+    }
+
+    // MARK: Names
+
     private func pathInfo(for identity: ProcessIdentity, shortName: String) -> PathInfo {
-        if let cached = pathCache[identity] { return cached }
+        if let cached = pathCache[identity], cached.shortName == shortName { return cached }
         let executable = ProcessTable.executablePath(of: identity.pid)
         let name = ProcessTable.name(of: identity.pid)
             ?? executable.map { ($0 as NSString).lastPathComponent }
             ?? shortName
         let info = PathInfo(
+            shortName: shortName,
             executablePath: executable,
             appBundlePath: executable.flatMap(AppUsageAggregator.outermostAppBundle(in:)),
             name: name
@@ -110,19 +149,30 @@ public actor LiveProcessSnapshotSource: ProcessSnapshotSource {
         return info
     }
 
-    private func displayNames(for bundles: Set<String>) -> [String: String] {
-        var result: [String: String] = [:]
-        for bundle in bundles {
-            if let cached = displayNameCache[bundle] {
-                result[bundle] = cached
-                continue
+    /// Display names come from running apps (`NSRunningApplication.localizedName`) or the
+    /// bundle's folder name. Nothing is read from disk, so apps running from Downloads or
+    /// a disk image never trigger a macOS privacy prompt.
+    private func displayNames(for bundles: Set<String>) async -> [String: String] {
+        let missing = bundles.filter { displayNameCache[$0] == nil }
+        if !missing.isEmpty {
+            let running = await MainActor.run { () -> [String: String] in
+                var names: [String: String] = [:]
+                for app in NSWorkspace.shared.runningApplications {
+                    if let path = app.bundleURL?.path, let name = app.localizedName {
+                        names[path] = name
+                    }
+                }
+                return names
             }
-            // Finder's localized display name, without the ".app" extension.
-            var name = FileManager.default.displayName(atPath: bundle)
-            if name.hasSuffix(".app") { name = String(name.dropLast(4)) }
-            displayNameCache[bundle] = name
-            result[bundle] = name
+            for bundle in missing {
+                displayNameCache[bundle] = running[bundle] ?? Self.folderName(of: bundle)
+            }
         }
-        return result
+        return displayNameCache.filter { bundles.contains($0.key) }
+    }
+
+    static func folderName(of bundlePath: String) -> String {
+        let last = (bundlePath as NSString).lastPathComponent
+        return last.hasSuffix(".app") ? String(last.dropLast(4)) : last
     }
 }

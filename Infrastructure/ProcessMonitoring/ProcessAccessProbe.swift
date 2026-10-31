@@ -2,9 +2,9 @@ import AppKit
 import Darwin
 import Foundation
 
-/// Phase 3 spike (ADR-009): measures which process-information APIs work from inside
-/// the App Sandbox. It reports only counts and error codes — no process names, paths
-/// or arguments — so the output is safe to paste into an issue.
+/// Measures which process-information APIs work in this build (ADR-009 spike; kept as
+/// a diagnostic after ADR-010 removed the sandbox). Reports only counts and error codes —
+/// no process names, paths or arguments — so the output is safe to paste into an issue.
 public struct ProcessAccessReport: Sendable, Codable, Equatable {
     public struct Attempt: Sendable, Codable, Equatable {
         public var tried = 0
