@@ -51,7 +51,14 @@ jobs:
             -resultBundlePath build/UITests.xcresult \
             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES \
             test 2>&1 | tee xcodebuild.log | grep -E "(warning|error):|Test Case|\*\* TEST" \
-            || { echo "::error::xcodebuild test failed"; grep -E "error:|failed" xcodebuild.log | head -50; exit 1; }
+            || {
+              echo "::error::xcodebuild test failed"
+              # Surface the failing lines as annotations so they are readable without the raw log.
+              grep -E "error:|failed|XCTAssert|Failing tests|Testing failed" xcodebuild.log \
+                | grep -v "^Test Suite" | sort -u | head -40 \
+                | while IFS= read -r line; do echo "::error::${line:0:900}"; done
+              exit 1
+            }
           test -d build/Build/Products/Debug/MacPulse.app
 
       - name: Verify entitlements are exactly the sandbox
