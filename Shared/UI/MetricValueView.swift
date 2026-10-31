@@ -51,8 +51,10 @@ public struct MetricValueView<Value: Sendable & Equatable>: View {
             }
         }
         .help(metric.provenance.explanation)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityText)
+        // Expose one static-text element (a known role) instead of a role-less group.
+        .accessibilityRepresentation {
+            Text(accessibilityText)
+        }
         .accessibilityHint(metric.provenance.explanation)
     }
 
