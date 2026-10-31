@@ -31,7 +31,14 @@ jobs:
         run: swift build -Xswiftc -warnings-as-errors
 
       - name: Run unit and integration tests
-        run: swift test --parallel
+        run: |
+          set -o pipefail
+          swift test 2>&1 | tee swift-test.log | tail -20 || {
+            # Surface failing tests as annotations so they are readable without the raw log.
+            grep -E "✘|error:|Expectation failed|failed after" swift-test.log | sort -u | head -40 \
+              | while IFS= read -r line; do echo "::error::${line:0:900}"; done
+            exit 1
+          }
 
       - name: Install XcodeGen
         run: brew install xcodegen
