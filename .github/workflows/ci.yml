@@ -86,18 +86,19 @@ jobs:
       - name: Verify Release entitlements are exactly the sandbox
         run: |
           codesign -d --entitlements - --xml build-release/Build/Products/Release/MacPulse.app > entitlements.plist
-          plutil -p entitlements.plist
           # Checked on Release, the shipping artifact: Xcode adds debugging/preview
           # exceptions to Debug builds automatically. Anything new here needs an ADR first.
-          ALLOWED="com.apple.security.app-sandbox"
-          FOUND=$(plutil -convert json -o - entitlements.plist | python3 -c 'import json,sys; print(" ".join(json.load(sys.stdin).keys()))')
-          for key in $FOUND; do
-            case " $ALLOWED " in
-              *" $key "*) ;;
-              *) echo "::error::Unexpected entitlement $key"; exit 1 ;;
-            esac
-          done
-          plutil -extract com.apple.security.app-sandbox raw entitlements.plist | grep -q true
+          python3 - <<'PY'
+          import plistlib, sys
+          with open("entitlements.plist", "rb") as f:
+              data = f.read()
+          entitlements = plistlib.loads(data) if data.strip() else {}
+          print(f"::notice::Release entitlements: {entitlements}")
+          allowed = {"com.apple.security.app-sandbox": True}
+          if entitlements != allowed:
+              print(f"::error::Expected exactly {allowed}, got {entitlements}")
+              sys.exit(1)
+          PY
 
       - name: Upload test results
         if: always()
