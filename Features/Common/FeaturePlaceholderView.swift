@@ -14,8 +14,7 @@ public struct FeaturePlaceholderView: View {
             title: feature.title,
             systemImage: feature.systemImage,
             summary: feature.summary,
-            plannedCapabilities: feature.capabilities,
-            phase: feature.phase
+            plannedCapabilities: feature.capabilities
         )
         .navigationTitle(feature.title)
     }

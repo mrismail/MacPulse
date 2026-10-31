@@ -72,3 +72,18 @@ struct AppDependenciesTests {
         #expect(live.systemInfo is LiveSystemInfoRepository)
     }
 }
+
+@Suite("AppModel")
+@MainActor
+struct AppModelTests {
+    @Test func createsOneViewModelPerScreenSharingTheMonitor() async {
+        let model = AppModel(dependencies: .preview())
+        #expect(model.coordinator.selection == .overview)
+        await model.start()
+        await model.battery.observe()
+        await model.overview.observeBattery()
+        // Both screens see the same battery status from the shared monitor.
+        #expect(model.battery.status != nil)
+        #expect(model.battery.status == model.overview.batteryStatus)
+    }
+}

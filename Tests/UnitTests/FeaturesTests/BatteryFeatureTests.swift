@@ -10,6 +10,7 @@ actor StubBatteryMonitor: BatteryMonitoring {
     var historyError: (any Error)?
     private(set) var clearCount = 0
     private(set) var refreshCount = 0
+    private(set) var historyReads = 0
 
     init(status: BatteryStatus?, history: [BatterySnapshot] = [], historyError: (any Error)? = nil) {
         statusToSend = status
@@ -29,6 +30,7 @@ actor StubBatteryMonitor: BatteryMonitoring {
     }
 
     func history(since date: Date) async throws -> [BatterySnapshot] {
+        historyReads += 1
         if let historyError { throw historyError }
         return storedHistory.filter { $0.timestamp >= date }
     }
@@ -38,6 +40,21 @@ actor StubBatteryMonitor: BatteryMonitoring {
         storedHistory.removeAll()
         clearCount += 1
     }
+}
+
+/// Delays long-range history reads so a later, shorter request finishes first.
+struct SlowBatteryMonitor: BatteryMonitoring {
+    let base: PreviewBatteryMonitor
+    func start() async {}
+    func refresh() async {}
+    func updates() async -> AsyncStream<BatteryStatus> { await base.updates() }
+    func history(since date: Date) async throws -> [BatterySnapshot] {
+        if date < base.referenceDateForTests.addingTimeInterval(-48 * 3_600) {
+            try await Task.sleep(for: .milliseconds(200))
+        }
+        return try await base.history(since: date)
+    }
+    func clearHistory() async throws {}
 }
 
 private let referenceDate = Date(timeIntervalSince1970: 1_793_448_000)
@@ -57,6 +74,7 @@ struct BatteryViewModelTests {
         let preview = PreviewBatteryMonitor(referenceDate: referenceDate)
         let model = BatteryViewModel(monitor: preview, now: { referenceDate })
 
+        await model.reloadHistory()
         await model.observe()
 
         #expect(model.status == preview.status())
@@ -65,6 +83,47 @@ struct BatteryViewModelTests {
         #expect(!model.chartPoints.isEmpty)
         #expect(model.recentSessions.count == 1)
         #expect(model.conditionDescription == .measured("Normal"))
+        #expect(model.lastUpdated == referenceDate)
+        #expect(model.estimatedRuntime.value == 295)
+    }
+
+    @Test func liveUpdatesAppendWithoutReloadingFromDisk() async {
+        let stub = StubBatteryMonitor(status: status(PreviewBatteryMonitor.sampleRaw), history: [
+            BatterySnapshot(
+                timestamp: referenceDate.addingTimeInterval(-600),
+                percentage: 75, isCharging: false, isPluggedIn: false
+            ),
+        ])
+        let model = BatteryViewModel(monitor: stub, now: { referenceDate })
+        await model.reloadHistory()
+        #expect(model.chartPoints.count == 1)
+        #expect(await stub.historyReads == 1)
+
+        await model.observe()  // one live status at referenceDate (72%)
+
+        #expect(model.chartPoints.map(\.percentage) == [75, 72])
+        #expect(await stub.historyReads == 1)
+    }
+
+    @Test func staleRangeResultsAreDiscarded() async {
+        let preview = PreviewBatteryMonitor(referenceDate: referenceDate)
+        let model = BatteryViewModel(monitor: SlowBatteryMonitor(base: preview), now: { referenceDate })
+        model.range = .week
+        let slowLoad = Task { await model.reloadHistory() }
+        await Task.yield()
+        model.range = .sixHours
+        await model.reloadHistory()
+        await slowLoad.value
+        // The 6-hour result must win even though the 7-day request finished last.
+        #expect(model.chartPoints.allSatisfy { $0.timestamp >= referenceDate.addingTimeInterval(-6 * 3_600) })
+    }
+
+    @Test func chartDomainCoversTheWholeRange() async {
+        let model = BatteryViewModel(monitor: PreviewBatteryMonitor(referenceDate: referenceDate), now: { referenceDate })
+        await model.observe()
+        model.range = .week
+        #expect(model.chartDomain.upperBound == referenceDate)
+        #expect(model.chartDomain.lowerBound == referenceDate.addingTimeInterval(-7 * 24 * 3_600))
     }
 
     @Test func rangeLimitsHistory() async {
@@ -106,7 +165,7 @@ struct BatteryViewModelTests {
             historyError: CocoaError(.fileReadNoPermission)
         )
         let model = BatteryViewModel(monitor: stub, now: { referenceDate })
-        await model.observe()
+        await model.reloadHistory()
         #expect(model.historyError?.kind == .permissionDenied)
         #expect(model.chartPoints.isEmpty)
     }
@@ -201,6 +260,35 @@ struct BatteryIntegrationViewModelTests {
         #expect(await stub.storedHistory.isEmpty)
     }
 
+    @Test func overviewRecommendationsFollowStatus() async {
+        var raw = PreviewBatteryMonitor.sampleRaw
+        raw.currentCapacity = 12
+        raw.batteryHealthCondition = "Service Recommended"
+        let model = OverviewViewModel(
+            systemInfoRepository: systemInfo,
+            batteryMonitor: StubBatteryMonitor(status: status(raw))
+        )
+        await model.observeBattery()
+        #expect(model.recommendations.map(\.id).contains("lowCharge"))
+        #expect(model.recommendations.first?.severity == .warning)
+    }
+
+    @Test func clearedConfirmationHidesAfterAWhile() async {
+        let model = SettingsViewModel(
+            systemInfoRepository: systemInfo,
+            batteryMonitor: StubBatteryMonitor(status: nil),
+            confirmationDuration: .milliseconds(10)
+        )
+        await model.clearBatteryHistory()
+        #expect(model.clearBatteryHistoryState == .cleared)
+        #expect(await eventuallyOnMain { model.clearBatteryHistoryState == .idle })
+    }
+
+    @Test func retentionMatchesTheMonitor() {
+        let model = SettingsViewModel(systemInfoRepository: systemInfo, batteryMonitor: StubBatteryMonitor(status: nil))
+        #expect(model.batteryHistoryRetentionDays == BatteryMonitor.Configuration.defaultHistoryRetentionDays)
+    }
+
     @Test func settingsReportsClearFailure() async {
         let stub = StubBatteryMonitor(status: nil, historyError: POSIXError(.EACCES))
         let model = SettingsViewModel(systemInfoRepository: systemInfo, batteryMonitor: stub)
@@ -211,4 +299,13 @@ struct BatteryIntegrationViewModelTests {
         }
         #expect(error.kind == .permissionDenied)
     }
+}
+
+@MainActor
+func eventuallyOnMain(_ condition: @MainActor () -> Bool) async -> Bool {
+    for _ in 0..<200 {
+        if condition() { return true }
+        try? await Task.sleep(for: .milliseconds(10))
+    }
+    return false
 }

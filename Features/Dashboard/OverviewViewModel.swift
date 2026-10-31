@@ -7,9 +7,21 @@ import Observation
 public final class OverviewViewModel {
     public private(set) var systemInfo: LoadState<SystemInfo> = .idle
 
-    public private(set) var batteryCharge: Metric<Double> = .unavailable(.notYetSampled)
-    public private(set) var estimatedRuntimeMinutes: Metric<Int> = .unavailable(.notYetSampled)
-    public private(set) var batteryStateDescription: String?
+    public private(set) var batteryStatus: BatteryStatus?
+    public private(set) var recommendations: [Recommendation] = []
+
+    public var batteryCharge: Metric<Double> {
+        batteryStatus?.reading.charge ?? .unavailable(.notYetSampled)
+    }
+
+    /// Same definition as the Battery screen's "Estimated runtime".
+    public var estimatedRuntimeMinutes: Metric<Int> {
+        BatteryStatusPresentation.estimatedRuntime(batteryStatus)
+    }
+
+    public var batteryStateDescription: String? {
+        batteryStatus.map { BatteryStatusPresentation.stateDescription($0.reading) }
+    }
 
     // Filled in by later phases. Shown as "Unavailable" so the dashboard
     // never displays a made-up number.
@@ -34,21 +46,8 @@ public final class OverviewViewModel {
     }
 
     func apply(_ status: BatteryStatus) {
-        batteryCharge = status.reading.charge
-        estimatedRuntimeMinutes = status.reading.powerSource.value == .battery
-            ? status.bestRuntimeEstimate
-            : status.reading.systemTimeToEmptyMinutes
-        guard status.reading.hasBattery else {
-            batteryStateDescription = "This Mac has no battery"
-            return
-        }
-        batteryStateDescription = switch status.reading.chargingState.value {
-        case .charging: "Charging"
-        case .discharging: "On battery"
-        case .notCharging: "Plugged in, not charging"
-        case .fullyCharged: "Fully charged"
-        case nil: nil
-        }
+        batteryStatus = status
+        recommendations = BatteryRecommendations.make(for: status)
     }
 
     /// Loads data for the dashboard. Safe to call repeatedly; concurrent calls are ignored.

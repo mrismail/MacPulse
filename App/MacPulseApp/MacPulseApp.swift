@@ -1,11 +1,13 @@
 import MacPulseAppCore
+import MacPulseFeatures
 import MacPulseShared
 import SwiftUI
 
 @main
 struct MacPulseApp: App {
-    @State private var coordinator = AppCoordinator()
-    private let dependencies = AppDependencies.forLaunch(arguments: ProcessInfo.processInfo.arguments)
+    @State private var model = AppModel(
+        dependencies: AppDependencies.forLaunch(arguments: ProcessInfo.processInfo.arguments)
+    )
 
     init() {
         Log.logger(.app).info("MacPulse launched")
@@ -13,12 +15,18 @@ struct MacPulseApp: App {
 
     var body: some Scene {
         Window("MacPulse", id: "main") {
-            RootView(coordinator: coordinator, dependencies: dependencies)
+            RootView(model: model)
                 .frame(minWidth: 860, minHeight: 560)
         }
-        .defaultSize(width: 1100, height: 720)
+        .defaultSize(width: 1100, height: 760)
         .commands {
-            MainCommands(coordinator: coordinator)
+            MainCommands(coordinator: model.coordinator)
+        }
+
+        // ⌘, opens the same settings that are also in the sidebar.
+        Settings {
+            SettingsView(viewModel: model.settings)
+                .frame(width: 560, height: 520)
         }
     }
 }

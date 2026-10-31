@@ -3,11 +3,11 @@ import MacPulseShared
 import SwiftUI
 
 public struct SettingsView: View {
-    @State private var viewModel: SettingsViewModel
+    private let viewModel: SettingsViewModel
     @State private var isConfirmingClearHistory = false
 
     public init(viewModel: SettingsViewModel) {
-        _viewModel = State(initialValue: viewModel)
+        self.viewModel = viewModel
     }
 
     public var body: some View {
@@ -19,13 +19,25 @@ public struct SettingsView: View {
             }
 
             Section("Battery history") {
-                Text("MacPulse records the battery level about once a minute while it is running and keeps \(viewModel.batteryHistoryRetentionDays) days of history on this Mac.")
+                Text("MacPulse records the battery level about once a minute while it is running and keeps \(viewModel.batteryHistoryRetentionDays) days of history on this Mac. Old history is removed automatically.")
                     .foregroundStyle(.secondary)
                 HStack {
                     Button("Clear Battery History…", role: .destructive) {
                         isConfirmingClearHistory = true
                     }
                     .disabled(viewModel.clearBatteryHistoryState == .clearing)
+                    .accessibilityIdentifier("settings.clearBatteryHistory")
+                    .confirmationDialog(
+                        "Clear all battery history?",
+                        isPresented: $isConfirmingClearHistory,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Clear History", role: .destructive) {
+                            Task { await viewModel.clearBatteryHistory() }
+                        }
+                    } message: {
+                        Text("Charts and charging sessions start again from now. Your battery itself is not affected.")
+                    }
                     switch viewModel.clearBatteryHistoryState {
                     case .idle:
                         EmptyView()
@@ -39,22 +51,6 @@ public struct SettingsView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-            }
-            .confirmationDialog(
-                "Clear all battery history?",
-                isPresented: $isConfirmingClearHistory,
-                titleVisibility: .visible
-            ) {
-                Button("Clear History", role: .destructive) {
-                    Task { await viewModel.clearBatteryHistory() }
-                }
-            } message: {
-                Text("Charts and charging sessions start again from now. Your battery itself is not affected.")
-            }
-
-            Section("Coming in later phases") {
-                Text("Scan locations and exclusions, monitoring frequency, notifications, cleanup preferences, data retention and startup behavior.")
-                    .foregroundStyle(.secondary)
             }
 
             Section("About") {

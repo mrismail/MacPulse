@@ -3,15 +3,19 @@ import MacPulseShared
 import SwiftUI
 
 public struct OverviewView: View {
-    @State private var viewModel: OverviewViewModel
+    private let viewModel: OverviewViewModel
+    private let openBattery: () -> Void
 
-    public init(viewModel: OverviewViewModel) {
-        _viewModel = State(initialValue: viewModel)
+    public init(viewModel: OverviewViewModel, openBattery: @escaping () -> Void = {}) {
+        self.viewModel = viewModel
+        self.openBattery = openBattery
     }
 
     public var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.large) {
+            VStack(alignment: .leading, spacing: Spacing.medium) {
+                recommendationsCard
+
                 LazyVGrid(
                     columns: [GridItem(.adaptive(minimum: 260), spacing: Spacing.medium, alignment: .top)],
                     alignment: .leading,
@@ -22,7 +26,7 @@ public struct OverviewView: View {
                     thisMacCard
                 }
 
-                Card("Coming next", systemImage: "list.bullet.rectangle") {
+                Card("More tools coming soon", systemImage: "sparkles") {
                     ForEach(viewModel.upcomingFeatures, id: \.title) { feature in
                         Label {
                             VStack(alignment: .leading, spacing: 2) {
@@ -42,6 +46,32 @@ public struct OverviewView: View {
         .task { await viewModel.observeBattery() }
     }
 
+    private var recommendationsCard: some View {
+        Card("Recommended", systemImage: "lightbulb") {
+            if viewModel.recommendations.isEmpty {
+                Label("Nothing needs your attention right now.", systemImage: "checkmark.circle")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(viewModel.recommendations) { recommendation in
+                    Label {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(recommendation.title).bold()
+                            Text(recommendation.detail)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    } icon: {
+                        Image(systemName: recommendation.severity == .warning
+                            ? "exclamationmark.triangle.fill" : "info.circle")
+                            .foregroundStyle(recommendation.severity == .warning ? Color.orange : Color.accentColor)
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+            }
+        }
+        .accessibilityIdentifier("overview.recommendations")
+    }
+
     private var batteryCard: some View {
         Card("Battery", systemImage: "battery.75percent") {
             MetricValueView("Charge", metric: viewModel.batteryCharge) {
@@ -53,6 +83,9 @@ public struct OverviewView: View {
             MetricValueView("Estimated runtime", metric: viewModel.estimatedRuntimeMinutes) {
                 DurationFormatting.string(fromMinutes: $0)
             }
+            Button("Show Battery Details", action: openBattery)
+                .buttonStyle(.link)
+                .accessibilityIdentifier("overview.openBattery")
         }
     }
 
@@ -95,7 +128,7 @@ public struct OverviewView: View {
                 systemInfoRepository: PreviewSystemInfoRepository(),
                 batteryMonitor: PreviewBatteryMonitor()
             ))
-                .frame(width: 800, height: 600)
+            .frame(width: 800, height: 700)
         }
     }
 #endif

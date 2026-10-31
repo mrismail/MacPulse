@@ -4,31 +4,14 @@ import SwiftUI
 
 /// Main window content: sidebar plus the selected feature.
 public struct RootView: View {
-    @Bindable private var coordinator: AppCoordinator
+    private let model: AppModel
 
-    // View models are created once and kept for the window's lifetime, so switching
-    // sections does not reload data or lose state.
-    @State private var overviewModel: OverviewViewModel
-    @State private var batteryModel: BatteryViewModel
-    @State private var settingsModel: SettingsViewModel
-
-    private let dependencies: AppDependencies
-
-    public init(coordinator: AppCoordinator, dependencies: AppDependencies) {
-        self.coordinator = coordinator
-        self.dependencies = dependencies
-        _overviewModel = State(initialValue: OverviewViewModel(
-            systemInfoRepository: dependencies.systemInfo,
-            batteryMonitor: dependencies.battery
-        ))
-        _batteryModel = State(initialValue: BatteryViewModel(monitor: dependencies.battery))
-        _settingsModel = State(initialValue: SettingsViewModel(
-            systemInfoRepository: dependencies.systemInfo,
-            batteryMonitor: dependencies.battery
-        ))
+    public init(model: AppModel) {
+        self.model = model
     }
 
     public var body: some View {
+        @Bindable var coordinator = model.coordinator
         NavigationSplitView {
             List(selection: $coordinator.selection) {
                 ForEach(SidebarGroup.allCases) { group in
@@ -44,10 +27,7 @@ public struct RootView: View {
         } detail: {
             detail(for: coordinator.effectiveSelection)
         }
-        .task {
-            // Battery sampling runs for the life of the window, whichever section is shown.
-            await dependencies.battery.start()
-        }
+        .task { await model.start() }
     }
 
     @ViewBuilder
@@ -62,13 +42,16 @@ public struct RootView: View {
     @ViewBuilder
     private func detail(for section: SidebarSection) -> some View {
         switch section {
-        case .overview: OverviewView(viewModel: overviewModel)
-        case .battery: BatteryView(viewModel: batteryModel)
+        case .overview:
+            OverviewView(viewModel: model.overview) {
+                model.coordinator.select(.battery)
+            }
+        case .battery: BatteryView(viewModel: model.battery)
         case .energy: EnergyView()
         case .spaceAnalyzer: SpaceAnalyzerView()
         case .duplicateFinder: DuplicateFinderView()
         case .cleaner: CleanerView()
-        case .settings: SettingsView(viewModel: settingsModel)
+        case .settings: SettingsView(viewModel: model.settings)
         }
     }
 }
