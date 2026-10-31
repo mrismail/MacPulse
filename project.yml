@@ -1,0 +1,58 @@
+# XcodeGen spec — generates MacPulse.xcodeproj (git-ignored).
+#   brew install xcodegen
+#   xcodegen generate
+#   open MacPulse.xcodeproj
+name: MacPulse
+
+options:
+  bundleIdPrefix: com.mrismail
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+
+packages:
+  MacPulse:
+    path: .
+
+targets:
+  MacPulse:
+    type: application
+    platform: macOS
+    sources:
+      - path: App/MacPulseApp
+    dependencies:
+      - package: MacPulse
+        product: MacPulseAppCore
+    info:
+      path: App/MacPulseApp/Info.plist
+      properties:
+        CFBundleDisplayName: MacPulse
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        LSApplicationCategoryType: public.app-category.utilities
+        LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
+    entitlements:
+      path: App/MacPulseApp/MacPulse.entitlements
+      properties:
+        # ADR-002: App Sandbox is enabled. Entitlements are added only when a
+        # phase needs them (e.g. user-selected file access in Phase 4).
+        com.apple.security.app-sandbox: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mrismail.MacPulse
+        PRODUCT_NAME: MacPulse
+        ENABLE_HARDENED_RUNTIME: YES
+        # Ad-hoc signing for local development and CI. Set DEVELOPMENT_TEAM and
+        # CODE_SIGN_STYLE: Automatic once an Apple Developer account is configured.
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        DEVELOPMENT_TEAM: ""
+        COMBINE_HIDPI_IMAGES: YES
+    scheme:
+      gatherCoverageData: false
