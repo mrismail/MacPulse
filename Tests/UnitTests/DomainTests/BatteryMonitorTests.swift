@@ -77,7 +77,7 @@ struct BatteryMonitorTests {
         history: InMemoryBatteryHistoryRepository = InMemoryBatteryHistoryRepository(),
         clock: ManualClock = ManualClock(),
         events: ManualPowerEvents? = nil,
-        sleep: @escaping BatteryMonitor.Sleeper = { try await Task.sleep(for: .seconds(3_600)) }
+        sleep: @escaping BatteryMonitor.Sleeper = { _ in try await Task.sleep(for: .seconds(3_600)) }
     ) -> (BatteryMonitor, FakeBatterySource) {
         let source = FakeBatterySource(raw)
         let monitor = BatteryMonitor(
