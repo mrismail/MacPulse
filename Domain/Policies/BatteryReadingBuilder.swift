@@ -56,7 +56,7 @@ public enum BatteryReadingBuilder {
         guard max > 0, current >= 0, current <= max else {
             return .unavailable(.sourceError("capacity \(current)/\(max)"))
         }
-        return .measured(Double(current) / Double(max) * 100)
+        return .measured(Double(current) * 100 / Double(max))
     }
 
     static func powerSourceMetric(_ raw: RawBatteryData) -> Metric<PowerSource> {
