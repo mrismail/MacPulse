@@ -18,7 +18,7 @@ public final class SettingsViewModel {
     public private(set) var clearUsageHistoryState: ClearHistoryState = .idle
 
     /// How long hourly app usage is kept before it is removed automatically.
-    public let usageHistoryRetentionDays = 7
+    public let usageHistoryRetentionDays = ProcessMonitor.Configuration.defaultHistoryRetentionDays
 
     /// `false` when no app-usage monitor is available (the button is hidden).
     public var canClearUsageHistory: Bool { energyMonitor != nil }
