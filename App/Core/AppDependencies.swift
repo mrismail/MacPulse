@@ -44,7 +44,8 @@ public struct AppDependencies: Sendable {
         let logger = Log.logger(.battery)
         let history: any BatteryHistoryRepository
         do {
-            history = JSONLinesBatteryHistoryStore(directory: try JSONLinesBatteryHistoryStore.defaultDirectory())
+            let directory = try JSONLinesBatteryHistoryStore.defaultDirectory()
+            history = JSONLinesBatteryHistoryStore(directory: directory)
         } catch {
             logger.error("Battery history unavailable, keeping it in memory: \(String(describing: error), privacy: .public)")
             history = InMemoryBatteryHistoryRepository()

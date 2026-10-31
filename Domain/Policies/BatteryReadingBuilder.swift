@@ -61,8 +61,8 @@ public enum BatteryReadingBuilder {
 
     static func powerSourceMetric(_ raw: RawBatteryData) -> Metric<PowerSource> {
         switch raw.powerSourceState {
-        case "AC Power": .measured(.externalPower)
-        case "Battery Power": .measured(.battery)
+        case "AC Power"?: .measured(.externalPower)
+        case "Battery Power"?: .measured(.battery)
         case nil: .unavailable(.sourceError("power source state not reported"))
         case let other?: .unavailable(.sourceError("unknown power source \(other)"))
         }
