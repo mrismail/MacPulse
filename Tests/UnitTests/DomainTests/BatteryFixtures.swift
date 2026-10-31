@@ -53,6 +53,34 @@ enum BatteryFixtures {
         )
     )
 
+    /// Captured from the owner's Intel MacBook Pro (16-inch, 2019) with
+    /// `ioreg -rc AppleSmartBattery -a` on 2026-10-31, unplugged right after a full
+    /// charge. Identifiers (serial numbers) intentionally omitted.
+    /// Notable: `MaxCapacity` is mAh here, there is no `NominalChargeCapacity`, and the
+    /// fully-charged flag is still set although the Mac is on battery.
+    static let realIntelMacBookPro16 = RawBatteryData(
+        hasInternalBattery: true,
+        isPresent: true,
+        currentCapacity: 98,  // IOPS percentage: 7057 / 7232 mAh
+        maxCapacity: 100,
+        isCharging: false,
+        isCharged: true,
+        powerSourceState: "Battery Power",
+        timeToEmptyMinutes: 213,
+        timeToFullMinutes: -1,
+        batteryHealth: "Good",
+        registry: .init(
+            cycleCount: 425,
+            designCapacity: 8_790,
+            appleRawMaxCapacity: 7_232,
+            nominalChargeCapacity: nil,
+            maxCapacity: 7_232,
+            temperatureCentiCelsius: 3_072,
+            voltageMillivolts: 12_031,
+            amperageMilliamps: -2_435
+        )
+    )
+
     /// Desktop Mac: no internal battery.
     static let desktop = RawBatteryData(hasInternalBattery: false, adapterWatts: nil)
 }

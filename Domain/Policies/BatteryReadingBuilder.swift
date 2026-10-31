@@ -69,7 +69,9 @@ public enum BatteryReadingBuilder {
     }
 
     static func chargingStateMetric(_ raw: RawBatteryData, powerSource: PowerSource?) -> Metric<ChargingState> {
-        if raw.isCharged == true {
+        // Real Intel MacBook data showed the "charged" flag still set after unplugging
+        // at ~98%, so it only counts while on external power.
+        if raw.isCharged == true, powerSource == .externalPower {
             return .measured(.fullyCharged)
         }
         guard let isCharging = raw.isCharging else {

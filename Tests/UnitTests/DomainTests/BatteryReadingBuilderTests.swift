@@ -36,6 +36,30 @@ struct BatteryReadingBuilderTests {
         #expect(basis.contains("8790 mAh"))
     }
 
+    @Test func realIntelMacBookPro16() throws {
+        let reading = BatteryReadingBuilder.build(from: BatteryFixtures.realIntelMacBookPro16, at: date)
+
+        #expect(reading.charge == .measured(98))
+        #expect(reading.powerSource == .measured(.battery))
+        // The stale fully-charged flag must not override "on battery".
+        #expect(reading.chargingState == .measured(.discharging))
+        #expect(reading.cycleCount == .measured(425))
+        #expect(reading.fullChargeCapacityMAh == .measured(7_232))
+        #expect(reading.designCapacityMAh == .measured(8_790))
+        let health = try #require(reading.healthPercentage.value)
+        #expect(abs(health - 82.27) < 0.01)  // 7232 / 8790
+        #expect(reading.condition == .measured(.normal))
+        #expect(reading.temperatureCelsius == .measured(30.72))
+        #expect(reading.voltageVolts == .measured(12.031))
+        #expect(reading.systemTimeToEmptyMinutes.value == 213)
+    }
+
+    @Test func chargedFlagCountsOnlyOnExternalPower() {
+        var raw = BatteryFixtures.realIntelMacBookPro16
+        raw.powerSourceState = "AC Power"
+        #expect(BatteryReadingBuilder.build(from: raw, at: date).chargingState == .measured(.fullyCharged))
+    }
+
     @Test func appleSiliconCharging() {
         let reading = BatteryReadingBuilder.build(from: BatteryFixtures.appleSiliconCharging, at: date)
 
