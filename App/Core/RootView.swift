@@ -9,12 +9,23 @@ public struct RootView: View {
     // View models are created once and kept for the window's lifetime, so switching
     // sections does not reload data or lose state.
     @State private var overviewModel: OverviewViewModel
+    @State private var batteryModel: BatteryViewModel
     @State private var settingsModel: SettingsViewModel
+
+    private let dependencies: AppDependencies
 
     public init(coordinator: AppCoordinator, dependencies: AppDependencies) {
         self.coordinator = coordinator
-        _overviewModel = State(initialValue: OverviewViewModel(systemInfoRepository: dependencies.systemInfo))
-        _settingsModel = State(initialValue: SettingsViewModel(systemInfoRepository: dependencies.systemInfo))
+        self.dependencies = dependencies
+        _overviewModel = State(initialValue: OverviewViewModel(
+            systemInfoRepository: dependencies.systemInfo,
+            batteryMonitor: dependencies.battery
+        ))
+        _batteryModel = State(initialValue: BatteryViewModel(monitor: dependencies.battery))
+        _settingsModel = State(initialValue: SettingsViewModel(
+            systemInfoRepository: dependencies.systemInfo,
+            batteryMonitor: dependencies.battery
+        ))
     }
 
     public var body: some View {
@@ -33,6 +44,10 @@ public struct RootView: View {
         } detail: {
             detail(for: coordinator.effectiveSelection)
         }
+        .task {
+            // Battery sampling runs for the life of the window, whichever section is shown.
+            await dependencies.battery.start()
+        }
     }
 
     @ViewBuilder
@@ -48,7 +63,7 @@ public struct RootView: View {
     private func detail(for section: SidebarSection) -> some View {
         switch section {
         case .overview: OverviewView(viewModel: overviewModel)
-        case .battery: BatteryView()
+        case .battery: BatteryView(viewModel: batteryModel)
         case .energy: EnergyView()
         case .spaceAnalyzer: SpaceAnalyzerView()
         case .duplicateFinder: DuplicateFinderView()
