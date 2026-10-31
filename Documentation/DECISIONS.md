@@ -135,3 +135,34 @@ The owner targets global customers including Arabic. Phase 2 sets
 `String(localized:)` / `LocalizedStringKey` for UI text, and mirrors directional glyphs
 in RTL. Extracting a String Catalog and translating (Arabic first) is scheduled for
 Phase 7, when the UI text is stable; see `DEFERRED.md`.
+
+## ADR-009 — Process monitoring inside the App Sandbox (Phase 3 spike)
+
+**Date:** 2026-10-31 · **Status:** Measured; design decision pending owner choice
+
+**Method.** `MacPulse --macpulse-process-access-probe` runs in the signed, sandboxed
+Release and Debug apps in CI (macOS 15.8.2) and prints counts and errno only.
+
+**Results (sandboxed Release, 300-process sample):**
+
+| API | Result |
+|---|---|
+| `sysctl(KERN_PROC_ALL)` process list (pid, uid, name) | ✅ 519 processes |
+| `proc_listallpids` | ❌ returns 0 in the sandbox |
+| `host_statistics(HOST_CPU_LOAD_INFO)` system CPU | ✅ |
+| `NSWorkspace.runningApplications` | ✅ 35 apps |
+| `proc_pidinfo(PROC_PIDTASKINFO)` CPU time, resident memory, threads | ✅ 187/187 same-user processes; ❌ EPERM for 113 root/system |
+| `proc_pidinfo(PROC_PIDTBSDINFO)` | ✅ same-user apps |
+| `proc_pid_rusage` (billed energy, phys footprint, disk I/O) on other processes | ❌ EPERM for all, including same-user |
+| `proc_pid_rusage` on MacPulse itself | ✅ (billed energy 0 on the CI VM) |
+
+**Consequences.**
+- Sandboxed Phase 3 is feasible: per-process CPU % (from CPU-time deltas), resident
+  memory and threads for every process of the current user, plus system CPU load.
+- Per-process energy (`ri_billed_energy`), memory footprint and disk I/O are only
+  available without the sandbox. Without them, battery impact is a resource-based
+  estimate, labeled as such (spec §6 allows this).
+- Root/system daemons are not readable either way without admin rights (spec forbids
+  requesting admin for this).
+- Open: run the probe on a real Mac (owner's Intel MacBook, macOS 26) to confirm, and to
+  see whether billed energy is non-zero on Intel at all.
