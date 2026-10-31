@@ -3,8 +3,8 @@ import SwiftUI
 
 /// States whether a value is measured, estimated or unavailable.
 ///
-/// Meaning is carried by the glyph and the text (primary/secondary label colors for
-/// contrast); color only reinforces it.
+/// Meaning is carried by the glyph shape and the text, both in label colors so they meet
+/// contrast requirements in light and dark mode; a thin colored edge only reinforces it.
 public struct ProvenanceBadge: View {
     private let provenance: MetricProvenance
 
@@ -14,18 +14,16 @@ public struct ProvenanceBadge: View {
 
     public var body: some View {
         let kind = provenance.kind
-        Label {
-            Text(provenance.badgeTitle)
-                .foregroundStyle(kind == .unavailable ? .secondary : .primary)
-        } icon: {
-            Image(systemName: kind.symbolName)
-                .foregroundStyle(Palette.provenance(kind))
-        }
-        .font(.caption2.weight(.medium))
-        .labelStyle(.titleAndIcon)
-        .padding(.horizontal, Spacing.small - 2)
-        .padding(.vertical, 2)
-        .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: Radius.badge))
+        Label(provenance.badgeTitle, systemImage: kind.symbolName)
+            .font(.caption2.weight(.medium))
+            .foregroundStyle(kind == .unavailable ? Color.secondary : Color.primary)
+            .labelStyle(.titleAndIcon)
+            .padding(.horizontal, Spacing.small - 2)
+            .padding(.vertical, 2)
+            .overlay(
+                RoundedRectangle(cornerRadius: Radius.badge)
+                    .strokeBorder(Palette.provenance(kind), lineWidth: 1)
+            )
         .help(provenance.explanation)
         .accessibilityHidden(true)  // MetricValueView reads provenance as part of the value
     }
