@@ -7,7 +7,7 @@ import MacPulseShared
 ///
 /// - Appends are a single small write, so sampling stays cheap.
 /// - Retention is enforced by removing whole day files.
-/// - Files are created with owner-only permissions (0600) inside the app's sandbox container.
+/// - Files are created with owner-only permissions (0600) in the user's Application Support.
 /// - Unreadable lines are skipped rather than failing the whole read.
 public actor JSONLinesBatteryHistoryStore: BatteryHistoryRepository {
     public static let filePrefix = "battery-"
@@ -31,8 +31,7 @@ public actor JSONLinesBatteryHistoryStore: BatteryHistoryRepository {
         calendar = utc
     }
 
-    /// `~/Library/Containers/com.mrismail.MacPulse/Data/Library/Application Support/MacPulse/History/Battery`
-    /// when sandboxed.
+    /// `~/Library/Application Support/MacPulse/History/Battery`.
     public static func defaultDirectory() throws -> URL {
         let base = try FileManager.default.url(
             for: .applicationSupportDirectory,

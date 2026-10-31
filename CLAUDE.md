@@ -14,7 +14,8 @@
 - Swift 6, strict concurrency, zero warnings (`swift build -Xswiftc -warnings-as-errors`).
 - Features must not import MacPulseInfrastructure; inject Domain protocols via AppDependencies.
 - Every displayed number is a `Metric<T>` with provenance. Never show CPU % as battery use.
-- App Sandbox is on (ADR-002). Add entitlements only when a phase needs them, and record why.
+- No App Sandbox (ADR-010): Hardened Runtime, zero entitlements, Developer ID + notarization.
+  Never add entitlements, network code, admin prompts or private APIs without an ADR.
 - Never delete files without explicit user confirmation; prefer the Trash.
 - Tests use Swift Testing (`import Testing`); UI tests use XCTest/XCUITest.
 - Log `AppError` with `Logger.log(_:context:)`; never log paths or file names as public.
