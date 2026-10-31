@@ -52,13 +52,21 @@ public actor JSONLinesAppUsageStore: AppUsageHistoryRepository {
         if skipped > 0 {
             Log.logger(.persistence).notice("Skipped \(skipped, privacy: .public) unreadable usage history lines")
         }
-        return records
-            .filter { $0.hourStart >= from && $0.hourStart <= to }
-            .sorted { $0.hourStart < $1.hourStart }
+        // Records are cumulative per (app, hour); keep the latest of each.
+        return AppUsageRecord.latestPerAppAndHour(records.filter { $0.hourStart >= from && $0.hourStart <= to })
     }
 
+    /// Removes old days and compacts the rest to one record per (app, hour), so periodic
+    /// saves of the hour in progress don't make the files grow without bound.
     public func prune(olderThan date: Date) throws {
         try files.removeDays(before: files.dayString(for: date))
+        for day in try files.days() {
+            let lines = try files.lines(fromDay: day, toDay: day)
+            let decoded = lines.compactMap { try? decoder.decode(AppUsageRecord.self, from: $0) }
+            let latest = AppUsageRecord.latestPerAppAndHour(decoded)
+            guard latest.count < lines.count else { continue }
+            try files.replace(day: day, with: try latest.map { try encoder.encode($0) })
+        }
     }
 
     public func deleteAll() throws {

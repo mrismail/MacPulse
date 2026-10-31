@@ -61,6 +61,31 @@ struct DailyJSONLinesFiles {
         return result
     }
 
+    /// Atomically replaces the contents of one day's file (used for compaction).
+    func replace(day: String, with lines: [Data]) throws {
+        try ensureDirectory()
+        var payload = Data()
+        for line in lines {
+            payload.append(line)
+            payload.append(0x0A)
+        }
+        let url = fileURL(forDay: day)
+        let temporary = directory.appendingPathComponent(".\(prefix)\(day).\(UUID().uuidString).tmp")
+        guard fileManager.createFile(atPath: temporary.path, contents: payload, attributes: [.posixPermissions: 0o600]) else {
+            throw CocoaError(.fileWriteUnknown)
+        }
+        if fileManager.fileExists(atPath: url.path) {
+            _ = try fileManager.replaceItemAt(url, withItemAt: temporary)
+        } else {
+            try fileManager.moveItem(at: temporary, to: url)
+        }
+    }
+
+    /// The days that have a file, oldest first.
+    func days() throws -> [String] {
+        try dayFiles().map(\.day)
+    }
+
     func removeDays(before day: String) throws {
         try remove(try dayFiles().filter { $0.day < day }.map(\.url))
     }
@@ -78,6 +103,9 @@ struct DailyJSONLinesFiles {
                 withIntermediateDirectories: true,
                 attributes: [.posixPermissions: 0o700]
             )
+            // Intermediate folders (MacPulse/History) are created with default permissions;
+            // tighten the parent too.
+            try? fileManager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.deletingLastPathComponent().path)
         }
     }
 

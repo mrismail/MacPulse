@@ -15,17 +15,25 @@ struct ProcessTableEntry: Sendable, Equatable {
 /// Low-level process APIs used by the process monitor and the access probe.
 enum ProcessTable {
     /// Every process on the system. Works for any user without special rights.
+    /// Retries when the table grows between the size query and the read (ENOMEM).
     static func entries() -> [ProcessTableEntry] {
+        for _ in 0..<3 {
+            if let entries = readTable() { return entries }
+        }
+        return []
+    }
+
+    private static func readTable() -> [ProcessTableEntry]? {
         var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_ALL]
         var size = 0
-        guard sysctl(&mib, u_int(mib.count), nil, &size, nil, 0) == 0, size > 0 else { return [] }
+        guard sysctl(&mib, u_int(mib.count), nil, &size, nil, 0) == 0, size > 0 else { return nil }
         // The table can grow between the two calls; leave headroom.
-        size += size / 8
+        size += size / 4
         var raw = [kinfo_proc](repeating: kinfo_proc(), count: size / MemoryLayout<kinfo_proc>.stride)
         let ok = raw.withUnsafeMutableBufferPointer { buffer in
             sysctl(&mib, u_int(mib.count), buffer.baseAddress, &size, nil, 0) == 0
         }
-        guard ok else { return [] }
+        guard ok else { return nil }  // ENOMEM: grew past the headroom; try again
         return raw.prefix(size / MemoryLayout<kinfo_proc>.stride).map { info in
             let start = info.kp_proc.p_un.__p_starttime
             return ProcessTableEntry(
@@ -77,15 +85,33 @@ enum ProcessTable {
         return result == 0 ? info : nil
     }
 
+    /// The host port is constant for the process; look it up once.
+    private static let hostPort = mach_host_self()
+
     static func hostCPUTicks() -> host_cpu_load_info? {
         var load = host_cpu_load_info()
         var count = mach_msg_type_number_t(MemoryLayout<host_cpu_load_info>.size / MemoryLayout<integer_t>.size)
         let result = withUnsafeMutablePointer(to: &load) { pointer in
             pointer.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
-                host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, $0, &count)
+                host_statistics(hostPort, HOST_CPU_LOAD_INFO, $0, &count)
             }
         }
         return result == KERN_SUCCESS ? load : nil
+    }
+
+    /// `kern.memorystatus_vm_pressure_level`: 1 normal, 2 warning, 4 critical.
+    static func memoryPressureLevel() -> Int32? {
+        var level: Int32 = 0
+        var size = MemoryLayout<Int32>.size
+        guard sysctlbyname("kern.memorystatus_vm_pressure_level", &level, &size, nil, 0) == 0 else { return nil }
+        return level
+    }
+
+    /// `true` when this process runs under Rosetta 2.
+    static var isTranslated: Bool {
+        var value: Int32 = 0
+        var size = MemoryLayout<Int32>.size
+        return sysctlbyname("sysctl.proc_translated", &value, &size, nil, 0) == 0 && value == 1
     }
 }
 
@@ -97,7 +123,15 @@ struct MachTimebase: Sendable, Equatable {
     let numerator: UInt64
     let denominator: UInt64
 
+    /// Apple silicon's native timebase: 125/3 ns per tick (24 MHz).
+    static let appleSiliconNative = MachTimebase(numerator: 125, denominator: 3)
+
     static let current: MachTimebase = {
+        // Under Rosetta, mach_timebase_info reports 1/1 for the translated process, but
+        // the kernel's per-process counters are still in native Apple silicon ticks.
+        if ProcessTable.isTranslated {
+            return appleSiliconNative
+        }
         var info = mach_timebase_info_data_t()
         guard mach_timebase_info(&info) == KERN_SUCCESS, info.denom != 0 else {
             return MachTimebase(numerator: 1, denominator: 1)
