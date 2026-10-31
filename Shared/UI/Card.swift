@@ -28,6 +28,7 @@ public struct Card<Content: View>: View {
                 }
                 .font(.headline)
                 .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("card.\(title)")
             }
             content
         }
