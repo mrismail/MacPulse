@@ -14,7 +14,6 @@ appear. Each has a target phase and a reason. Update this file whenever scope mo
 | Snapshot tests (light/dark/RTL) | Review finding | Phase 7 | Needs a third-party snapshot library; decide with the UI polish pass. |
 | macOS 14 launch verification | Phase 1 acceptance | Before Phase 8 | CI runners are macOS 15; verify on a macOS 14 VM before release. |
 | Contrast audit findings on the Battery screen (`battery.health`, `battery.cycleCount` and 4 unnamed elements) | Accessibility (review) | Phase 2 sign-off, local | The CI audit flags them but can't show colors. Inspect with Accessibility Inspector on a real Mac, fix, then make the contrast check blocking again (it is an expected failure in `MacPulseUITests` until then). Badge colors were already moved to label colors. |
-| Real `ioreg` fixtures from Intel and Apple silicon | Review finding | Phase 2 sign-off | Owner to capture `ioreg -rc AppleSmartBattery -a`; fixtures are synthetic until then. |
 
 ## Open risks to decide before the phase starts
 
@@ -22,5 +21,7 @@ appear. Each has a target phase and a reason. Update this file whenever scope mo
   (`proc_pid_rusage`, `proc_pidinfo`)? 1-day spike in the signed app first.
 - **Phases 4–6:** which cleanup categories are reachable from the sandbox (user Trash,
   other apps' caches, protected folders)? Capability matrix before Phase 4.
+- **Apple silicon fixture:** only Intel real-hardware data exists so far
+  (`BatteryFixtures.realIntelMacBookPro16`); add an Apple silicon capture when available.
 - **Phase 8:** Apple Developer Program enrolment; moving from ad-hoc to Team ID signing
   changes the container's code requirement (plan history migration).
