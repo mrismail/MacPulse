@@ -136,6 +136,21 @@ jobs:
             echo "::error::Diagnostics ran without MACPULSE_DIAGNOSTICS=1"; exit 1
           fi
 
+      - name: Monitoring overhead budget (Phase 3 acceptance)
+        run: |
+          LINE=$(MACPULSE_DIAGNOSTICS=1 build-release/Build/Products/Release/MacPulse.app/Contents/MacOS/MacPulse --macpulse-overhead-benchmark | grep '^MACPULSE_OVERHEAD ')
+          JSON=${LINE#MACPULSE_OVERHEAD }
+          echo "::notice title=Monitoring overhead (Release, CI VM)::$JSON"
+          echo "$JSON" | python3 -c '
+          import json, sys
+          r = json.load(sys.stdin)
+          ms = r["cpuMillisecondsPerSample"]
+          # Budget: 15 ms CPU per sample = 0.025 % of one core at 60 s, 0.15 % at 10 s.
+          if ms > 15:
+              print("::error::Monitoring costs %.1f ms CPU per sample (budget 15 ms)" % ms)
+              sys.exit(1)
+          '
+
       - name: Guardrails — no networking, no process control (ADR-010)
         run: |
           # Source: APIs MacPulse must never use without a new ADR.
