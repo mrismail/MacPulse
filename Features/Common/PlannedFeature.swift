@@ -6,19 +6,6 @@ public struct PlannedFeature: Sendable, Equatable {
     public let capabilities: [String]
     public let phase: Int
 
-    public static let battery = PlannedFeature(
-        title: "Battery",
-        systemImage: "battery.75percent",
-        summary: "Battery charge, health, cycle count and history, with every estimate clearly labeled.",
-        capabilities: [
-            "Charge level and charging state",
-            "Health, maximum capacity and cycle count",
-            "Charge history and charging sessions",
-            "Estimated remaining runtime",
-        ],
-        phase: 2
-    )
-
     public static let energy = PlannedFeature(
         title: "Energy",
         systemImage: "bolt.horizontal.circle",
@@ -68,5 +55,5 @@ public struct PlannedFeature: Sendable, Equatable {
         phase: 6
     )
 
-    public static let all: [PlannedFeature] = [battery, energy, spaceAnalyzer, duplicateFinder, cleaner]
+    public static let all: [PlannedFeature] = [energy, spaceAnalyzer, duplicateFinder, cleaner]
 }
