@@ -114,6 +114,9 @@ final class MacPulseUITests: XCTestCase {
         let app = launchApp()
         open("battery", in: app)
         XCTAssertTrue(element("battery.charge", in: app).waitForExistence(timeout: 10))
+        // Inactive windows render secondary text dimmer; audit the window as the user sees it.
+        app.activate()
+        app.windows.firstMatch.click()
         var problems: [String] = []
         try app.performAccessibilityAudit(for: [.contrast, .elementDetection, .sufficientElementDescription]) { issue in
             let element = issue.element
