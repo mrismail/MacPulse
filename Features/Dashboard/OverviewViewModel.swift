@@ -54,9 +54,15 @@ public final class OverviewViewModel {
         }
     }
 
-    /// The apps with the highest estimated battery impact recently.
+    /// The most active apps recently (same rule as the Battery screen).
     public var topApps: [AppUsage] {
-        Array((energyStatus?.recent ?? []).prefix(3))
+        EnergyPresentation.topApps(energyStatus?.recent ?? [], limit: 3)
+    }
+
+    /// `true` until the first battery or energy update arrives, so the Overview doesn't
+    /// claim "nothing needs attention" before it has looked.
+    public var isWaitingForFirstUpdate: Bool {
+        batteryStatus == nil && energyStatus == nil
     }
 
     /// Follows battery updates until the calling task is cancelled.

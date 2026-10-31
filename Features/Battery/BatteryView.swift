@@ -303,18 +303,18 @@ private struct TopAppsCard: View {
     let openEnergy: () -> Void
 
     var body: some View {
-        Card("Apps using the most energy", systemImage: "bolt.horizontal.circle") {
+        Card(EnergyPresentation.topAppsTitle(energyDataAvailable: energy.energyDataAvailable), systemImage: "bolt.horizontal.circle") {
             if energy.status == nil {
                 ProgressView("Measuring app activity…").controlSize(.small)
             } else if energy.topApps.isEmpty {
-                Text("No app has used noticeable CPU in the last few minutes.")
+                Text("No app has used noticeable CPU in the last \(energy.status?.recentWindowMinutes ?? 10) minutes.")
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(energy.topApps) { app in
                     HStack {
                         Text(app.displayName)
                         Spacer()
-                        Text(NumberFormatting.percent(app.cpuPercent) + " " + String(localized: "CPU"))
+                        Text(EnergyPresentation.cpuText(app.cpuPercent))
                             .monospacedDigit()
                             .foregroundStyle(.secondary)
                         ImpactBadge(impact: app.impact)
