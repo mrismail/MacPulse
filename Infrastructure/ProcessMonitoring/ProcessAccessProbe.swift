@@ -120,45 +120,21 @@ public enum ProcessAccessProbe {
     }
 
     static func sysctlProcessCount() -> Int {
-        sysctlProcesses().count
+        ProcessTable.entries().count
     }
 
     /// (pid, uid) for every process, via `sysctl(KERN_PROC_ALL)`.
     static func sysctlProcesses() -> [(pid: pid_t, uid: uid_t)] {
-        var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_ALL]
-        var size = 0
-        guard sysctl(&mib, u_int(mib.count), nil, &size, nil, 0) == 0, size > 0 else { return [] }
-        // The table can grow between the two calls; leave headroom.
-        size += size / 8
-        var entries = [kinfo_proc](repeating: kinfo_proc(), count: size / MemoryLayout<kinfo_proc>.stride)
-        let ok = entries.withUnsafeMutableBufferPointer { buffer in
-            sysctl(&mib, u_int(mib.count), buffer.baseAddress, &size, nil, 0) == 0
-        }
-        guard ok else { return [] }
-        return entries.prefix(size / MemoryLayout<kinfo_proc>.stride).map {
-            ($0.kp_proc.p_pid, $0.kp_eproc.e_ucred.cr_uid)
-        }
+        ProcessTable.entries().map { ($0.pid, $0.uid) }
     }
 
     static func hostCPULoadReadable() -> Bool {
-        var load = host_cpu_load_info()
-        var count = mach_msg_type_number_t(MemoryLayout<host_cpu_load_info>.size / MemoryLayout<integer_t>.size)
-        let result = withUnsafeMutablePointer(to: &load) { pointer in
-            pointer.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
-                host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, $0, &count)
-            }
-        }
-        return result == KERN_SUCCESS
+        ProcessTable.hostCPUTicks() != nil
     }
 
     static func rusage(of pid: pid_t) -> (info: rusage_info_v4?, errorNumber: Int32) {
-        var info = rusage_info_v4()
-        let result = withUnsafeMutablePointer(to: &info) { pointer in
-            pointer.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) {
-                proc_pid_rusage(pid, RUSAGE_INFO_V4, $0)
-            }
-        }
-        return result == 0 ? (info, 0) : (nil, errno)
+        let info = ProcessTable.resourceUsage(of: pid)
+        return (info, info == nil ? errno : 0)
     }
 
     static func taskInfo(of pid: pid_t) -> (ok: Bool, errorNumber: Int32) {
