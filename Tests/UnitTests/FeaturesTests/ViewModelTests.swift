@@ -37,18 +37,19 @@ let sampleInfo = SystemInfo(
 @MainActor
 struct OverviewViewModelTests {
     @Test func startsIdleWithUnavailablePlaceholders() {
-        let model = OverviewViewModel(systemInfoRepository: StubSystemInfoRepository(result: .success(sampleInfo)))
+        let model = OverviewViewModel(systemInfoRepository: StubSystemInfoRepository(result: .success(sampleInfo)), batteryMonitor: PreviewBatteryMonitor())
         #expect(model.systemInfo == .idle)
         #expect(!model.batteryCharge.isAvailable)
         #expect(!model.estimatedRuntimeMinutes.isAvailable)
         #expect(!model.storageAvailableBytes.isAvailable)
         #expect(!model.reclaimableBytes.isAvailable)
-        #expect(model.batteryCharge.provenance == .unavailable(.notYetImplemented))
+        #expect(model.batteryCharge.provenance == .unavailable(.notYetSampled))
+        #expect(model.storageAvailableBytes.provenance == .unavailable(.notYetImplemented))
     }
 
     @Test func loadsSystemInfo() async {
         let repo = StubSystemInfoRepository(result: .success(sampleInfo))
-        let model = OverviewViewModel(systemInfoRepository: repo)
+        let model = OverviewViewModel(systemInfoRepository: repo, batteryMonitor: PreviewBatteryMonitor())
         await model.load()
         #expect(model.systemInfo == .loaded(sampleInfo))
         #expect(repo.callCount == 1)
@@ -56,17 +57,18 @@ struct OverviewViewModelTests {
 
     @Test func mapsFailureToAppError() async {
         let repo = StubSystemInfoRepository(result: .failure(POSIXError(.EACCES)))
-        let model = OverviewViewModel(systemInfoRepository: repo)
+        let model = OverviewViewModel(systemInfoRepository: repo, batteryMonitor: PreviewBatteryMonitor())
         await model.load()
         #expect(model.systemInfo.error?.kind == .permissionDenied)
         #expect(model.systemInfo.error?.userMessage == "Couldn't read information about this Mac.")
     }
 
     @Test func listsUpcomingFeaturesInPhaseOrder() {
-        let model = OverviewViewModel(systemInfoRepository: StubSystemInfoRepository(result: .success(sampleInfo)))
+        let model = OverviewViewModel(systemInfoRepository: StubSystemInfoRepository(result: .success(sampleInfo)), batteryMonitor: PreviewBatteryMonitor())
         let phases = model.upcomingFeatures.map(\.phase)
         #expect(phases == phases.sorted())
-        #expect(phases.count == 5)
+        #expect(phases.count == 4)
+        #expect(!model.upcomingFeatures.contains { $0.title == "Battery" })
     }
 }
 
@@ -74,12 +76,12 @@ struct OverviewViewModelTests {
 @MainActor
 struct SettingsViewModelTests {
     @Test func diagnosticsAreNilBeforeLoading() {
-        let model = SettingsViewModel(systemInfoRepository: StubSystemInfoRepository(result: .success(sampleInfo)))
+        let model = SettingsViewModel(systemInfoRepository: StubSystemInfoRepository(result: .success(sampleInfo)), batteryMonitor: PreviewBatteryMonitor())
         #expect(model.diagnosticsText == nil)
     }
 
     @Test func diagnosticsContainSystemFactsOnly() async throws {
-        let model = SettingsViewModel(systemInfoRepository: StubSystemInfoRepository(result: .success(sampleInfo)))
+        let model = SettingsViewModel(systemInfoRepository: StubSystemInfoRepository(result: .success(sampleInfo)), batteryMonitor: PreviewBatteryMonitor())
         await model.load()
         let text = try #require(model.diagnosticsText)
         #expect(text.contains("MacPulse 0.1.0 (7)"))
@@ -92,7 +94,7 @@ struct SettingsViewModelTests {
 
     @Test func failureLeavesNoDiagnostics() async {
         let repo = StubSystemInfoRepository(result: .failure(CocoaError(.fileReadUnknown)))
-        let model = SettingsViewModel(systemInfoRepository: repo)
+        let model = SettingsViewModel(systemInfoRepository: repo, batteryMonitor: PreviewBatteryMonitor())
         await model.load()
         #expect(model.systemInfo.error != nil)
         #expect(model.diagnosticsText == nil)

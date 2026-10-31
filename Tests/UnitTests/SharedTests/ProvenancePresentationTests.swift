@@ -25,6 +25,7 @@ struct ProvenancePresentationTests {
         .notYetSampled,
         .notYetImplemented,
         .sourceError("code 5"),
+        .notApplicable("Not charging."),
     ])
     func everyUnavailabilityReasonIsExplained(reason: UnavailabilityReason) {
         let provenance = MetricProvenance.unavailable(reason)
