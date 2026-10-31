@@ -71,6 +71,7 @@ public struct BatteryView: View {
                 Card("App energy use", systemImage: "list.bullet.rectangle") {
                     Text("Coming soon: see which apps use the most CPU and memory while you're on battery.")
                         .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("battery.appEnergy.comingSoon")
                 }
             }
             .padding(Spacing.large)
@@ -187,15 +188,23 @@ public struct BatteryView: View {
                         Text("Charge")
                     } icon: {
                         RoundedRectangle(cornerRadius: 1).fill(Color.accentColor).frame(width: 14, height: 3)
+                            .accessibilityHidden(true)
                     }
+                    .accessibilityIdentifier("battery.legend.charge")
                     Label {
                         Text("On power")
                     } icon: {
-                        RoundedRectangle(cornerRadius: 2).fill(Color.green.opacity(0.25)).frame(width: 14, height: 10)
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color.green.opacity(0.3))
+                            .overlay(RoundedRectangle(cornerRadius: 2).strokeBorder(Color.green, lineWidth: 1))
+                            .frame(width: 14, height: 10)
+                            .accessibilityHidden(true)
                     }
+                    .accessibilityIdentifier("battery.legend.onPower")
                     Spacer()
                     Text("Gaps mean MacPulse wasn't running or the Mac was asleep.")
                         .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("battery.legend.gaps")
                 }
                 .font(.caption)
             }
@@ -276,6 +285,7 @@ public struct BatteryView: View {
             if viewModel.recentSessions.isEmpty {
                 Text("No charging sessions in this range.")
                     .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("battery.sessions.empty")
             } else {
                 ForEach(viewModel.recentSessions.prefix(8)) { session in
                     ChargingSessionRow(session: session)
@@ -289,6 +299,11 @@ private struct ChargingSessionRow: View {
     let session: ChargingSession
 
     var body: some View {
+        row
+            .accessibilityIdentifier("battery.session")
+    }
+
+    private var row: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(session.start.formatted(date: .abbreviated, time: .shortened))
