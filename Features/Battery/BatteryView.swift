@@ -117,14 +117,14 @@ public struct BatteryView: View {
         Card("Power", systemImage: "bolt.fill") {
             if let reading = viewModel.status?.reading {
                 MetricValueView("Charging power", metric: reading.chargingPowerWatts) {
-                    NumberFormatting.measurement($0, unit: "W")
+                    NumberFormatting.watts($0)
                 }
                 MetricValueView("Power adapter", metric: reading.adapterWatts) { "\($0) W" }
                 MetricValueView("Battery temperature", metric: reading.temperatureCelsius) {
-                    NumberFormatting.measurement($0, unit: "°C")
+                    NumberFormatting.temperature(celsius: $0)
                 }
                 MetricValueView("Voltage", metric: reading.voltageVolts) {
-                    NumberFormatting.measurement($0, unit: "V", fractionDigits: 2)
+                    NumberFormatting.volts($0)
                 }
             } else {
                 ProgressView().controlSize(.small)

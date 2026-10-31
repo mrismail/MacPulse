@@ -35,15 +35,31 @@ struct ByteFormattingTests {
 
 @Suite("DurationFormatting")
 struct DurationFormattingTests {
-    @Test(arguments: [
-        (-5, "0 min"),
-        (0, "0 min"),
-        (45, "45 min"),
-        (60, "1 h"),
-        (205, "3 h 25 min"),
-        (600, "10 h"),
-    ])
-    func formatsMinutes(minutes: Int, expected: String) {
-        #expect(DurationFormatting.string(fromMinutes: minutes) == expected)
+    private let enUS = Locale(identifier: "en_US")
+
+    @Test func formatsHoursAndMinutes() {
+        let text = DurationFormatting.string(fromMinutes: 205, locale: enUS)
+        #expect(text.contains("3"))
+        #expect(text.contains("25"))
+        #expect(text.contains("hr"))
+        #expect(text.contains("min"))
+    }
+
+    @Test func wholeHoursOmitZeroMinutes() {
+        let text = DurationFormatting.string(fromMinutes: 120, locale: enUS)
+        #expect(text.contains("2"))
+        #expect(!text.contains("min"))
+    }
+
+    @Test func negativeIsTreatedAsZero() {
+        #expect(
+            DurationFormatting.string(fromMinutes: -5, locale: enUS)
+                == DurationFormatting.string(fromMinutes: 0, locale: enUS)
+        )
+    }
+
+    @Test func usesLocaleDigits() {
+        let text = DurationFormatting.string(fromMinutes: 45, locale: Locale(identifier: "ar_EG"))
+        #expect(text.contains("٤٥"))
     }
 }

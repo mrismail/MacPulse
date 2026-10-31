@@ -6,6 +6,7 @@ import PackageDescription
 
 let package = Package(
     name: "MacPulse",
+    defaultLocalization: "en",
     platforms: [.macOS(.v14)],
     products: [
         .library(name: "MacPulseAppCore", targets: ["MacPulseAppCore"]),

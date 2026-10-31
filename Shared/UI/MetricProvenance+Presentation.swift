@@ -5,6 +5,15 @@ public enum ProvenanceKind: Sendable, Equatable {
     case measured
     case estimated
     case unavailable
+
+    /// Shape carries the meaning, so the badge never relies on color alone.
+    public var symbolName: String {
+        switch self {
+        case .measured: "checkmark.seal.fill"
+        case .estimated: "function"
+        case .unavailable: "minus.circle"
+        }
+    }
 }
 
 extension MetricProvenance {

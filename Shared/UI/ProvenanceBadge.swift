@@ -1,7 +1,10 @@
 import MacPulseDomain
 import SwiftUI
 
-/// Small capsule stating whether a value is measured, estimated or unavailable.
+/// States whether a value is measured, estimated or unavailable.
+///
+/// Meaning is carried by the glyph and the text (primary/secondary label colors for
+/// contrast); color only reinforces it.
 public struct ProvenanceBadge: View {
     private let provenance: MetricProvenance
 
@@ -10,16 +13,20 @@ public struct ProvenanceBadge: View {
     }
 
     public var body: some View {
-        let color = Palette.provenance(provenance.kind)
-        Text(provenance.badgeTitle)
-            .font(.caption2.weight(.semibold))
-            .padding(.horizontal, Spacing.small - 2)
-            .padding(.vertical, 2)
-            .foregroundStyle(color)
-            .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: Radius.badge))
-            .help(provenance.explanation)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(provenance.badgeTitle)
-            .accessibilityHint(provenance.explanation)
+        let kind = provenance.kind
+        Label {
+            Text(provenance.badgeTitle)
+                .foregroundStyle(kind == .unavailable ? .secondary : .primary)
+        } icon: {
+            Image(systemName: kind.symbolName)
+                .foregroundStyle(Palette.provenance(kind))
+        }
+        .font(.caption2.weight(.medium))
+        .labelStyle(.titleAndIcon)
+        .padding(.horizontal, Spacing.small - 2)
+        .padding(.vertical, 2)
+        .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: Radius.badge))
+        .help(provenance.explanation)
+        .accessibilityHidden(true)  // MetricValueView reads provenance as part of the value
     }
 }
