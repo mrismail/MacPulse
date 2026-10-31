@@ -17,6 +17,8 @@ public struct SettingsView: View {
                 Label("MacPulse works entirely on this Mac.", systemImage: "lock.shield")
                 Text("No account is required. File names, file contents and usage data are never uploaded.")
                     .foregroundStyle(.secondary)
+                Text("To find apps that drain your battery, MacPulse reads the list of your running apps and how much CPU, memory and energy each uses — the same information Activity Monitor shows. It never reads what's inside your apps or documents, and it can't see other users' or system processes.")
+                    .foregroundStyle(.secondary)
             }
 
             Section("Battery history") {

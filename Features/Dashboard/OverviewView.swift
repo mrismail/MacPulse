@@ -56,7 +56,9 @@ public struct OverviewView: View {
 
     private var recommendationsCard: some View {
         Card("Recommended", systemImage: "lightbulb") {
-            if viewModel.recommendations.isEmpty {
+            if viewModel.isWaitingForFirstUpdate {
+                ProgressView("Checking your Mac…").controlSize(.small)
+            } else if viewModel.recommendations.isEmpty {
                 Label("Nothing needs your attention right now.", systemImage: "checkmark.circle")
                     .foregroundStyle(.secondary)
             } else {
@@ -100,9 +102,15 @@ public struct OverviewView: View {
 
     private var energyCard: some View {
         Card("Energy", systemImage: "bolt.horizontal.circle") {
-            if viewModel.topApps.isEmpty {
-                Text("Measuring app activity…").foregroundStyle(.secondary)
+            if viewModel.energyStatus == nil {
+                ProgressView("Measuring app activity…").controlSize(.small)
+            } else if viewModel.topApps.isEmpty {
+                Label("No app is using noticeable CPU right now.", systemImage: "moon.zzz")
+                    .foregroundStyle(.secondary)
             } else {
+                Text(EnergyPresentation.topAppsTitle(energyDataAvailable: viewModel.energyStatus?.energyDataAvailable ?? false))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 ForEach(viewModel.topApps) { app in
                     HStack {
                         Text(app.displayName).lineLimit(1)
