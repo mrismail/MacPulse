@@ -83,7 +83,7 @@ jobs:
             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES build 2>&1 | tee release.log | tail -5 \
             || { grep -E "error:" release.log | sort -u | head -20 | while IFS= read -r l; do echo "::error::${l:0:900}"; done; exit 1; }
 
-      - name: Verify Release entitlements are exactly the sandbox
+      - name: Verify Release signing (no entitlements, Hardened Runtime)
         run: |
           codesign -d --entitlements - --xml build-release/Build/Products/Release/MacPulse.app > entitlements.plist
           # Checked on Release, the shipping artifact: Xcode adds debugging/preview
@@ -94,13 +94,15 @@ jobs:
               data = f.read()
           entitlements = plistlib.loads(data) if data.strip() else {}
           print(f"::notice::Release entitlements: {entitlements}")
-          allowed = {"com.apple.security.app-sandbox": True}
+          allowed = {}  # ADR-010: no entitlements; any new one needs an ADR
           if entitlements != allowed:
               print(f"::error::Expected exactly {allowed}, got {entitlements}")
               sys.exit(1)
           PY
+          codesign -dv --verbose=4 build-release/Build/Products/Release/MacPulse.app 2>&1 | tee codesign.txt
+          grep -Eq "flags=.*runtime" codesign.txt || { echo "::error::Hardened Runtime is not enabled"; exit 1; }
 
-      - name: Sandbox process-access probe (Phase 3 spike, ADR-009)
+      - name: Process-access probe (ADR-009/010)
         run: |
           for config in Release Debug; do
             if [ "$config" = Release ]; then APP=build-release/Build/Products/Release/MacPulse.app; else APP=build/Build/Products/Debug/MacPulse.app; fi
