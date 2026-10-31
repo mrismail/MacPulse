@@ -128,6 +128,12 @@ public struct AppUsageRecord: Sendable, Equatable, Codable, Identifiable {
     /// How much of the observed time was on battery, seconds.
     public let onBatterySeconds: Double
     public let peakCPUPercent: Double
+    /// Memory × observed seconds, for the hourly average. `nil` in records written before
+    /// memory trends existed.
+    public let memoryByteSeconds: Double?
+    public let peakMemoryBytes: UInt64?
+    /// How long the app was running during the observed time, seconds.
+    public let activeSeconds: Double?
 
     public init(
         hourStart: Date,
@@ -137,7 +143,10 @@ public struct AppUsageRecord: Sendable, Equatable, Codable, Identifiable {
         energyJoules: Double?,
         sampledSeconds: Double,
         onBatterySeconds: Double,
-        peakCPUPercent: Double
+        peakCPUPercent: Double,
+        memoryByteSeconds: Double? = nil,
+        peakMemoryBytes: UInt64? = nil,
+        activeSeconds: Double? = nil
     ) {
         self.hourStart = hourStart
         self.appKey = appKey
@@ -147,10 +156,32 @@ public struct AppUsageRecord: Sendable, Equatable, Codable, Identifiable {
         self.sampledSeconds = sampledSeconds
         self.onBatterySeconds = onBatterySeconds
         self.peakCPUPercent = peakCPUPercent
+        self.memoryByteSeconds = memoryByteSeconds
+        self.peakMemoryBytes = peakMemoryBytes
+        self.activeSeconds = activeSeconds
     }
 
     /// Average CPU over the observed part of the hour, percent of one core.
     public var averageCPUPercent: Double {
         sampledSeconds > 0 ? cpuSeconds / sampledSeconds * 100 : 0
+    }
+
+    /// Average memory while the app was running during the hour.
+    public var averageMemoryBytes: Double? {
+        guard let memoryByteSeconds else { return nil }
+        let seconds = activeSeconds ?? sampledSeconds
+        return seconds > 0 ? memoryByteSeconds / seconds : nil
+    }
+
+    /// Records are cumulative snapshots of an hour; for each (app, hour) the last one written
+    /// is the most complete. Keeps that one, in time order.
+    public static func latestPerAppAndHour(_ records: [AppUsageRecord]) -> [AppUsageRecord] {
+        var latest: [String: AppUsageRecord] = [:]
+        var order: [String] = []
+        for record in records {
+            if latest[record.id] == nil { order.append(record.id) }
+            latest[record.id] = record
+        }
+        return order.compactMap { latest[$0] }.sorted { $0.hourStart < $1.hourStart }
     }
 }

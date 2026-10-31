@@ -32,11 +32,25 @@ public enum ProcessActivityCalculator {
     }
 
     /// System-wide busy fraction (0–1) between two tick readings.
+    ///
+    /// macOS keeps these counters as 32-bit values that wrap (after weeks of uptime), so
+    /// differences are computed modulo 2³².
     public static func systemBusyFraction(from previous: SystemCPUTicks?, to current: SystemCPUTicks?) -> Double? {
-        guard let previous, let current,
-              current.total > previous.total, current.busy >= previous.busy
-        else { return nil }
-        return Double(current.busy - previous.busy) / Double(current.total - previous.total)
+        guard let previous, let current else { return nil }
+        let busy = wrappingDelta(current.user, previous.user)
+            + wrappingDelta(current.system, previous.system)
+            + wrappingDelta(current.nice, previous.nice)
+        let idle = wrappingDelta(current.idle, previous.idle)
+        let total = busy + idle
+        guard total > 0 else { return nil }
+        return Double(busy) / Double(total)
+    }
+
+    /// Difference of two 32-bit tick counters, allowing one wrap.
+    static func wrappingDelta(_ current: UInt64, _ previous: UInt64) -> UInt64 {
+        let now = UInt32(truncatingIfNeeded: current)
+        let then = UInt32(truncatingIfNeeded: previous)
+        return UInt64(now &- then)
     }
 
     static func rate(_ now: UInt64?, _ then: UInt64?, _ interval: TimeInterval) -> Double? {

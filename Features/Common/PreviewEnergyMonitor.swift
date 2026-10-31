@@ -109,6 +109,8 @@ public actor PreviewEnergyMonitor: EnergyMonitoring {
 
     public func clearHistory() {}
 
+    public func flush() {}
+
     public var isDetailedSampling: Bool { detailed }
 }
 #endif

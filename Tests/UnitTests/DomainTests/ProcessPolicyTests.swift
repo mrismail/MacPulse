@@ -43,8 +43,15 @@ struct ProcessActivityCalculatorTests {
         let before = SystemCPUTicks(user: 100, system: 100, idle: 800, nice: 0)
         let after = SystemCPUTicks(user: 150, system: 150, idle: 900, nice: 0)
         #expect(ProcessActivityCalculator.systemBusyFraction(from: before, to: after) == 0.5)
-        #expect(ProcessActivityCalculator.systemBusyFraction(from: after, to: before) == nil)
         #expect(ProcessActivityCalculator.systemBusyFraction(from: nil, to: after) == nil)
+        #expect(ProcessActivityCalculator.systemBusyFraction(from: before, to: before) == nil)
+    }
+
+    @Test func systemTickCountersWrapAt32Bits() {
+        // user counter wraps from near 2^32 to a small value.
+        let before = SystemCPUTicks(user: UInt64(UInt32.max) - 99, system: 0, idle: 1_000, nice: 0)
+        let after = SystemCPUTicks(user: 100, system: 0, idle: 1_200, nice: 0)  // +200 busy, +200 idle
+        #expect(ProcessActivityCalculator.systemBusyFraction(from: before, to: after) == 0.5)
     }
 }
 
@@ -66,7 +73,7 @@ struct AppUsageAggregatorTests {
             (F.sample(pid: 2, name: "Chrome Helper", bundle: chrome, cpuSeconds: 0), F.sample(pid: 2, name: "Chrome Helper", bundle: chrome, cpuSeconds: 3)),
             (F.sample(pid: 3, name: "mds_stores", cpuSeconds: 0), F.sample(pid: 3, name: "mds_stores", cpuSeconds: 1)),
         ])
-        let apps = AppUsageAggregator.aggregate(list, displayNames: [chrome: "Google Chrome"])
+        let apps = AppUsageAggregator.aggregate(list, displayNames: [chrome: "Google Chrome"], basis: .cpu)
         #expect(apps.count == 2)
         let first = try #require(apps.first)
         #expect(first.displayName == "Google Chrome")
@@ -82,13 +89,13 @@ struct AppUsageAggregatorTests {
         #expect(AppUsageAggregator.outermostAppBundle(in: "/usr/sbin/cfprefsd") == nil)
     }
 
-    @Test func impactUsesCPUWhenNoEnergyData() throws {
+    @Test func impactUsesCPUWhenNoEnergyAccounting() throws {
         let list = activities([
             (F.sample(pid: 1, name: "busy", cpuSeconds: 0), F.sample(pid: 1, name: "busy", cpuSeconds: 6)),   // 60%
             (F.sample(pid: 2, name: "mid", cpuSeconds: 0), F.sample(pid: 2, name: "mid", cpuSeconds: 2)),     // 20%
             (F.sample(pid: 3, name: "idle", cpuSeconds: 0), F.sample(pid: 3, name: "idle", cpuSeconds: 0.1)), // 1%
         ])
-        let apps = AppUsageAggregator.aggregate(list, displayNames: [:])
+        let apps = AppUsageAggregator.aggregate(list, displayNames: [:], basis: .cpu)
         #expect(apps.map(\.displayName) == ["busy", "mid", "idle"])
         #expect(apps.map { $0.impact.value } == [.high, .moderate, .low])
         #expect(apps.allSatisfy { !$0.impact.isMeasured })
@@ -106,7 +113,7 @@ struct AppUsageAggregatorTests {
             (F.sample(pid: 1, name: "gpu", cpuSeconds: 0, energyJoules: 0), F.sample(pid: 1, name: "gpu", cpuSeconds: 0.5, energyJoules: 30)),  // 3 W
             (F.sample(pid: 2, name: "cpu", cpuSeconds: 0, energyJoules: 0), F.sample(pid: 2, name: "cpu", cpuSeconds: 3, energyJoules: 2)),     // 200 mW
         ])
-        let apps = AppUsageAggregator.aggregate(list, displayNames: [:])
+        let apps = AppUsageAggregator.aggregate(list, displayNames: [:], basis: .energy)
         #expect(apps.first?.displayName == "gpu")
         #expect(apps.first?.impact.value == .high)
         #expect(apps.last?.impact.value == .low)
@@ -118,26 +125,45 @@ struct AppUsageAggregatorTests {
         #expect(abs(apps.map(\.shareOfActivity).reduce(0, +) - 1) < 0.0001)
     }
 
+    @Test func idleIntervalOnEnergyMacStaysEnergyBased() throws {
+        // Energy accounting exists but this interval used none: the label must not flip to CPU.
+        let list = activities([
+            (F.sample(pid: 1, name: "a", cpuSeconds: 0, energyJoules: 5), F.sample(pid: 1, name: "a", cpuSeconds: 0.01, energyJoules: 5)),
+        ])
+        let app = try #require(AppUsageAggregator.aggregate(list, displayNames: [:], basis: .energy).first)
+        guard case .estimated(let basis) = app.impact.provenance else {
+            Issue.record("Impact must be an estimate")
+            return
+        }
+        #expect(basis == AppUsageAggregator.energyBasis)
+        #expect(app.energyMilliwatts == 0)
+        #expect(app.shareOfActivity == 0)
+    }
+
+    @Test func cpuBasisSaysItIsNotABatteryMeasurement() {
+        #expect(AppUsageAggregator.cpuBasis.contains("not measured battery use"))
+    }
+
     @Test func ownProcessIsExcluded() {
         let list = activities([
             (F.sample(pid: 999, name: "MacPulse", cpuSeconds: 0), F.sample(pid: 999, name: "MacPulse", cpuSeconds: 1)),
             (F.sample(pid: 1, name: "other", cpuSeconds: 0), F.sample(pid: 1, name: "other", cpuSeconds: 1)),
         ])
-        let apps = AppUsageAggregator.aggregate(list, displayNames: [:], excludingPID: 999)
+        let apps = AppUsageAggregator.aggregate(list, displayNames: [:], excludingPID: 999, basis: .cpu)
         #expect(apps.map(\.displayName) == ["other"])
     }
 
     @Test func bundleNameFallsBackToFolderName() {
         let bundle = "/Applications/Some Tool.app"
         let list = activities([(F.sample(pid: 1, name: "x", bundle: bundle, cpuSeconds: 0), F.sample(pid: 1, name: "x", bundle: bundle, cpuSeconds: 1))])
-        #expect(AppUsageAggregator.aggregate(list, displayNames: [:]).first?.displayName == "Some Tool")
+        #expect(AppUsageAggregator.aggregate(list, displayNames: [:], basis: .cpu).first?.displayName == "Some Tool")
     }
 
     @Test func averageWeightsByDurationAndCountsAbsenceAsIdle() throws {
         let busy = F.usage("a", cpu: 100)
         let first = UsageInterval(start: F.start, end: F.start.addingTimeInterval(60), onBattery: true, apps: [busy])
         let second = UsageInterval(start: F.start.addingTimeInterval(60), end: F.start.addingTimeInterval(180), onBattery: true, apps: [])
-        let averaged = AppUsageAggregator.average([first, second])
+        let averaged = AppUsageAggregator.average([first, second], basis: .cpu)
         let app = try #require(averaged.first)
         #expect(abs(app.cpuPercent - 100.0 / 3) < 0.0001)  // 60 s of 180 s
     }
@@ -219,6 +245,57 @@ struct UsageHourAccumulatorTests {
         #expect(abs(record.onBatterySeconds - 59 * 60) < 0.001)
         #expect(record.peakCPUPercent == 50)
         #expect(accumulator.pending().first?.hourStart == F.start.addingTimeInterval(3_600))
+    }
+
+    @Test func lateAppsAreAveragedOverTheWholeObservedHour() throws {
+        var accumulator = UsageHourAccumulator(timeZone: TimeZone(identifier: "UTC")!)
+        let early = UsageInterval(start: F.start, end: F.start.addingTimeInterval(1_800), onBattery: true, apps: [F.usage("a", cpu: 10)])
+        let late = UsageInterval(start: F.start.addingTimeInterval(1_800), end: F.start.addingTimeInterval(3_540), onBattery: true, apps: [F.usage("a", cpu: 10), F.usage("b", cpu: 50)])
+        _ = accumulator.add(early)
+        _ = accumulator.add(late)
+        let b = try #require(accumulator.pending().first { $0.appKey == "b" })
+        #expect(b.sampledSeconds == 3_540)  // the hour's observed time, not just b's
+        #expect(abs(b.averageCPUPercent - 50 * 1_740 / 3_540) < 0.001)
+        #expect(b.activeSeconds == 1_740)
+    }
+
+    @Test func seedingContinuesTheHourAfterARelaunch() throws {
+        var first = UsageHourAccumulator(timeZone: TimeZone(identifier: "UTC")!)
+        _ = first.add(UsageInterval(start: F.start, end: F.start.addingTimeInterval(600), onBattery: false, apps: [F.usage("a", cpu: 50)]))
+        let saved = first.pending()
+
+        var relaunched = UsageHourAccumulator(timeZone: TimeZone(identifier: "UTC")!)
+        relaunched.seed(with: saved, at: F.start.addingTimeInterval(900))
+        _ = relaunched.add(UsageInterval(start: F.start.addingTimeInterval(900), end: F.start.addingTimeInterval(1_500), onBattery: false, apps: [F.usage("a", cpu: 50)]))
+        let record = try #require(relaunched.pending().first)
+        #expect(record.cpuSeconds == 600)  // 300 before + 300 after the relaunch
+        #expect(record.sampledSeconds == 1_200)
+
+        // Readers keep the latest cumulative record per (app, hour).
+        let merged = AppUsageRecord.latestPerAppAndHour(saved + relaunched.pending())
+        #expect(merged.count == 1)
+        #expect(merged.first?.cpuSeconds == 600)
+    }
+
+    @Test func memoryIsTrackedPerHour() throws {
+        var accumulator = UsageHourAccumulator(timeZone: TimeZone(identifier: "UTC")!)
+        let app = AppUsage(
+            id: "a", displayName: "a", appBundlePath: nil, processCount: 1, cpuPercent: 5,
+            memoryBytes: 1_000, threadCount: nil, energyMilliwatts: nil, diskBytesPerSecond: nil,
+            wakeupsPerSecond: nil, impact: .estimated(.low, basis: "t"), shareOfActivity: 1
+        )
+        _ = accumulator.add(UsageInterval(start: F.start, end: F.start.addingTimeInterval(60), onBattery: nil, apps: [app]))
+        let record = try #require(accumulator.pending().first)
+        #expect(record.averageMemoryBytes == 1_000)
+        #expect(record.peakMemoryBytes == 1_000)
+    }
+
+    @Test func oldRecordsWithoutMemoryStillDecode() throws {
+        let json = #"{"appKey":"a","cpuSeconds":1,"displayName":"a","hourStart":1793448000,"onBatterySeconds":0,"peakCPUPercent":1,"sampledSeconds":60}"#
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .secondsSince1970
+        let record = try decoder.decode(AppUsageRecord.self, from: Data(json.utf8))
+        #expect(record.averageMemoryBytes == nil)
     }
 
     @Test func idleAppsDoNotProduceRecords() {

@@ -46,8 +46,8 @@ public struct DrainAlert: Identifiable, Sendable, Equatable {
 
     /// Explains why the alert fired, in plain language. CPU is never presented as battery %.
     public var explanation: String {
-        let percent = Int(averageCPUPercent.rounded())
-        return "\(displayName) has averaged \(percent)% CPU for the last \(minutes) minutes. Sustained CPU use is a common cause of faster battery drain."
+        let percent = (averageCPUPercent / 100).formatted(.percent.precision(.fractionLength(0)))
+        return String(localized: "\(displayName) has averaged \(percent) CPU for the last \(minutes) minutes. Sustained CPU use is a common cause of faster battery drain.")
     }
 }
 
