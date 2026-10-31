@@ -56,3 +56,23 @@ targets:
         COMBINE_HIDPI_IMAGES: YES
     scheme:
       gatherCoverageData: false
+      testTargets:
+        - MacPulseUITests
+
+  # UI automation (XCUITest). Launches the app with -MacPulseUseFakeServices so
+  # results do not depend on the test machine's battery or disks.
+  MacPulseUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - path: Tests/UIAutomationTests
+    dependencies:
+      - target: MacPulse
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mrismail.MacPulseUITests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: MacPulse
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        DEVELOPMENT_TEAM: ""
