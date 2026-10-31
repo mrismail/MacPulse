@@ -96,6 +96,27 @@ final class MacPulseUITests: XCTestCase {
     }
 
     @MainActor
+    func testEnergyScreenRanksAppsWithEstimatedImpact() {
+        let app = launchApp()
+        open("energy", in: app)
+        XCTAssertTrue(element("energy.table", in: app).waitForExistence(timeout: 10))
+        XCTAssertTrue(element("energy.row.Web Browser", in: app).waitForExistence(timeout: 10))
+        XCTAssertTrue(element("energy.alert", in: app).exists, "The sustained-CPU alert should be shown")
+        XCTAssertTrue(element("energy.ownCPU", in: app).exists, "MacPulse must show its own overhead")
+        XCTAssertTrue(element("energy.alerts.enabled", in: app).exists)
+    }
+
+    @MainActor
+    func testBatteryScreenLinksToEnergy() {
+        let app = launchApp()
+        open("battery", in: app)
+        let link = element("battery.openEnergy", in: app)
+        XCTAssertTrue(link.waitForExistence(timeout: 10))
+        link.click()
+        XCTAssertTrue(element("energy.table", in: app).waitForExistence(timeout: 10))
+    }
+
+    @MainActor
     func testClearHistoryAsksForConfirmation() {
         let app = launchApp()
         open("settings", in: app)
