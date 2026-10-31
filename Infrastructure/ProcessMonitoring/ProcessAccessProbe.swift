@@ -28,6 +28,8 @@ public struct ProcessAccessReport: Sendable, Codable, Equatable {
     public var listedProcessCount = 0
     /// Processes visible via `sysctl(KERN_PROC_ALL)`.
     public var sysctlProcessCount = 0
+    /// Of the "any process" sample, how many belong to the current user.
+    public var anyProcessSameUserCount = 0
     /// System-wide CPU ticks via `host_statistics(HOST_CPU_LOAD_INFO)`.
     public var hostCPULoadReadable = false
     /// Regular apps listed by `NSWorkspace.runningApplications`.
@@ -81,8 +83,12 @@ public enum ProcessAccessProbe {
             report.userAppBSDInfo.record(success: bsd.ok, errorNumber: bsd.errorNumber)
         }
 
-        // Any process.
-        for pid in pids.filter({ $0 > 0 && $0 != ownPID }).prefix(sampleLimit) {
+        // Any process, from sysctl (proc_listallpids returns nothing in the sandbox).
+        let processes = sysctlProcesses()
+        let uid = getuid()
+        let sample = processes.filter { $0.pid > 0 && $0.pid != ownPID }.prefix(sampleLimit)
+        report.anyProcessSameUserCount = sample.filter { $0.uid == uid }.count
+        for pid in sample.map(\.pid) {
             let usage = rusage(of: pid)
             report.anyProcessRusage.record(success: usage.info != nil, errorNumber: usage.errorNumber)
             let task = taskInfo(of: pid)
@@ -114,10 +120,24 @@ public enum ProcessAccessProbe {
     }
 
     static func sysctlProcessCount() -> Int {
+        sysctlProcesses().count
+    }
+
+    /// (pid, uid) for every process, via `sysctl(KERN_PROC_ALL)`.
+    static func sysctlProcesses() -> [(pid: pid_t, uid: uid_t)] {
         var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_ALL]
         var size = 0
-        guard sysctl(&mib, u_int(mib.count), nil, &size, nil, 0) == 0 else { return 0 }
-        return size / MemoryLayout<kinfo_proc>.stride
+        guard sysctl(&mib, u_int(mib.count), nil, &size, nil, 0) == 0, size > 0 else { return [] }
+        // The table can grow between the two calls; leave headroom.
+        size += size / 8
+        var entries = [kinfo_proc](repeating: kinfo_proc(), count: size / MemoryLayout<kinfo_proc>.stride)
+        let ok = entries.withUnsafeMutableBufferPointer { buffer in
+            sysctl(&mib, u_int(mib.count), buffer.baseAddress, &size, nil, 0) == 0
+        }
+        guard ok else { return [] }
+        return entries.prefix(size / MemoryLayout<kinfo_proc>.stride).map {
+            ($0.kp_proc.p_pid, $0.kp_eproc.e_ucred.cr_uid)
+        }
     }
 
     static func hostCPULoadReadable() -> Bool {
