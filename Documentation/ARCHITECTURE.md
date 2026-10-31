@@ -89,11 +89,12 @@ a tooltip explanation and VoiceOver hint.
 |---|---|---|
 | Unit | `Tests/UnitTests/*` | `swift test` (Swift Testing) |
 | Integration | `Tests/IntegrationTests/*` | `swift test`, against the real machine |
-| UI automation | `Tests/UIAutomationTests/` | Xcode ⌘U / `xcodebuild test` (XCUITest, fake services) |
+| UI automation | `Tests/UIAutomationTests/` | Xcode ⌘U / `xcodebuild test` (XCUITest, fake services), also in CI |
 
-CI (`.github/workflows/ci.yml`, macOS runner) builds the package with warnings as
-errors, runs all tests, generates the Xcode project, builds the app, checks the sandbox
-entitlement and launches the app for 10 seconds.
+CI (`.github/workflows/ci.yml`, macOS runner, on PRs and `main`) builds the package with
+warnings as errors, runs unit + integration tests, generates the Xcode project, builds
+the app and runs the UI tests, checks the entitlements are exactly the sandbox, launches
+the app for 10 seconds and builds the Release configuration.
 
 ## Battery monitoring (Phase 2)
 
@@ -105,11 +106,16 @@ IOKitBatteryProbe ──raw──▶ BatteryReadingBuilder ──BatteryReading�
                                                                        └─▶ AsyncStream<BatteryStatus> ──▶ Overview, Battery screen
 ```
 
-- `BatteryMonitor` is created once in `AppDependencies.live()` and started by `RootView`;
-  it samples whichever screen is visible, so history keeps growing while the app runs.
+- `AppModel` (App/Core) is created once by `MacPulseApp`. It owns the coordinator and
+  every screen's view model, shared by the main window, the Settings window (⌘,) and
+  menu commands, and starts `BatteryMonitor`.
 - Sampling uses `Task.sleep(for:tolerance:)` with 10 s tolerance so macOS can coalesce
-  wake-ups; power-source notifications are debounced to one sample per 5 s.
-- `ChargingSessionDetector` and `BatteryHistoryChartModel` (gap-aware, ≤ 400 points)
-  prepare history for the chart.
+  wake-ups. Samples are serialized; power events inside 5 s get one trailing sample
+  (ADR-006).
+- The estimator window is in memory; the Battery screen loads history on range change
+  only and appends live samples. `ChargingSessionDetector` and
+  `BatteryHistoryChartModel` (gap-aware, ≤ 400 points) run off the main actor.
+- `BatteryStatusPresentation` is the single source of state wording and the
+  "Estimated runtime" definition; `BatteryRecommendations` drives the Overview.
 - History is only recorded while MacPulse runs. A background agent / menu-bar
   companion is planned for Phase 7.
