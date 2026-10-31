@@ -9,12 +9,14 @@ import Foundation
 /// its own CPU use in every status so the overhead is visible (Phase 3 acceptance).
 public actor ProcessMonitor: EnergyMonitoring {
     public struct Configuration: Sendable {
+        public static let defaultHistoryRetentionDays = 7
+
         public var backgroundInterval: Duration = .seconds(60)
         public var detailedInterval: Duration = .seconds(10)
         public var recentWindow: TimeInterval = 10 * 60
         /// How much interval history to keep in memory (also bounds alert windows).
         public var inMemoryWindow: TimeInterval = 60 * 60
-        public var historyRetention: TimeInterval = 7 * 24 * 60 * 60
+        public var historyRetention: TimeInterval = TimeInterval(defaultHistoryRetentionDays) * 24 * 60 * 60
         /// Don't notify about the same app again within this time.
         public var notificationCooldown: TimeInterval = 30 * 60
         public var thresholds = AppUsageAggregator.Thresholds()
