@@ -1,5 +1,6 @@
 import MacPulseDomain
 
+#if DEBUG
 /// Fixed system information for SwiftUI previews and UI tests.
 public struct PreviewSystemInfoRepository: SystemInfoRepository {
     public init() {}
@@ -16,3 +17,4 @@ public struct PreviewSystemInfoRepository: SystemInfoRepository {
         )
     }
 }
+#endif

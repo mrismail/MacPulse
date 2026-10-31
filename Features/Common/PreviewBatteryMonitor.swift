@@ -1,6 +1,7 @@
 import Foundation
 import MacPulseDomain
 
+#if DEBUG
 /// Deterministic battery data for SwiftUI previews and UI tests: a MacBook on battery
 /// at 72% with 24 hours of history that includes one overnight charging session.
 public struct PreviewBatteryMonitor: BatteryMonitoring {
@@ -84,3 +85,4 @@ public struct PreviewBatteryMonitor: BatteryMonitoring {
 
     public func clearHistory() async throws {}
 }
+#endif
