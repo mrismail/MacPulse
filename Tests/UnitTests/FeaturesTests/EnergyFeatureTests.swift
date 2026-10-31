@@ -116,3 +116,26 @@ struct OverviewEnergyTests {
         #expect(model.topApps.count == 3)
     }
 }
+
+@Suite("Settings usage history")
+@MainActor
+struct SettingsUsageHistoryTests {
+    @Test func clearsUsageHistoryThroughTheMonitor() async {
+        let model = SettingsViewModel(
+            systemInfoRepository: StubSystemInfoRepository(result: .success(sampleInfo)),
+            batteryMonitor: PreviewBatteryMonitor(referenceDate: referenceDate),
+            energyMonitor: StubEnergyMonitor(status: nil)
+        )
+        #expect(model.canClearUsageHistory)
+        await model.clearUsageHistory()
+        #expect(model.clearUsageHistoryState == .cleared)
+    }
+
+    @Test func hiddenWithoutAnEnergyMonitor() {
+        let model = SettingsViewModel(
+            systemInfoRepository: StubSystemInfoRepository(result: .success(sampleInfo)),
+            batteryMonitor: PreviewBatteryMonitor(referenceDate: referenceDate)
+        )
+        #expect(!model.canClearUsageHistory)
+    }
+}
