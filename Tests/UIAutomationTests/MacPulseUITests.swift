@@ -100,10 +100,39 @@ final class MacPulseUITests: XCTestCase {
         let app = launchApp()
         open("energy", in: app)
         XCTAssertTrue(element("energy.table", in: app).waitForExistence(timeout: 10))
-        XCTAssertTrue(element("energy.row.Web Browser", in: app).waitForExistence(timeout: 10))
+        let row = element("energy.row./Applications/Web Browser.app", in: app)
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
         XCTAssertTrue(element("energy.alert", in: app).exists, "The sustained-CPU alert should be shown")
         XCTAssertTrue(element("energy.ownCPU", in: app).exists, "MacPulse must show its own overhead")
+        XCTAssertTrue(element("energy.basisNote", in: app).exists, "The screen must say what the ranking is based on")
+        XCTAssertTrue(element("energy.cpuUnitsNote", in: app).exists)
         XCTAssertTrue(element("energy.alerts.enabled", in: app).exists)
+
+        // Selecting an app shows its detail and trend.
+        row.click()
+        XCTAssertTrue(element("energy.detail", in: app).waitForExistence(timeout: 10))
+        XCTAssertTrue(element("energy.trendChart", in: app).waitForExistence(timeout: 10))
+    }
+
+    @MainActor
+    func testOverviewLinksToEnergy() {
+        let app = launchApp()
+        let link = element("overview.openEnergy", in: app)
+        XCTAssertTrue(link.waitForExistence(timeout: 10))
+        link.click()
+        XCTAssertTrue(element("energy.table", in: app).waitForExistence(timeout: 10))
+    }
+
+    @MainActor
+    func testClearUsageHistoryAsksForConfirmation() {
+        let app = launchApp()
+        open("settings", in: app)
+        let clear = element("settings.clearUsageHistory", in: app)
+        XCTAssertTrue(clear.waitForExistence(timeout: 10))
+        clear.click()
+        let confirm = app.sheets.buttons["Clear Usage History"].firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "Clearing must ask for confirmation first")
+        confirm.click()
     }
 
     @MainActor
