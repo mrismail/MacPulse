@@ -35,7 +35,8 @@ enum ProcessFixtures {
             timestamp: start.addingTimeInterval(offset),
             processes: processes,
             unreadableProcessCount: 3,
-            systemCPU: busy.map { SystemCPUTicks(user: $0, system: 0, idle: 10_000 - $0 + UInt64(offset) * 100, nice: 0) },
+            // Idle grows 100 ticks per second; busy is cumulative and supplied by the test.
+            systemCPU: busy.map { SystemCPUTicks(user: $0, system: 0, idle: 1_000_000 + UInt64(max(0, offset)) * 100, nice: 0) },
             logicalCPUCount: 8,
             ownPID: ownPID,
             appDisplayNames: ["/Applications/Chrome.app": "Google Chrome"]
