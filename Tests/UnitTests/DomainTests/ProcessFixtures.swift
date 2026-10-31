@@ -30,9 +30,16 @@ enum ProcessFixtures {
         )
     }
 
-    static func snapshot(at offset: TimeInterval, _ processes: [ProcessSample], ownPID: Int32 = 999, busy: UInt64? = nil) -> ProcessSnapshot {
+    static func snapshot(
+        at offset: TimeInterval,
+        _ processes: [ProcessSample],
+        ownPID: Int32 = 999,
+        busy: UInt64? = nil,
+        uptime: TimeInterval? = nil
+    ) -> ProcessSnapshot {
         ProcessSnapshot(
             timestamp: start.addingTimeInterval(offset),
+            awakeUptime: uptime,
             processes: processes,
             unreadableProcessCount: 3,
             // Idle grows 100 ticks per second; busy is cumulative and supplied by the test.

@@ -35,6 +35,7 @@ actor StubEnergyMonitor: EnergyMonitoring {
         return !newSettings.sendsNotifications || allowNotifications
     }
     func clearHistory() async throws {}
+    func flush() async {}
 }
 
 @Suite("EnergyViewModel")

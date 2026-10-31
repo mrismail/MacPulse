@@ -89,9 +89,22 @@ public struct SystemCPUTicks: Sendable, Equatable {
     public var total: UInt64 { busy + idle }
 }
 
+/// System memory pressure as reported by macOS.
+public enum MemoryPressureLevel: Int, Sendable, Equatable, Codable, Comparable {
+    case normal = 1
+    case warning = 2
+    case critical = 4
+
+    public static func < (lhs: Self, rhs: Self) -> Bool { lhs.rawValue < rhs.rawValue }
+}
+
 /// Everything read in one sampling pass.
 public struct ProcessSnapshot: Sendable, Equatable {
     public let timestamp: Date
+    /// Seconds since boot that the Mac was awake (pauses during sleep). Comparing it with
+    /// the wall clock tells whether the Mac slept between two snapshots.
+    public let awakeUptime: TimeInterval?
+    public let memoryPressure: MemoryPressureLevel?
     /// The current user's processes that could be read.
     public let processes: [ProcessSample]
     /// Processes of other users (root, system daemons) that macOS does not let a normal
@@ -106,6 +119,8 @@ public struct ProcessSnapshot: Sendable, Equatable {
 
     public init(
         timestamp: Date,
+        awakeUptime: TimeInterval? = nil,
+        memoryPressure: MemoryPressureLevel? = nil,
         processes: [ProcessSample],
         unreadableProcessCount: Int = 0,
         systemCPU: SystemCPUTicks? = nil,
@@ -114,6 +129,8 @@ public struct ProcessSnapshot: Sendable, Equatable {
         appDisplayNames: [String: String] = [:]
     ) {
         self.timestamp = timestamp
+        self.awakeUptime = awakeUptime
+        self.memoryPressure = memoryPressure
         self.processes = processes
         self.unreadableProcessCount = unreadableProcessCount
         self.systemCPU = systemCPU

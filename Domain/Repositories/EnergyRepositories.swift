@@ -37,9 +37,11 @@ public struct EnergyStatus: Sendable, Equatable {
     /// Apps averaged over the recent window (default 10 minutes), ranked.
     public let recent: [AppUsage]
     public let recentWindowMinutes: Int
-    /// Whole-system CPU busy, percent of total capacity.
+    /// Whole-system CPU busy, percent of total capacity (all cores together).
     public let systemCPUPercent: Metric<Double>
-    /// `true` when macOS reported per-app energy for the latest interval.
+    public let memoryPressure: Metric<MemoryPressureLevel>
+    /// `true` once macOS has reported per-app energy on this Mac this session; impact is
+    /// then energy-based, otherwise CPU-based.
     public let energyDataAvailable: Bool
     /// Other users' processes (system daemons) that can't be read without admin rights.
     public let unreadableProcessCount: Int
@@ -48,6 +50,8 @@ public struct EnergyStatus: Sendable, Equatable {
     public let onBattery: Bool?
     public let alerts: [DrainAlert]
     public let historyIssue: AppError?
+    /// Increases when stored history is cleared, so views reload their trends.
+    public let historyVersion: Int
 
     public init(
         timestamp: Date,
@@ -56,12 +60,14 @@ public struct EnergyStatus: Sendable, Equatable {
         recent: [AppUsage],
         recentWindowMinutes: Int,
         systemCPUPercent: Metric<Double>,
+        memoryPressure: Metric<MemoryPressureLevel> = .unavailable(.notSupportedOnThisMac),
         energyDataAvailable: Bool,
         unreadableProcessCount: Int,
         ownCPUPercent: Metric<Double>,
         onBattery: Bool?,
         alerts: [DrainAlert],
-        historyIssue: AppError? = nil
+        historyIssue: AppError? = nil,
+        historyVersion: Int = 0
     ) {
         self.timestamp = timestamp
         self.intervalSeconds = intervalSeconds
@@ -69,12 +75,24 @@ public struct EnergyStatus: Sendable, Equatable {
         self.recent = recent
         self.recentWindowMinutes = recentWindowMinutes
         self.systemCPUPercent = systemCPUPercent
+        self.memoryPressure = memoryPressure
         self.energyDataAvailable = energyDataAvailable
         self.unreadableProcessCount = unreadableProcessCount
         self.ownCPUPercent = ownCPUPercent
         self.onBattery = onBattery
         self.alerts = alerts
         self.historyIssue = historyIssue
+        self.historyVersion = historyVersion
+    }
+
+    func withHistoryVersion(_ version: Int) -> EnergyStatus {
+        EnergyStatus(
+            timestamp: timestamp, intervalSeconds: intervalSeconds, current: current, recent: recent,
+            recentWindowMinutes: recentWindowMinutes, systemCPUPercent: systemCPUPercent,
+            memoryPressure: memoryPressure, energyDataAvailable: energyDataAvailable,
+            unreadableProcessCount: unreadableProcessCount, ownCPUPercent: ownCPUPercent,
+            onBattery: onBattery, alerts: alerts, historyIssue: historyIssue, historyVersion: version
+        )
     }
 }
 
@@ -93,4 +111,6 @@ public protocol EnergyMonitoring: Sendable {
     @discardableResult
     func updateAlertSettings(_ settings: DrainAlertSettings) async -> Bool
     func clearHistory() async throws
+    /// Saves anything held in memory (call when the app quits or the Mac sleeps).
+    func flush() async
 }

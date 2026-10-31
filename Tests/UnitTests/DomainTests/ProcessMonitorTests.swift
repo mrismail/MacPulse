@@ -166,7 +166,9 @@ struct ProcessMonitorTests {
         let stored = await history.stored
         #expect(stored.contains { $0.appKey == "process:hog" })
         let all = try await monitor.usageHistory(since: .distantPast)
-        #expect(all.count > stored.count)  // includes the hour in progress
+        // One record per (app, hour), covering the finished hour and the one in progress.
+        #expect(Set(all.map(\.id)).count == all.count)
+        #expect(Set(all.filter { $0.appKey == "process:hog" }.map(\.hourStart)).count == 2)
     }
 
     @Test func enablingNotificationsRespectsPermission() async {
@@ -192,6 +194,156 @@ struct ProcessMonitorTests {
         await monitor.start()
         #expect(await eventually { source.reads >= 1 })
         await monitor.stop()
+    }
+
+    @Test func energyBasisIsKeptOnceSeen() async throws {
+        let snapshots = [
+            F.snapshot(at: 0, [F.sample(pid: 1, name: "a", cpuSeconds: 0, energyJoules: 0)]),
+            F.snapshot(at: 60, [F.sample(pid: 1, name: "a", cpuSeconds: 6, energyJoules: 30)]),
+            F.snapshot(at: 120, [F.sample(pid: 1, name: "a", cpuSeconds: 6, energyJoules: 30)]),  // idle
+        ]
+        let (monitor, clock) = makeMonitor(source: ScriptedSnapshotSource(snapshots))
+        await monitor.refresh()
+        clock.advance(by: 60)
+        #expect(await monitor.refresh()?.energyDataAvailable == true)
+        clock.advance(by: 60)
+        let idle = try #require(await monitor.refresh())
+        #expect(idle.energyDataAvailable)
+        guard case .estimated(let basis)? = idle.current.first?.impact.provenance else {
+            Issue.record("Impact must be an estimate")
+            return
+        }
+        #expect(basis == AppUsageAggregator.energyBasis)
+    }
+
+    @Test func tooShortIntervalsKeepTheBaseline() async throws {
+        let snapshots = [
+            F.snapshot(at: 0, [F.sample(pid: 1, name: "a", cpuSeconds: 0)]),
+            F.snapshot(at: 0.5, [F.sample(pid: 1, name: "a", cpuSeconds: 0.4)]),
+            F.snapshot(at: 60, [F.sample(pid: 1, name: "a", cpuSeconds: 6)]),
+        ]
+        let (monitor, _) = makeMonitor(source: ScriptedSnapshotSource(snapshots))
+        await monitor.refresh()
+        #expect(await monitor.refresh() == nil)
+        let status = try #require(await monitor.refresh())
+        #expect(status.intervalSeconds == 60)  // measured from the original baseline
+        #expect(abs((status.current.first?.cpuPercent ?? 0) - 10) < 0.001)
+    }
+
+    @Test func sleepIsDetectedFromAwakeUptime() async throws {
+        let snapshots = [
+            F.snapshot(at: 0, [F.sample(pid: 1, name: "a", cpuSeconds: 0)], uptime: 1_000),
+            F.snapshot(at: 120, [F.sample(pid: 1, name: "a", cpuSeconds: 1)], uptime: 1_010),  // slept ~110 s
+            F.snapshot(at: 180, [F.sample(pid: 1, name: "a", cpuSeconds: 7)], uptime: 1_070),
+        ]
+        let (monitor, _) = makeMonitor(source: ScriptedSnapshotSource(snapshots))
+        await monitor.refresh()
+        #expect(await monitor.refresh() == nil)
+        #expect(await monitor.refresh() != nil)
+    }
+
+    @Test func longAwakeGapsAreNotMistakenForSleep() async {
+        // App Nap can delay timers well past 3 minutes while the Mac stays awake.
+        let snapshots = [
+            F.snapshot(at: 0, [F.sample(pid: 1, name: "a", cpuSeconds: 0)], uptime: 1_000),
+            F.snapshot(at: 400, [F.sample(pid: 1, name: "a", cpuSeconds: 4)], uptime: 1_400),
+        ]
+        let (monitor, _) = makeMonitor(source: ScriptedSnapshotSource(snapshots))
+        await monitor.refresh()
+        #expect(await monitor.refresh() != nil)
+    }
+
+    @Test func emptyProcessTableKeepsTheBaseline() async throws {
+        let snapshots = [
+            F.snapshot(at: 0, [F.sample(pid: 1, name: "a", cpuSeconds: 0)]),
+            F.snapshot(at: 60, []),
+            F.snapshot(at: 120, [F.sample(pid: 1, name: "a", cpuSeconds: 12)]),
+        ]
+        let (monitor, _) = makeMonitor(source: ScriptedSnapshotSource(snapshots))
+        await monitor.refresh()
+        #expect(await monitor.refresh() == nil)
+        let status = try #require(await monitor.refresh())
+        #expect(status.intervalSeconds == 120)
+    }
+
+    @Test func detailedSamplingIsReferenceCounted() async {
+        let (monitor, _) = makeMonitor(source: ScriptedSnapshotSource(script(count: 2)))
+        await monitor.setDetailedSampling(true)   // Energy screen A
+        await monitor.setDetailedSampling(true)   // Energy screen B appears before A disappears
+        await monitor.setDetailedSampling(false)  // A goes away
+        #expect(await monitor.isDetailedSampling)
+        await monitor.setDetailedSampling(false)
+        #expect(await monitor.isDetailedSampling == false)
+        await monitor.setDetailedSampling(false)  // extra calls never go negative
+        await monitor.setDetailedSampling(true)
+        #expect(await monitor.isDetailedSampling)
+    }
+
+    @Test func notificationPermissionKeepsOtherEdits() async {
+        let notifier = RecordingNotifier(allow: true)
+        let (monitor, _) = makeMonitor(source: ScriptedSnapshotSource(script(count: 2)), notifier: notifier)
+        let ok = await monitor.updateAlertSettings(DrainAlertSettings(cpuThresholdPercent: 80, sendsNotifications: true))
+        #expect(ok)
+        let settings = await monitor.alertSettings()
+        #expect(settings.sendsNotifications)
+        #expect(settings.cpuThresholdPercent == 80)
+    }
+
+    @Test func hourInProgressIsSavedAndReloadedAfterRelaunch() async throws {
+        let history = InMemoryUsageHistory()
+        let (first, firstClock) = makeMonitor(source: ScriptedSnapshotSource(script(count: 3)), history: history)
+        for _ in 0..<3 {
+            await first.refresh()
+            firstClock.advance(by: 60)
+        }
+        await first.flush()
+        let savedHog = try #require(await history.stored.last { $0.appKey == "process:hog" })
+
+        // A new monitor (relaunch) in the same hour continues from the saved record.
+        let snapshots = script(count: 6).suffix(3)
+        let (second, secondClock) = makeMonitor(source: ScriptedSnapshotSource(Array(snapshots)), history: history)
+        secondClock.advance(by: 180)
+        for _ in 0..<3 {
+            await second.refresh()
+            secondClock.advance(by: 60)
+        }
+        let merged = try await second.usageHistory(since: .distantPast)
+        let hog = try #require(merged.first { $0.appKey == "process:hog" })
+        #expect(merged.filter { $0.appKey == "process:hog" }.count == 1)
+        #expect(hog.cpuSeconds > savedHog.cpuSeconds)
+    }
+
+    @Test func clearHistoryAnnouncesANewHistoryVersion() async throws {
+        let (monitor, clock) = makeMonitor(source: ScriptedSnapshotSource(script(count: 3)))
+        await monitor.refresh()
+        clock.advance(by: 60)
+        let before = try #require(await monitor.refresh()).historyVersion
+        try await monitor.clearHistory()
+        let after = try #require(await monitor.latestStatus).historyVersion
+        #expect(after == before + 1)
+        #expect(try await monitor.usageHistory(since: .distantPast).isEmpty)
+    }
+
+    @Test func longSessionsStayBounded() async throws {
+        // Soak: 3,000 one-minute samples (~2 days) with a fake clock.
+        let steps = 3_000
+        let snapshots = (0..<steps).map { index -> ProcessSnapshot in
+            let t = Double(index) * 60
+            return F.snapshot(at: t, (1...40).map { pid in
+                F.sample(pid: Int32(pid), name: "app\(pid)", cpuSeconds: t * Double(pid) / 400)
+            })
+        }
+        let history = InMemoryUsageHistory()
+        let (monitor, clock) = makeMonitor(source: ScriptedSnapshotSource(snapshots), history: history)
+        for _ in 0..<steps {
+            await monitor.refresh()
+            clock.advance(by: 60)
+        }
+        #expect(await monitor.inMemoryIntervalCount <= 61)  // one hour of one-minute intervals
+        let records = await history.stored
+        // Cumulative saves: at most one save per 5 minutes plus hour ends, per app.
+        #expect(records.count <= 40 * (steps / 5 + steps / 60 + 2))
+        #expect(AppUsageRecord.latestPerAppAndHour(records).count <= 40 * (steps / 60 + 2))
     }
 
     @Test func clearHistoryEmptiesTheStore() async throws {

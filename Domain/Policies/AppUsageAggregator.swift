@@ -7,6 +7,15 @@ import Foundation
 ///   power macOS attributes to the app.
 /// - Otherwise it is based on CPU use, the dominant driver of battery drain for apps.
 public enum AppUsageAggregator {
+    /// Which measure the impact estimate uses. Chosen once per session (see
+    /// `ProcessMonitor`), so labels and rankings don't flip between intervals.
+    public enum ImpactBasis: Sendable, Equatable {
+        /// macOS energy accounting (`ri_billed_energy`) has been seen on this Mac.
+        case energy
+        /// No energy accounting seen: CPU-based activity, not a battery measurement.
+        case cpu
+    }
+
     public struct Thresholds: Sendable, Equatable {
         /// Power above which an app counts as high / moderate impact, milliwatts.
         public var highMilliwatts = 2_000.0
@@ -18,23 +27,29 @@ public enum AppUsageAggregator {
         public init() {}
     }
 
-    public static let energyBasis = "Based on the energy macOS attributes to this app's processes."
-    public static let cpuBasis = "Based on CPU use. macOS energy data isn't available on this Mac, so this is an approximation."
+    public static var energyBasis: String {
+        String(localized: "Estimated from the energy macOS attributes to this app's processes.")
+    }
+
+    public static var cpuBasis: String {
+        String(localized: "Estimated from CPU use only. This Mac hasn't reported per-app energy, so this shows activity, not measured battery use.")
+    }
 
     /// Apps ranked by estimated impact, then CPU.
     public static func aggregate(
         _ activities: [ProcessActivity],
         displayNames: [String: String],
         excludingPID ownPID: Int32? = nil,
+        basis: ImpactBasis,
         thresholds: Thresholds = Thresholds()
     ) -> [AppUsage] {
         let relevant = activities.filter { $0.identity.pid != ownPID }
         let groups = Dictionary(grouping: relevant, by: groupKey)
 
-        // Use energy for the whole interval only if macOS reported some for it; mixing
-        // bases between apps would make the ranking meaningless.
+        // One basis for every app, so the ranking is consistent. An idle interval on an
+        // energy-reporting Mac stays energy-based (0 W), it doesn't fall back to CPU.
+        let useEnergy = basis == .energy
         let totalEnergy = relevant.compactMap(\.energyMilliwatts).reduce(0, +)
-        let useEnergy = totalEnergy > 0
         let totalCPU = relevant.map(\.cpuPercent).reduce(0, +)
 
         let apps = groups.map { key, members -> AppUsage in
@@ -45,7 +60,7 @@ public enum AppUsageAggregator {
             let share: Double
             if useEnergy {
                 let power = energy ?? 0
-                share = power / totalEnergy
+                share = totalEnergy > 0 ? power / totalEnergy : 0
                 impact = .estimated(level(power, high: thresholds.highMilliwatts, moderate: thresholds.moderateMilliwatts), basis: energyBasis)
             } else {
                 share = totalCPU > 0 ? cpu / totalCPU : 0
@@ -82,19 +97,21 @@ public enum AppUsageAggregator {
 
     /// Averages several intervals into one usage per app, weighting by duration.
     /// Apps missing from an interval count as idle for it.
-    public static func average(_ intervals: [UsageInterval], thresholds: Thresholds = Thresholds()) -> [AppUsage] {
+    public static func average(_ intervals: [UsageInterval], basis: ImpactBasis, thresholds: Thresholds = Thresholds()) -> [AppUsage] {
         let totalDuration = intervals.map(\.duration).reduce(0, +)
         guard totalDuration > 0 else { return [] }
-        let useEnergy = intervals.contains { interval in interval.apps.contains { $0.energyMilliwatts != nil } }
+        let useEnergy = basis == .energy
 
         var latest: [String: AppUsage] = [:]
         var cpuSeconds: [String: Double] = [:]
         var energyJoules: [String: Double] = [:]
+        var wakeups: [String: Double] = [:]
         for interval in intervals {
             for app in interval.apps {
                 latest[app.id] = app
                 cpuSeconds[app.id, default: 0] += app.cpuPercent / 100 * interval.duration
                 energyJoules[app.id, default: 0] += (app.energyMilliwatts ?? 0) / 1_000 * interval.duration
+                wakeups[app.id, default: 0] += (app.wakeupsPerSecond ?? 0) * interval.duration
             }
         }
         let totalCPUSeconds = cpuSeconds.values.reduce(0, +)
@@ -105,8 +122,8 @@ public enum AppUsageAggregator {
             let milliwatts = (energyJoules[app.id] ?? 0) / totalDuration * 1_000
             let impact: Metric<BatteryImpactLevel>
             let share: Double
-            if useEnergy && totalJoules > 0 {
-                share = (energyJoules[app.id] ?? 0) / totalJoules
+            if useEnergy {
+                share = totalJoules > 0 ? (energyJoules[app.id] ?? 0) / totalJoules : 0
                 impact = .estimated(level(milliwatts, high: thresholds.highMilliwatts, moderate: thresholds.moderateMilliwatts), basis: energyBasis)
             } else {
                 share = totalCPUSeconds > 0 ? (cpuSeconds[app.id] ?? 0) / totalCPUSeconds : 0
@@ -122,7 +139,7 @@ public enum AppUsageAggregator {
                 threadCount: app.threadCount,
                 energyMilliwatts: useEnergy ? milliwatts : nil,
                 diskBytesPerSecond: app.diskBytesPerSecond,
-                wakeupsPerSecond: app.wakeupsPerSecond,
+                wakeupsPerSecond: app.wakeupsPerSecond == nil ? nil : (wakeups[app.id] ?? 0) / totalDuration,
                 impact: impact,
                 shareOfActivity: share
             )
