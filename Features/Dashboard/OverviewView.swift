@@ -39,12 +39,16 @@ public struct OverviewView: View {
         }
         .navigationTitle("Overview")
         .task { await viewModel.load() }
+        .task { await viewModel.observeBattery() }
     }
 
     private var batteryCard: some View {
         Card("Battery", systemImage: "battery.75percent") {
             MetricValueView("Charge", metric: viewModel.batteryCharge) {
-                $0.formatted(.percent.precision(.fractionLength(0)))
+                NumberFormatting.percent($0)
+            }
+            if let state = viewModel.batteryStateDescription {
+                Text(state).font(.headline)
             }
             MetricValueView("Estimated runtime", metric: viewModel.estimatedRuntimeMinutes) {
                 DurationFormatting.string(fromMinutes: $0)
@@ -87,7 +91,10 @@ public struct OverviewView: View {
 #if DEBUG
     struct OverviewView_Previews: PreviewProvider {
         static var previews: some View {
-            OverviewView(viewModel: OverviewViewModel(systemInfoRepository: PreviewSystemInfoRepository()))
+            OverviewView(viewModel: OverviewViewModel(
+                systemInfoRepository: PreviewSystemInfoRepository(),
+                batteryMonitor: PreviewBatteryMonitor()
+            ))
                 .frame(width: 800, height: 600)
         }
     }
