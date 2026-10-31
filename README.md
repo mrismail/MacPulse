@@ -4,8 +4,9 @@ A native macOS utility that helps MacBook users understand battery health and en
 see what is filling their disk, find duplicate files and clean up safely. Everything runs
 locally: no account, no uploads.
 
-> **Status:** Phase 1 (foundation) — app shell, navigation, design system, CI.
-> Battery, Energy, Space Analyzer, Duplicate Finder and Cleaner arrive in Phases 2–6.
+> **Status:** Phase 2 — Battery Monitor (charge, health, cycle count, power, history,
+> charging sessions, runtime estimate). Energy, Space Analyzer, Duplicate Finder and
+> Cleaner arrive in Phases 3–6.
 
 ## Requirements
 
@@ -28,7 +29,9 @@ Run `xcodegen generate` again whenever `project.yml` changes.
 
 ```sh
 swift build
-swift test
+swift test                                   # unit + integration tests
+xcodegen generate && xcodebuild test \
+  -project MacPulse.xcodeproj -scheme MacPulse -destination 'platform=macOS'   # UI tests
 ```
 
 ## Project layout

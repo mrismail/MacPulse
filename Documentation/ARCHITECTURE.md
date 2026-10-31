@@ -89,8 +89,27 @@ a tooltip explanation and VoiceOver hint.
 |---|---|---|
 | Unit | `Tests/UnitTests/*` | `swift test` (Swift Testing) |
 | Integration | `Tests/IntegrationTests/*` | `swift test`, against the real machine |
-| UI automation | `Tests/UIAutomationTests/` | added from Phase 2 (XCUITest) |
+| UI automation | `Tests/UIAutomationTests/` | Xcode ⌘U / `xcodebuild test` (XCUITest, fake services) |
 
 CI (`.github/workflows/ci.yml`, macOS runner) builds the package with warnings as
 errors, runs all tests, generates the Xcode project, builds the app, checks the sandbox
 entitlement and launches the app for 10 seconds.
+
+## Battery monitoring (Phase 2)
+
+```
+IOKitBatteryProbe ──raw──▶ BatteryReadingBuilder ──BatteryReading──▶ BatteryMonitor (actor)
+ (Infrastructure)            (Domain/Policies)                         │   every 60 s + on IOPS events
+                                                                       ├─▶ JSONLinesBatteryHistoryStore (append)
+                                                                       ├─▶ RuntimeEstimator (recent discharge)
+                                                                       └─▶ AsyncStream<BatteryStatus> ──▶ Overview, Battery screen
+```
+
+- `BatteryMonitor` is created once in `AppDependencies.live()` and started by `RootView`;
+  it samples whichever screen is visible, so history keeps growing while the app runs.
+- Sampling uses `Task.sleep(for:tolerance:)` with 10 s tolerance so macOS can coalesce
+  wake-ups; power-source notifications are debounced to one sample per 5 s.
+- `ChargingSessionDetector` and `BatteryHistoryChartModel` (gap-aware, ≤ 400 points)
+  prepare history for the chart.
+- History is only recorded while MacPulse runs. A background agent / menu-bar
+  companion is planned for Phase 7.
