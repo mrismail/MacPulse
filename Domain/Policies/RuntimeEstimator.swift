@@ -10,12 +10,13 @@ public enum RuntimeEstimator {
     public struct Parameters: Sendable, Equatable {
         /// How far back to look.
         public var window: TimeInterval = 30 * 60
-        /// Minimum time covered by the samples used.
-        public var minimumSpan: TimeInterval = 5 * 60
+        /// Minimum time covered by the samples used. macOS reports whole percentages, so
+        /// short spans give very noisy rates.
+        public var minimumSpan: TimeInterval = 15 * 60
         /// Minimum number of samples used.
         public var minimumSamples = 3
         /// Minimum charge drop (percentage points) — below this the rate is mostly rounding noise.
-        public var minimumDrop = 1.0
+        public var minimumDrop = 2.0
         /// A larger gap between samples (sleep, app closed) ends the run.
         public var maximumGap: TimeInterval = 10 * 60
         /// Estimates above this are not shown.
@@ -65,7 +66,10 @@ public enum RuntimeEstimator {
         let rate = Metric<Double>.estimated(ratePerMinute * 60, basis: basis)
 
         guard minutes <= parameters.maximumMinutes else {
-            return Estimate(runtime: .unavailable(.notYetSampled), ratePercentPerHour: rate)
+            return Estimate(
+                runtime: .unavailable(.notApplicable("The battery is draining too slowly to estimate a runtime.")),
+                ratePercentPerHour: rate
+            )
         }
         return Estimate(runtime: .estimated(minutes, basis: basis), ratePercentPerHour: rate)
     }
