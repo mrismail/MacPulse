@@ -4,9 +4,9 @@ A native macOS utility that helps MacBook users understand battery health and en
 see what is filling their disk, find duplicate files and clean up safely. Everything runs
 locally: no account, no uploads.
 
-> **Status:** Phase 2 — Battery Monitor (charge, health, cycle count, power, history,
-> charging sessions, runtime estimate). Energy, Space Analyzer, Duplicate Finder and
-> Cleaner arrive in Phases 3–6.
+> **Status:** Phase 3 — Energy: per-app CPU, memory, energy and wake-ups with an
+> estimated battery impact, trends and alerts, on top of the Phase 2 Battery Monitor.
+> Space Analyzer, Duplicate Finder and Cleaner arrive in Phases 4–6.
 
 ## Requirements
 

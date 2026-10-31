@@ -119,3 +119,22 @@ IOKitBatteryProbe ──raw──▶ BatteryReadingBuilder ──BatteryReading�
   "Estimated runtime" definition; `BatteryRecommendations` drives the Overview.
 - History is only recorded while MacPulse runs. A background agent / menu-bar
   companion is planned for Phase 7.
+
+## Energy / battery drain detection (Phase 3)
+
+```
+LiveProcessSnapshotSource ──ProcessSnapshot──▶ ProcessMonitor (actor)
+ sysctl + proc_pidinfo + proc_pid_rusage         │ 60 s background / 10 s while Energy is visible
+ (current user's processes only)                 ├─▶ ProcessActivityCalculator (deltas by pid + start time)
+                                                 ├─▶ AppUsageAggregator (helpers → app, estimated impact)
+                                                 ├─▶ DrainAlertEvaluator (sustained CPU, battery-only)
+                                                 ├─▶ UsageHourAccumulator ─▶ JSONLinesAppUsageStore (hourly, 7 days)
+                                                 └─▶ AsyncStream<EnergyStatus> ─▶ Energy, Battery card, Overview
+```
+
+- CPU time is converted from Mach ticks with the timebase (ticks ≠ ns on Apple silicon).
+- A process is identified by pid **and** start time; reused pids and counters that go
+  backwards never produce activity. Intervals across sleep (> 3 min gap) are skipped.
+- MacPulse excludes itself from the ranking and reports its own CPU in every status.
+- Root/system processes are counted ("N system processes aren't included"), never read.
+- Battery impact is always an estimate (ADR-011).
