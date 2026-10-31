@@ -4,10 +4,11 @@ import MacPulseShared
 import SwiftUI
 
 public struct BatteryView: View {
-    @State private var viewModel: BatteryViewModel
+    @Bindable private var viewModel: BatteryViewModel
+    @State private var selectedDate: Date?
 
     public init(viewModel: BatteryViewModel) {
-        _viewModel = State(initialValue: viewModel)
+        self.viewModel = viewModel
     }
 
     public var body: some View {
@@ -23,23 +24,39 @@ public struct BatteryView: View {
             }
         }
         .navigationTitle("Battery")
+        .navigationSubtitle(lastUpdatedText)
         .toolbar {
-            ToolbarItem {
-                Button {
-                    Task { await viewModel.refresh() }
-                } label: {
-                    Label("Refresh", systemImage: "arrow.clockwise")
+            if viewModel.hasBattery {
+                ToolbarItem {
+                    Button {
+                        Task { await viewModel.refresh() }
+                    } label: {
+                        Label("Refresh", systemImage: "arrow.clockwise")
+                    }
+                    .keyboardShortcut("r", modifiers: .command)
+                    .help("Read the battery now (⌘R)")
                 }
-                .help("Read the battery now")
             }
         }
         .task { await viewModel.observe() }
         .task(id: viewModel.range) { await viewModel.reloadHistory() }
     }
 
+    private var lastUpdatedText: String {
+        guard let lastUpdated = viewModel.lastUpdated else { return "" }
+        return String(localized: "Updated \(lastUpdated.formatted(date: .omitted, time: .shortened))")
+    }
+
     private var content: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.medium) {
+                if let issue = viewModel.status?.historyIssue {
+                    Label(issue.userMessage, systemImage: "exclamationmark.triangle.fill")
+                        .padding(Spacing.medium)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: Radius.card))
+                        .accessibilityIdentifier("battery.historyIssue")
+                }
                 LazyVGrid(
                     columns: [GridItem(.adaptive(minimum: 280), spacing: Spacing.medium, alignment: .top)],
                     alignment: .leading,
@@ -51,8 +68,8 @@ public struct BatteryView: View {
                 }
                 historyCard
                 sessionsCard
-                Card("App activity", systemImage: "list.bullet.rectangle") {
-                    Text("Which apps use the most CPU and memory arrives with the Energy view in Phase 3.")
+                Card("App energy use", systemImage: "list.bullet.rectangle") {
+                    Text("Coming soon: see which apps use the most CPU and memory while you're on battery.")
                         .foregroundStyle(.secondary)
                 }
             }
@@ -66,8 +83,10 @@ public struct BatteryView: View {
     private var statusCard: some View {
         Card("Status", systemImage: "battery.75percent") {
             if let status = viewModel.status {
-                MetricValueView("Charge", metric: status.reading.charge) { NumberFormatting.percent($0) }
-                    .accessibilityIdentifier("battery.charge")
+                MetricValueView("Charge", metric: status.reading.charge, prominence: .hero) {
+                    NumberFormatting.percent($0)
+                }
+                .accessibilityIdentifier("battery.charge")
                 Text(viewModel.stateDescription)
                     .font(.headline)
                     .accessibilityIdentifier("battery.state")
@@ -77,15 +96,25 @@ public struct BatteryView: View {
                         DurationFormatting.string(fromMinutes: $0)
                     }
                 } else {
-                    MetricValueView("Estimated runtime", metric: status.runtimeFromRecentDischarge) {
+                    MetricValueView("Estimated runtime", metric: viewModel.estimatedRuntime) {
                         DurationFormatting.string(fromMinutes: $0)
                     }
                     .accessibilityIdentifier("battery.runtime")
-                    MetricValueView("macOS estimate", metric: status.reading.systemTimeToEmptyMinutes) {
-                        DurationFormatting.string(fromMinutes: $0)
-                    }
-                    MetricValueView("Discharge rate", metric: status.dischargeRatePercentPerHour) {
-                        NumberFormatting.percentPerHour($0)
+                    if status.reading.powerSource.value == .battery {
+                        DisclosureGroup("How this is estimated") {
+                            VStack(alignment: .leading, spacing: Spacing.small) {
+                                MetricValueView("From recent discharge", metric: status.runtimeFromRecentDischarge) {
+                                    DurationFormatting.string(fromMinutes: $0)
+                                }
+                                MetricValueView("macOS estimate", metric: status.reading.systemTimeToEmptyMinutes) {
+                                    DurationFormatting.string(fromMinutes: $0)
+                                }
+                                MetricValueView("Discharge rate", metric: status.dischargeRatePercentPerHour) {
+                                    NumberFormatting.percentPerHour($0)
+                                }
+                            }
+                            .padding(.top, Spacing.small)
+                        }
                     }
                 }
             } else {
@@ -102,10 +131,14 @@ public struct BatteryView: View {
                 MetricValueView("Health", metric: reading.healthPercentage) { NumberFormatting.percent($0) }
                     .accessibilityIdentifier("battery.health")
                 MetricValueView("Condition", metric: viewModel.conditionDescription) { $0 }
-                MetricValueView("Cycle count", metric: reading.cycleCount) { "\($0)" }
+                MetricValueView("Cycle count", metric: reading.cycleCount) { NumberFormatting.integer($0) }
                     .accessibilityIdentifier("battery.cycleCount")
-                MetricValueView("Full-charge capacity", metric: reading.fullChargeCapacityMAh) { "\($0) mAh" }
-                MetricValueView("Design capacity", metric: reading.designCapacityMAh) { "\($0) mAh" }
+                MetricValueView("Full-charge capacity", metric: reading.fullChargeCapacityMAh) {
+                    NumberFormatting.milliampereHours($0)
+                }
+                MetricValueView("Design capacity", metric: reading.designCapacityMAh) {
+                    NumberFormatting.milliampereHours($0)
+                }
             } else {
                 ProgressView().controlSize(.small)
             }
@@ -116,16 +149,12 @@ public struct BatteryView: View {
     private var electricalCard: some View {
         Card("Power", systemImage: "bolt.fill") {
             if let reading = viewModel.status?.reading {
-                MetricValueView("Charging power", metric: reading.chargingPowerWatts) {
-                    NumberFormatting.watts($0)
-                }
-                MetricValueView("Power adapter", metric: reading.adapterWatts) { "\($0) W" }
+                MetricValueView("Charging power", metric: reading.chargingPowerWatts) { NumberFormatting.watts($0) }
+                MetricValueView("Power adapter", metric: reading.adapterWatts) { NumberFormatting.watts(Double($0)) }
                 MetricValueView("Battery temperature", metric: reading.temperatureCelsius) {
                     NumberFormatting.temperature(celsius: $0)
                 }
-                MetricValueView("Voltage", metric: reading.voltageVolts) {
-                    NumberFormatting.volts($0)
-                }
+                MetricValueView("Voltage", metric: reading.voltageVolts) { NumberFormatting.volts($0) }
             } else {
                 ProgressView().controlSize(.small)
             }
@@ -142,6 +171,7 @@ public struct BatteryView: View {
             .pickerStyle(.segmented)
             .labelsHidden()
             .frame(maxWidth: 320)
+            .accessibilityIdentifier("battery.range")
 
             if let error = viewModel.historyError {
                 Label(error.userMessage, systemImage: "exclamationmark.triangle")
@@ -153,14 +183,29 @@ public struct BatteryView: View {
             } else {
                 chart
                 HStack(spacing: Spacing.medium) {
-                    Label("Charge", systemImage: "line.diagonal").foregroundStyle(Color.accentColor)
-                    Label("On power", systemImage: "square.fill").foregroundStyle(Color.green.opacity(0.5))
+                    Label {
+                        Text("Charge")
+                    } icon: {
+                        RoundedRectangle(cornerRadius: 1).fill(Color.accentColor).frame(width: 14, height: 3)
+                    }
+                    Label {
+                        Text("On power")
+                    } icon: {
+                        RoundedRectangle(cornerRadius: 2).fill(Color.green.opacity(0.25)).frame(width: 14, height: 10)
+                    }
                     Spacer()
                     Text("Gaps mean MacPulse wasn't running or the Mac was asleep.")
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.secondary)
                 }
                 .font(.caption)
             }
+        }
+    }
+
+    private var selectedPoint: BatteryChartPoint? {
+        guard let selectedDate else { return nil }
+        return viewModel.chartPoints.min {
+            abs($0.timestamp.timeIntervalSince(selectedDate)) < abs($1.timestamp.timeIntervalSince(selectedDate))
         }
     }
 
@@ -174,6 +219,8 @@ public struct BatteryView: View {
                     yEnd: .value("Top", 100)
                 )
                 .foregroundStyle(Color.green.opacity(0.12))
+                .accessibilityLabel("On power")
+                .accessibilityValue("\(session.start.formatted(date: .abbreviated, time: .shortened)) to \(session.end.formatted(date: .omitted, time: .shortened))")
             }
             ForEach(viewModel.chartPoints) { point in
                 LineMark(
@@ -183,15 +230,38 @@ public struct BatteryView: View {
                 )
                 .foregroundStyle(Color.accentColor)
                 .interpolationMethod(.monotone)
+                .accessibilityLabel(point.timestamp.formatted(date: .abbreviated, time: .shortened))
+                .accessibilityValue(NumberFormatting.percent(point.percentage))
+            }
+            if let selectedPoint {
+                RuleMark(x: .value("Selected", selectedPoint.timestamp))
+                    .foregroundStyle(Color.secondary.opacity(0.4))
+                    .annotation(position: .top, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
+                        VStack(spacing: 2) {
+                            Text(NumberFormatting.percent(selectedPoint.percentage)).bold()
+                            Text(selectedPoint.timestamp.formatted(date: .abbreviated, time: .shortened))
+                                .foregroundStyle(.secondary)
+                        }
+                        .font(.caption)
+                        .padding(Spacing.xSmall)
+                        .background(Palette.cardBackground, in: RoundedRectangle(cornerRadius: Radius.badge))
+                    }
+                PointMark(
+                    x: .value("Time", selectedPoint.timestamp),
+                    y: .value("Charge", selectedPoint.percentage)
+                )
+                .foregroundStyle(Color.accentColor)
             }
         }
+        .chartXScale(domain: viewModel.chartDomain)
         .chartYScale(domain: 0...100)
+        .chartXSelection(value: $selectedDate)
         .chartYAxis {
             AxisMarks(values: [0, 25, 50, 75, 100]) { value in
                 AxisGridLine()
                 AxisValueLabel {
-                    if let percent = value.as(Int.self) {
-                        Text("\(percent)%")
+                    if let percent = value.as(Double.self) {
+                        Text(NumberFormatting.percent(percent))
                     }
                 }
             }
@@ -227,24 +297,24 @@ private struct ChargingSessionRow: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Text(percentText)
+            if let start = session.startPercentage, let end = session.endPercentage {
+                HStack(spacing: Spacing.xSmall) {
+                    Text(NumberFormatting.percent(start))
+                    // `arrow.forward` mirrors automatically in right-to-left languages.
+                    Image(systemName: "arrow.forward").foregroundStyle(.secondary)
+                    Text(NumberFormatting.percent(end))
+                }
                 .monospacedDigit()
+            } else {
+                Text("—")
+            }
         }
+        .accessibilityElement(children: .combine)
     }
 
     private var durationText: String {
-        let minutes = Int(session.duration / 60)
-        let base = DurationFormatting.string(fromMinutes: minutes)
-        return session.isOngoing ? "\(base) so far" : base
-    }
-
-    private var percentText: String {
-        switch (session.startPercentage, session.endPercentage) {
-        case let (start?, end?):
-            "\(NumberFormatting.percent(start)) → \(NumberFormatting.percent(end))"
-        default:
-            "—"
-        }
+        let base = DurationFormatting.string(fromMinutes: Int(session.duration / 60))
+        return session.isOngoing ? String(localized: "\(base), still on power") : base
     }
 }
 

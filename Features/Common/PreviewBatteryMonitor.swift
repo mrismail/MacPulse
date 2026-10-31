@@ -11,6 +11,8 @@ public struct PreviewBatteryMonitor: BatteryMonitoring {
         self.referenceDate = referenceDate
     }
 
+    public var referenceDateForTests: Date { referenceDate }
+
     public static let sampleRaw = RawBatteryData(
         hasInternalBattery: true,
         isPresent: true,

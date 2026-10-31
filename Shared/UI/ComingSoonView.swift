@@ -1,25 +1,22 @@
 import SwiftUI
 
-/// Placeholder for a section whose feature arrives in a later phase.
+/// Placeholder for a section whose feature is not available yet.
 public struct ComingSoonView: View {
     private let title: String
     private let systemImage: String
     private let summary: String
     private let plannedCapabilities: [String]
-    private let phase: Int
 
     public init(
         title: String,
         systemImage: String,
         summary: String,
-        plannedCapabilities: [String],
-        phase: Int
+        plannedCapabilities: [String]
     ) {
         self.title = title
         self.systemImage = systemImage
         self.summary = summary
         self.plannedCapabilities = plannedCapabilities
-        self.phase = phase
     }
 
     public var body: some View {
@@ -33,7 +30,7 @@ public struct ComingSoonView: View {
                     Label(capability, systemImage: "circle.dashed")
                         .foregroundStyle(.secondary)
                 }
-                Text("Planned for development phase \(phase).")
+                Text("Coming soon")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .padding(.top, Spacing.small)

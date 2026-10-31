@@ -17,17 +17,31 @@ public final class SettingsViewModel {
     public private(set) var clearBatteryHistoryState: ClearHistoryState = .idle
 
     /// How long battery history is kept before it is removed automatically.
-    public let batteryHistoryRetentionDays = 30
+    public let batteryHistoryRetentionDays = BatteryMonitor.Configuration.defaultHistoryRetentionDays
+
+    /// How long the "History cleared" confirmation stays visible.
+    @ObservationIgnored private let confirmationDuration: Duration
 
     @ObservationIgnored private let systemInfoRepository: any SystemInfoRepository
     @ObservationIgnored private let batteryMonitor: any BatteryMonitoring
 
-    public init(systemInfoRepository: any SystemInfoRepository, batteryMonitor: any BatteryMonitoring) {
+    public init(
+        systemInfoRepository: any SystemInfoRepository,
+        batteryMonitor: any BatteryMonitoring,
+        confirmationDuration: Duration = .seconds(3)
+    ) {
         self.systemInfoRepository = systemInfoRepository
         self.batteryMonitor = batteryMonitor
+        self.confirmationDuration = confirmationDuration
     }
 
     /// Deletes all stored battery history. The view asks for confirmation first.
+    private func hideClearedConfirmation() {
+        if clearBatteryHistoryState == .cleared {
+            clearBatteryHistoryState = .idle
+        }
+    }
+
     public func clearBatteryHistory() async {
         guard clearBatteryHistoryState != .clearing else { return }
         clearBatteryHistoryState = .clearing
@@ -35,6 +49,11 @@ public final class SettingsViewModel {
             try await batteryMonitor.clearHistory()
             clearBatteryHistoryState = .cleared
             Log.logger(.persistence).info("Battery history cleared by the user")
+            let duration = confirmationDuration
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: duration)
+                self?.hideClearedConfirmation()
+            }
         } catch {
             let appError = AppError.wrapping(error, userMessage: "Couldn't clear battery history.")
             Log.logger(.persistence).log(appError, context: "Clear battery history")

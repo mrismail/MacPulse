@@ -8,11 +8,17 @@ import Observation
 public final class BatteryViewModel {
     public private(set) var status: BatteryStatus?
     public private(set) var chartPoints: [BatteryChartPoint] = []
-    public private(set) var chargingSessions: [ChargingSession] = []
+    /// Charging sessions in the selected range, most recent first.
+    public private(set) var recentSessions: [ChargingSession] = []
     public private(set) var historyError: AppError?
+    public private(set) var lastUpdated: Date?
     /// Selected chart range. The view reloads history when it changes.
     public var range: BatteryHistoryRange = .day
 
+    /// Snapshots for the selected range, oldest first. Live updates are appended here
+    /// instead of re-reading history from disk on every sample.
+    @ObservationIgnored private var snapshots: [BatterySnapshot] = []
+    @ObservationIgnored private var historyLoaded = false
     @ObservationIgnored private let monitor: any BatteryMonitoring
     @ObservationIgnored private let now: @Sendable () -> Date
 
@@ -24,16 +30,22 @@ public final class BatteryViewModel {
     /// `false` once a reading shows the Mac has no internal battery.
     public var hasBattery: Bool { status?.reading.hasBattery ?? true }
 
-    /// Sessions that overlap the selected range, most recent first.
-    public var recentSessions: [ChargingSession] {
-        chargingSessions.sorted { $0.start > $1.start }
+    public var stateDescription: String { BatteryStatusPresentation.stateDescription(status?.reading) }
+    public var conditionDescription: Metric<String> { BatteryStatusPresentation.condition(status?.reading) }
+    public var estimatedRuntime: Metric<Int> { BatteryStatusPresentation.estimatedRuntime(status) }
+
+    /// The x-axis domain for the chart: the full selected range ending now, so a short
+    /// history isn't stretched across the whole width.
+    public var chartDomain: ClosedRange<Date> {
+        let end = lastUpdated ?? now()
+        return end.addingTimeInterval(-range.duration)...end
     }
 
     /// Follows battery updates until the calling task is cancelled (the view disappears).
     public func observe() async {
         for await status in await monitor.updates() {
-            self.status = status
-            await reloadHistory()
+            apply(status)
+            await appendLive(status)
         }
     }
 
@@ -41,41 +53,56 @@ public final class BatteryViewModel {
         await monitor.refresh()
     }
 
+    /// Reloads history for the selected range from disk. Results for a range that is no
+    /// longer selected (the user switched while loading) are discarded.
     public func reloadHistory() async {
+        let requested = range
         let end = now()
         do {
-            let snapshots = try await monitor.history(since: end.addingTimeInterval(-range.duration))
-            chartPoints = BatteryHistoryChartModel.points(from: snapshots)
-            chargingSessions = ChargingSessionDetector.sessions(from: snapshots, now: end)
+            let loaded = try await monitor.history(since: end.addingTimeInterval(-requested.duration))
+            guard requested == range, !Task.isCancelled else { return }
+            snapshots = loaded
+            historyLoaded = true
             historyError = nil
+            await rebuildDerived(at: end)
         } catch {
-            let appError = AppError.wrapping(error, userMessage: "Couldn't load battery history.")
+            guard requested == range, !Task.isCancelled else { return }
+            let appError = AppError.wrapping(error, userMessage: String(localized: "Couldn't load battery history."))
             Log.logger(.battery).log(appError, context: "Battery history")
             historyError = appError
         }
     }
 
-    // MARK: Display helpers (kept here so they can be unit-tested)
+    // MARK: Private
 
-    public var stateDescription: String {
-        guard let reading = status?.reading else { return "Reading battery…" }
-        guard reading.hasBattery else { return "No battery" }
-        switch reading.chargingState.value {
-        case .charging: return "Charging"
-        case .discharging: return "On battery"
-        case .notCharging: return "Plugged in, not charging"
-        case .fullyCharged: return "Fully charged"
-        case nil: return "Status unknown"
-        }
+    private func apply(_ status: BatteryStatus) {
+        self.status = status
+        lastUpdated = status.reading.timestamp
     }
 
-    public var conditionDescription: Metric<String> {
-        guard let reading = status?.reading else { return .unavailable(.notYetSampled) }
-        return reading.condition.map { condition in
-            switch condition {
-            case .normal: "Normal"
-            case .serviceRecommended(let text): text
-            }
-        }
+    private func appendLive(_ status: BatteryStatus) async {
+        guard historyLoaded, status.reading.hasBattery else { return }
+        let snapshot = BatterySnapshot(reading: status.reading, estimatedRuntimeMinutes: nil)
+        if let last = snapshots.last, last.timestamp >= snapshot.timestamp { return }
+        snapshots.append(snapshot)
+        let start = snapshot.timestamp.addingTimeInterval(-range.duration)
+        snapshots.removeAll { $0.timestamp < start }
+        await rebuildDerived(at: snapshot.timestamp)
+    }
+
+    private func rebuildDerived(at end: Date) async {
+        let derived = await Self.derive(from: snapshots, now: end)
+        chartPoints = derived.points
+        recentSessions = derived.sessions
+    }
+
+    /// Runs off the main actor: downsampling and session detection over up to a week of samples.
+    private nonisolated static func derive(
+        from snapshots: [BatterySnapshot],
+        now: Date
+    ) async -> (points: [BatteryChartPoint], sessions: [ChargingSession]) {
+        let points = BatteryHistoryChartModel.points(from: snapshots)
+        let sessions = ChargingSessionDetector.sessions(from: snapshots, now: now).sorted { $0.start > $1.start }
+        return (points, sessions)
     }
 }
