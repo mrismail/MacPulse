@@ -106,6 +106,20 @@ struct BatteryReadingBuilderTests {
         #expect(reading.condition == .measured(.serviceRecommended("Service Recommended")))
     }
 
+    @Test(arguments: ["Fair", "Poor"])
+    func degradedHealthIsNotNormal(health: String) {
+        var raw = BatteryFixtures.intelOnBattery
+        raw.batteryHealth = health
+        let reading = BatteryReadingBuilder.build(from: raw, at: date)
+        #expect(reading.condition == .measured(.serviceRecommended(health)))
+    }
+
+    @Test func desktopPowerSourceIsInferredNotMeasured() {
+        let reading = BatteryReadingBuilder.build(from: BatteryFixtures.desktop, at: date)
+        #expect(reading.powerSource.value == .externalPower)
+        #expect(!reading.powerSource.isMeasured)
+    }
+
     @Test func implausibleValuesBecomeSourceErrors() {
         var raw = BatteryFixtures.intelOnBattery
         raw.currentCapacity = 140
