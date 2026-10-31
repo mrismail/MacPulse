@@ -61,21 +61,6 @@ jobs:
             }
           test -d build/Build/Products/Debug/MacPulse.app
 
-      - name: Verify entitlements are exactly the sandbox
-        run: |
-          codesign -d --entitlements - --xml build/Build/Products/Debug/MacPulse.app > entitlements.plist
-          plutil -p entitlements.plist
-          # Every entitlement must be on this list; anything new needs an ADR first.
-          ALLOWED="com.apple.security.app-sandbox com.apple.security.get-task-allow"
-          FOUND=$(plutil -convert json -o - entitlements.plist | python3 -c 'import json,sys; print(" ".join(json.load(sys.stdin).keys()))')
-          for key in $FOUND; do
-            case " $ALLOWED " in
-              *" $key "*) ;;
-              *) echo "::error::Unexpected entitlement $key"; exit 1 ;;
-            esac
-          done
-          plutil -extract com.apple.security.app-sandbox raw entitlements.plist | grep -q true
-
       - name: Smoke test — app launches and stays running
         run: |
           APP=build/Build/Products/Debug/MacPulse.app/Contents/MacOS/MacPulse
@@ -95,7 +80,24 @@ jobs:
           set -o pipefail
           xcodebuild -project MacPulse.xcodeproj -scheme MacPulse -configuration Release \
             -destination 'platform=macOS' -derivedDataPath build-release \
-            SWIFT_TREAT_WARNINGS_AS_ERRORS=YES build 2>&1 | tail -5
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=YES build 2>&1 | tee release.log | tail -5 \
+            || { grep -E "error:" release.log | sort -u | head -20 | while IFS= read -r l; do echo "::error::${l:0:900}"; done; exit 1; }
+
+      - name: Verify Release entitlements are exactly the sandbox
+        run: |
+          codesign -d --entitlements - --xml build-release/Build/Products/Release/MacPulse.app > entitlements.plist
+          plutil -p entitlements.plist
+          # Checked on Release, the shipping artifact: Xcode adds debugging/preview
+          # exceptions to Debug builds automatically. Anything new here needs an ADR first.
+          ALLOWED="com.apple.security.app-sandbox"
+          FOUND=$(plutil -convert json -o - entitlements.plist | python3 -c 'import json,sys; print(" ".join(json.load(sys.stdin).keys()))')
+          for key in $FOUND; do
+            case " $ALLOWED " in
+              *" $key "*) ;;
+              *) echo "::error::Unexpected entitlement $key"; exit 1 ;;
+            esac
+          done
+          plutil -extract com.apple.security.app-sandbox raw entitlements.plist | grep -q true
 
       - name: Upload test results
         if: always()
