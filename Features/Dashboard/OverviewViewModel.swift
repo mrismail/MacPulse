@@ -8,6 +8,7 @@ public final class OverviewViewModel {
     public private(set) var systemInfo: LoadState<SystemInfo> = .idle
 
     public private(set) var batteryStatus: BatteryStatus?
+    public private(set) var energyStatus: EnergyStatus?
     public private(set) var recommendations: [Recommendation] = []
 
     public var batteryCharge: Metric<Double> {
@@ -32,10 +33,30 @@ public final class OverviewViewModel {
 
     @ObservationIgnored private let systemInfoRepository: any SystemInfoRepository
     @ObservationIgnored private let batteryMonitor: any BatteryMonitoring
+    @ObservationIgnored private let energyMonitor: (any EnergyMonitoring)?
 
-    public init(systemInfoRepository: any SystemInfoRepository, batteryMonitor: any BatteryMonitoring) {
+    public init(
+        systemInfoRepository: any SystemInfoRepository,
+        batteryMonitor: any BatteryMonitoring,
+        energyMonitor: (any EnergyMonitoring)? = nil
+    ) {
         self.systemInfoRepository = systemInfoRepository
         self.batteryMonitor = batteryMonitor
+        self.energyMonitor = energyMonitor
+    }
+
+    /// Follows app activity until the calling task is cancelled.
+    public func observeEnergy() async {
+        guard let energyMonitor else { return }
+        for await status in await energyMonitor.updates() {
+            energyStatus = status
+            rebuildRecommendations()
+        }
+    }
+
+    /// The apps with the highest estimated battery impact recently.
+    public var topApps: [AppUsage] {
+        Array((energyStatus?.recent ?? []).prefix(3))
     }
 
     /// Follows battery updates until the calling task is cancelled.
@@ -47,7 +68,20 @@ public final class OverviewViewModel {
 
     func apply(_ status: BatteryStatus) {
         batteryStatus = status
-        recommendations = BatteryRecommendations.make(for: status)
+        rebuildRecommendations()
+    }
+
+    private func rebuildRecommendations() {
+        let drain = (energyStatus?.alerts ?? []).map { alert in
+            Recommendation(
+                id: "drain-\(alert.appKey)",
+                title: String(localized: "\(alert.displayName) is using a lot of CPU"),
+                detail: alert.explanation,
+                severity: .warning
+            )
+        }
+        recommendations = (drain + BatteryRecommendations.make(for: batteryStatus))
+            .sorted { $0.severity > $1.severity }
     }
 
     /// Loads data for the dashboard. Safe to call repeatedly; concurrent calls are ignored.

@@ -13,6 +13,7 @@ public final class AppModel {
     public let dependencies: AppDependencies
     public let overview: OverviewViewModel
     public let battery: BatteryViewModel
+    public let energy: EnergyViewModel
     public let settings: SettingsViewModel
 
     public init(dependencies: AppDependencies, coordinator: AppCoordinator = AppCoordinator()) {
@@ -20,18 +21,21 @@ public final class AppModel {
         self.coordinator = coordinator
         overview = OverviewViewModel(
             systemInfoRepository: dependencies.systemInfo,
-            batteryMonitor: dependencies.battery
+            batteryMonitor: dependencies.battery,
+            energyMonitor: dependencies.energy
         )
         battery = BatteryViewModel(monitor: dependencies.battery)
+        energy = EnergyViewModel(monitor: dependencies.energy)
         settings = SettingsViewModel(
             systemInfoRepository: dependencies.systemInfo,
             batteryMonitor: dependencies.battery
         )
     }
 
-    /// Starts background services. Battery sampling runs for the life of the app,
-    /// whichever section is shown.
+    /// Starts background services. Battery and process sampling run for the life of
+    /// the app, whichever section is shown.
     public func start() async {
         await dependencies.battery.start()
+        await dependencies.energy.start()
     }
 }

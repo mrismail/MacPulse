@@ -6,18 +6,6 @@ public struct PlannedFeature: Sendable, Equatable {
     public let capabilities: [String]
     public let phase: Int
 
-    public static let energy = PlannedFeature(
-        title: "Energy",
-        systemImage: "bolt.horizontal.circle",
-        summary: "Which apps use the most CPU and memory over time, and why they may affect battery life.",
-        capabilities: [
-            "Ranked list of resource-intensive apps",
-            "CPU and memory trends",
-            "Configurable alerts",
-        ],
-        phase: 3
-    )
-
     public static let spaceAnalyzer = PlannedFeature(
         title: "Space Analyzer",
         systemImage: "chart.pie",
@@ -55,5 +43,5 @@ public struct PlannedFeature: Sendable, Equatable {
         phase: 6
     )
 
-    public static let all: [PlannedFeature] = [energy, spaceAnalyzer, duplicateFinder, cleaner]
+    public static let all: [PlannedFeature] = [spaceAnalyzer, duplicateFinder, cleaner]
 }

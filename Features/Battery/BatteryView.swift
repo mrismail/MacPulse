@@ -5,10 +5,14 @@ import SwiftUI
 
 public struct BatteryView: View {
     @Bindable private var viewModel: BatteryViewModel
+    private let energy: EnergyViewModel?
+    private let openEnergy: () -> Void
     @State private var selectedDate: Date?
 
-    public init(viewModel: BatteryViewModel) {
+    public init(viewModel: BatteryViewModel, energy: EnergyViewModel? = nil, openEnergy: @escaping () -> Void = {}) {
         self.viewModel = viewModel
+        self.energy = energy
+        self.openEnergy = openEnergy
     }
 
     public var body: some View {
@@ -68,10 +72,8 @@ public struct BatteryView: View {
                 }
                 historyCard
                 sessionsCard
-                Card("App energy use", systemImage: "list.bullet.rectangle") {
-                    Text("Coming soon: see which apps use the most CPU and memory while you're on battery.")
-                        .foregroundStyle(.secondary)
-                        .accessibilityIdentifier("battery.appEnergy.comingSoon")
+                if let energy {
+                    TopAppsCard(energy: energy, openEnergy: openEnergy)
                 }
             }
             .padding(Spacing.large)
@@ -295,6 +297,41 @@ public struct BatteryView: View {
     }
 }
 
+/// The apps with the highest estimated battery impact, from the Energy monitor.
+private struct TopAppsCard: View {
+    let energy: EnergyViewModel
+    let openEnergy: () -> Void
+
+    var body: some View {
+        Card("Apps using the most energy", systemImage: "bolt.horizontal.circle") {
+            if energy.status == nil {
+                ProgressView("Measuring app activity…").controlSize(.small)
+            } else if energy.topApps.isEmpty {
+                Text("No app has used noticeable CPU in the last few minutes.")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(energy.topApps) { app in
+                    HStack {
+                        Text(app.displayName)
+                        Spacer()
+                        Text(NumberFormatting.percent(app.cpuPercent) + " " + String(localized: "CPU"))
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                        ImpactBadge(impact: app.impact)
+                            .frame(minWidth: 110, alignment: .leading)
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+            }
+            Button("Show All Apps", action: openEnergy)
+                .buttonStyle(.link)
+                .accessibilityIdentifier("battery.openEnergy")
+        }
+        .accessibilityIdentifier("battery.topApps")
+        .task { await energy.observe(detailed: false) }
+    }
+}
+
 private struct ChargingSessionRow: View {
     let session: ChargingSession
 
@@ -336,7 +373,10 @@ private struct ChargingSessionRow: View {
 #if DEBUG
     struct BatteryView_Previews: PreviewProvider {
         static var previews: some View {
-            BatteryView(viewModel: BatteryViewModel(monitor: PreviewBatteryMonitor()))
+            BatteryView(
+                viewModel: BatteryViewModel(monitor: PreviewBatteryMonitor()),
+                energy: EnergyViewModel(monitor: PreviewEnergyMonitor())
+            )
                 .frame(width: 900, height: 900)
         }
     }
