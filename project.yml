@@ -37,12 +37,8 @@ targets:
         CFBundleVersion: "1"
         LSApplicationCategoryType: public.app-category.utilities
         LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
-    entitlements:
-      path: App/MacPulseApp/MacPulse.entitlements
-      properties:
-        # ADR-002: App Sandbox is enabled. Entitlements are added only when a
-        # phase needs them (e.g. user-selected file access in Phase 4).
-        com.apple.security.app-sandbox: true
+    # ADR-010: no App Sandbox (direct distribution, Developer ID + notarization).
+    # No entitlements at all; add one only with an ADR.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mrismail.MacPulse
