@@ -5,14 +5,16 @@ import SwiftUI
 
 @main
 struct MacPulseApp: App {
-    @State private var model = AppModel(
-        dependencies: AppDependencies.forLaunch(arguments: ProcessInfo.processInfo.arguments)
-    )
+    @State private var model: AppModel
 
     init() {
+        // Diagnostics run before any live service (monitors, stores) is created.
         if LaunchDiagnostics.runIfRequested(arguments: ProcessInfo.processInfo.arguments) {
             exit(0)
         }
+        _model = State(initialValue: AppModel(
+            dependencies: AppDependencies.forLaunch(arguments: ProcessInfo.processInfo.arguments)
+        ))
         Log.logger(.app).info("MacPulse launched")
     }
 
