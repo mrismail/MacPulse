@@ -33,7 +33,7 @@ jobs:
       - name: Run unit and integration tests
         run: |
           set -o pipefail
-          swift test 2>&1 | tee swift-test.log | tail -20 || {
+          swift test --parallel 2>&1 | tee swift-test.log | tail -20 || {
             # Surface failing tests as annotations so they are readable without the raw log.
             grep -E "✘|error:|Expectation failed|failed after" swift-test.log | sort -u | head -40 \
               | while IFS= read -r line; do echo "::error::${line:0:900}"; done
@@ -41,7 +41,7 @@ jobs:
           }
 
       - name: Install XcodeGen
-        run: brew install xcodegen
+        run: brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
 
       - name: Generate Xcode project
         run: xcodegen generate
@@ -109,14 +109,46 @@ jobs:
           codesign -dv --verbose=4 build-release/Build/Products/Release/MacPulse.app 2>&1 | tee codesign.txt
           grep -Eq "flags=.*runtime" codesign.txt || { echo "::error::Hardened Runtime is not enabled"; exit 1; }
 
-      - name: Process-access probe (ADR-009/010)
+      - name: Process-access probe (ADR-009/010) — must keep working
         run: |
           for config in Release Debug; do
             if [ "$config" = Release ]; then APP=build-release/Build/Products/Release/MacPulse.app; else APP=build/Build/Products/Debug/MacPulse.app; fi
-            LINE=$("$APP/Contents/MacOS/MacPulse" --macpulse-process-access-probe | grep '^MACPULSE_PROCESS_PROBE ' || true)
-            echo "$config: $LINE"
-            echo "::notice title=Process probe ($config)::${LINE#MACPULSE_PROCESS_PROBE }"
+            LINE=$(MACPULSE_DIAGNOSTICS=1 "$APP/Contents/MacOS/MacPulse" --macpulse-process-access-probe | grep '^MACPULSE_PROCESS_PROBE ')
+            JSON=${LINE#MACPULSE_PROCESS_PROBE }
+            echo "::notice title=Process probe ($config)::$JSON"
+            echo "$JSON" | python3 -c '
+          import json, sys
+          r = json.load(sys.stdin)
+          ok = r["anyProcessRusage"]["succeeded"]
+          sandboxed = r["isSandboxed"]
+          if sandboxed or ok == 0:
+              print("::error::Process monitoring regressed: sandboxed=%s, rusage ok=%s" % (sandboxed, ok))
+              sys.exit(1)
+          '
           done
+          # Without the environment variable the probe must not run (normal launches).
+          OUT=$(mktemp)
+          build-release/Build/Products/Release/MacPulse.app/Contents/MacOS/MacPulse --macpulse-process-access-probe > "$OUT" 2>/dev/null &
+          PID=$!
+          sleep 5
+          kill "$PID" 2>/dev/null || true
+          if grep -q MACPULSE_PROCESS_PROBE "$OUT"; then
+            echo "::error::Diagnostics ran without MACPULSE_DIAGNOSTICS=1"; exit 1
+          fi
+
+      - name: Guardrails — no networking, no process control (ADR-010)
+        run: |
+          # Source: APIs MacPulse must never use without a new ADR.
+          if grep -RInE '\b(URLSession|NWConnection|NWListener|import Network|task_for_pid|kill\(|AuthorizationExecuteWithPrivileges|SMJobBless|NSAppleScript)' \
+               --include='*.swift' App Domain Features Infrastructure Shared; then
+            echo "::error::Forbidden API found in sources (see ADR-010)"; exit 1
+          fi
+          # Binary: no direct references to socket/process-control symbols.
+          BIN=build-release/Build/Products/Release/MacPulse.app/Contents/MacOS/MacPulse
+          if nm -u "$BIN" | grep -E '^_(socket|connect|task_for_pid|kill|ptrace)$'; then
+            echo "::error::Forbidden symbol linked in the Release binary (see ADR-010)"; exit 1
+          fi
+          echo "Guardrails OK"
 
       - name: Upload test results
         if: always()
