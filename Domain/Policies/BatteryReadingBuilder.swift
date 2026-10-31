@@ -169,11 +169,16 @@ public enum BatteryReadingBuilder {
         if let condition = raw.batteryHealthCondition?.trimmingCharacters(in: .whitespaces), !condition.isEmpty {
             return .measured(.serviceRecommended(condition))
         }
-        if raw.batteryHealth != nil {
+        switch raw.batteryHealth?.trimmingCharacters(in: .whitespaces) {
+        case "Good"?:
             // macOS omits BatteryHealthCondition when the battery is normal.
             return .measured(.normal)
+        case let health? where !health.isEmpty:
+            // "Fair", "Poor" (IOPSKeys.h) or any other non-good value.
+            return .measured(.serviceRecommended(health))
+        default:
+            return .unavailable(.notSupportedOnThisMac)
         }
-        return .unavailable(.notSupportedOnThisMac)
     }
 
     // MARK: - Electrical
@@ -212,7 +217,7 @@ public enum BatteryReadingBuilder {
             return .unavailable(.notSupportedOnThisMac)
         }
         guard amperage > 0 else {
-            return .unavailable(.notYetSampled)
+            return .unavailable(.notApplicable("The battery reports no charging current right now."))
         }
         let watts = voltage * Double(amperage) / 1_000
         return .estimated(watts, basis: "Battery voltage × charging current, as reported by the battery.")
