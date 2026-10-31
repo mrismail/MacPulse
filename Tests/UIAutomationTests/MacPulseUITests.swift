@@ -54,8 +54,9 @@ final class MacPulseUITests: XCTestCase {
 
         let charge = element("battery.charge", in: app)
         XCTAssertTrue(charge.waitForExistence(timeout: 10))
-        let label = charge.label
-        XCTAssertTrue(label.hasPrefix("Charge"), "Unexpected charge label: \(label)")
+        // Static text exposes its string as label or value depending on the macOS version.
+        let label = [charge.label, charge.value as? String ?? ""].joined(separator: " ")
+        XCTAssertTrue(label.contains("Charge"), "Unexpected charge text: \(label)")
         XCTAssertTrue(label.contains("72"), "Charge value missing: \(label)")
         XCTAssertTrue(label.contains("Measured"), "Charge must carry its provenance: \(label)")
 
@@ -122,6 +123,11 @@ final class MacPulseUITests: XCTestCase {
                 .joined(separator: " / ")
             // Swift Charts generates its own axis-label elements; they have no identifier or label.
             if name.isEmpty && issue.auditType == .sufficientElementDescription {
+                return true
+            }
+            // Sidebar rows are drawn by the system sidebar style (vibrancy over the desktop),
+            // not by MacPulse colors; their contrast depends on the wallpaper behind the window.
+            if issue.auditType == .contrast, element?.identifier.hasPrefix("sidebar.") == true {
                 return true
             }
             problems.append("\(issue.compactDescription) — \(name.isEmpty ? "unnamed element" : name)")
