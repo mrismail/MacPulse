@@ -1,3 +1,4 @@
+import AppKit
 import MacPulseDomain
 import MacPulseFeatures
 import Observation
@@ -38,5 +39,30 @@ public final class AppModel {
     public func start() async {
         await dependencies.battery.start()
         await dependencies.energy.start()
+        observeLifecycle()
+    }
+
+    @ObservationIgnored private var lifecycleObservers: [NSObjectProtocol] = []
+
+    /// Saves in-memory usage when the app quits or the Mac goes to sleep.
+    private func observeLifecycle() {
+        guard lifecycleObservers.isEmpty else { return }
+        let energy = dependencies.energy
+        lifecycleObservers.append(NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification, object: nil, queue: .main
+        ) { _ in
+            // Termination doesn't wait for async work; give the save up to one second.
+            let done = DispatchSemaphore(value: 0)
+            Task.detached {
+                await energy.flush()
+                done.signal()
+            }
+            _ = done.wait(timeout: .now() + 1)
+        })
+        lifecycleObservers.append(NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.willSleepNotification, object: nil, queue: .main
+        ) { _ in
+            Task { await energy.flush() }
+        })
     }
 }
