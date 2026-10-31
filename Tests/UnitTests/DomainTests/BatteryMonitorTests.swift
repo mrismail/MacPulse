@@ -59,6 +59,35 @@ final class ManualPowerEvents: PowerSourceEventSource, @unchecked Sendable {
     func fire() { continuation.yield() }
 }
 
+/// History store that always fails.
+actor FailingHistoryRepository: BatteryHistoryRepository {
+    func append(_ snapshot: BatterySnapshot) throws { throw POSIXError(.EACCES) }
+    func snapshots(from: Date, to: Date) throws -> [BatterySnapshot] { throw POSIXError(.EACCES) }
+    func prune(olderThan date: Date) throws { throw POSIXError(.EACCES) }
+    func deleteAll() throws { throw POSIXError(.EACCES) }
+}
+
+/// Counts store calls.
+actor CountingHistoryRepository: BatteryHistoryRepository {
+    private(set) var reads = 0
+    private(set) var appends = 0
+    func append(_ snapshot: BatterySnapshot) { appends += 1 }
+    func snapshots(from: Date, to: Date) -> [BatterySnapshot] {
+        reads += 1
+        return []
+    }
+    func prune(olderThan date: Date) {}
+    func deleteAll() {}
+}
+
+/// Collects reported errors.
+final class ErrorCollector: @unchecked Sendable {
+    private let lock = NSLock()
+    private var _errors: [AppError] = []
+    var errors: [AppError] { lock.withLock { _errors } }
+    func record(_ error: AppError) { lock.withLock { _errors.append(error) } }
+}
+
 /// Polls `condition` for up to ~2 seconds.
 func eventually(_ condition: @Sendable () async -> Bool) async -> Bool {
     for _ in 0..<200 {
@@ -74,9 +103,11 @@ func eventually(_ condition: @Sendable () async -> Bool) async -> Bool {
 struct BatteryMonitorTests {
     private func makeMonitor(
         raw: RawBatteryData = BatteryFixtures.intelOnBattery,
-        history: InMemoryBatteryHistoryRepository = InMemoryBatteryHistoryRepository(),
+        history: any BatteryHistoryRepository = InMemoryBatteryHistoryRepository(),
         clock: ManualClock = ManualClock(),
         events: ManualPowerEvents? = nil,
+        configuration: BatteryMonitor.Configuration = .init(),
+        errors: ErrorCollector = ErrorCollector(),
         sleep: @escaping BatteryMonitor.Sleeper = { _ in try await Task.sleep(for: .seconds(3_600)) }
     ) -> (BatteryMonitor, FakeBatterySource) {
         let source = FakeBatterySource(raw)
@@ -84,8 +115,11 @@ struct BatteryMonitorTests {
             source: source,
             history: history,
             powerEvents: events,
+            configuration: configuration,
             sleep: sleep,
-            now: { clock.now }
+            eventDelay: { _ in },
+            now: { clock.now },
+            reportError: { errors.record($0) }
         )
         return (monitor, source)
     }
@@ -170,10 +204,14 @@ struct BatteryMonitorTests {
     }
 
     @Test func clearHistoryRemovesSamplesAndResamples() async throws {
-        let history = InMemoryBatteryHistoryRepository(series([90, 89, 88]))
+        let old = series([90, 89, 88])
+        let history = InMemoryBatteryHistoryRepository(old)
         let (monitor, _) = makeMonitor(history: history)
         try await monitor.clearHistory()
-        #expect(await history.count == 1)
+        let remaining = await history.snapshots(from: .distantPast, to: .distantFuture)
+        #expect(remaining.count == 1)
+        #expect(!old.contains { $0.id == remaining[0].id })
+        #expect(remaining[0].percentage == 64)
     }
 
     @Test func startPrunesOldHistoryAndSamplesPeriodically() async {
@@ -193,10 +231,12 @@ struct BatteryMonitorTests {
 
         await monitor.start()
 
-        #expect(await eventually { source.reads == 3 })
+        // Wait on the store, not the source: the append happens after the read.
+        #expect(await eventually { await history.count == 3 })
         let snapshots = await history.snapshots(from: .distantPast, to: .distantFuture)
         #expect(!snapshots.contains { $0.id == old.id })
         #expect(snapshots.count == 3)
+        #expect(source.reads == 3)
         await monitor.stop()
     }
 
@@ -222,13 +262,77 @@ struct BatteryMonitorTests {
         events.fire()
         #expect(await eventually { source.reads == 2 })
 
-        // Within the debounce interval: ignored.
+        // Within the spacing window: one trailing sample, never dropped.
         clock.advance(by: 1)
         events.fire()
-        try? await Task.sleep(for: .milliseconds(100))
-        #expect(source.reads == 2)
+        #expect(await eventually { source.reads == 3 })
 
         await monitor.stop()
+    }
+
+    @Test func unplugRightAfterATimerSampleIsNotMissed() async throws {
+        let clock = ManualClock()
+        let events = ManualPowerEvents()
+        let (monitor, source) = makeMonitor(raw: BatteryFixtures.appleSiliconCharging, clock: clock, events: events)
+        await monitor.start()
+        #expect(await eventually { source.reads == 1 })
+
+        var unplugged = BatteryFixtures.appleSiliconCharging
+        unplugged.powerSourceState = "Battery Power"
+        unplugged.isCharging = false
+        source.set(unplugged)
+        clock.advance(by: 2)  // inside the 5 s spacing window
+        events.fire()
+
+        #expect(await eventually { await monitor.latestStatus?.reading.powerSource.value == .battery })
+        await monitor.stop()
+    }
+
+    @Test func concurrentRefreshesAreSerialized() async {
+        let history = InMemoryBatteryHistoryRepository()
+        let clock = ManualClock()
+        let (monitor, _) = makeMonitor(history: history, clock: clock)
+        await withTaskGroup(of: Void.self) { group in
+            for _ in 0..<10 {
+                group.addTask { await monitor.refresh() }
+            }
+        }
+        #expect(await history.count == 10)
+        let latest = await monitor.latestStatus
+        #expect(latest != nil)
+    }
+
+    @Test func historyFailuresAreReportedAndSurfaced() async throws {
+        let errors = ErrorCollector()
+        let (monitor, _) = makeMonitor(history: FailingHistoryRepository(), errors: errors)
+        await monitor.refresh()
+        let status = try #require(await monitor.latestStatus)
+        #expect(status.historyIssue?.kind == .permissionDenied)
+        #expect(!errors.errors.isEmpty)
+        #expect(status.reading.charge == .measured(64))  // monitoring still works
+    }
+
+    @Test func nonPersistentHistoryIsFlagged() async throws {
+        let (monitor, _) = makeMonitor(configuration: .init(historyIsPersistent: false))
+        await monitor.refresh()
+        let status = try #require(await monitor.latestStatus)
+        #expect(status.historyIssue != nil)
+    }
+
+    @Test func storedRuntimeIsOnlyMacPulsesOwnEstimate() async throws {
+        let history = InMemoryBatteryHistoryRepository()
+        let (monitor, _) = makeMonitor(history: history)  // no history → only macOS estimate exists
+        await monitor.refresh()
+        let stored = await history.snapshots(from: .distantPast, to: .distantFuture)
+        #expect(stored.first?.estimatedRuntimeMinutes == nil)
+    }
+
+    @Test func historyIsReadOnceNotOnEverySample() async {
+        let counting = CountingHistoryRepository()
+        let (monitor, _) = makeMonitor(history: counting)
+        for _ in 0..<5 { await monitor.refresh() }
+        #expect(await counting.reads == 1)
+        #expect(await counting.appends == 5)
     }
 
     @Test func cancelledSubscriberIsRemoved() async {
