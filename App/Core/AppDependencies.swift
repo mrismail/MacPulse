@@ -12,17 +12,21 @@ import MacPulseShared
 public struct AppDependencies: Sendable {
     public let systemInfo: any SystemInfoRepository
     public let battery: any BatteryMonitoring
+    public let energy: any EnergyMonitoring
 
-    public init(systemInfo: any SystemInfoRepository, battery: any BatteryMonitoring) {
+    public init(systemInfo: any SystemInfoRepository, battery: any BatteryMonitoring, energy: any EnergyMonitoring) {
         self.systemInfo = systemInfo
         self.battery = battery
+        self.energy = energy
     }
 
     /// Real system services. Used by the shipping app.
     public static func live() -> AppDependencies {
-        AppDependencies(
+        let battery = makeLiveBatteryMonitor()
+        return AppDependencies(
             systemInfo: LiveSystemInfoRepository(),
-            battery: makeLiveBatteryMonitor()
+            battery: battery,
+            energy: makeLiveProcessMonitor(battery: battery)
         )
     }
 
@@ -73,11 +77,44 @@ public struct AppDependencies: Sendable {
         public static func preview() -> AppDependencies {
             AppDependencies(
                 systemInfo: PreviewSystemInfoRepository(),
-                battery: PreviewBatteryMonitor()
+                battery: PreviewBatteryMonitor(),
+                energy: PreviewEnergyMonitor()
             )
         }
     }
 #endif
+
+extension AppDependencies {
+    fileprivate static func makeLiveProcessMonitor(battery: BatteryMonitor) -> ProcessMonitor {
+        let history: any AppUsageHistoryRepository
+        var configuration = ProcessMonitor.Configuration()
+        do {
+            history = JSONLinesAppUsageStore(directory: try JSONLinesAppUsageStore.defaultDirectory())
+        } catch {
+            Log.logger(.energy).log(
+                AppError.wrapping(error, userMessage: "App usage history can't be saved."),
+                context: "Usage history store"
+            )
+            history = InMemoryAppUsageHistory()
+            configuration.historyIsPersistent = false
+        }
+        return ProcessMonitor(
+            source: LiveProcessSnapshotSource(),
+            history: history,
+            settingsStore: UserDefaultsDrainAlertSettingsStore(),
+            notifier: UserNotificationDrainNotifier(),
+            powerState: {
+                await battery.latestStatus?.reading.powerSource.value.map { $0 == .battery }
+            },
+            configuration: configuration,
+            // Tolerance lets macOS coalesce the wake-up with other timers to save energy.
+            sleep: { try await Task.sleep(for: $0, tolerance: .seconds(5)) },
+            reportError: { error in
+                Log.logger(.energy).log(error, context: "Process monitor")
+            }
+        )
+    }
+}
 
 public enum LaunchArgument {
     public static let useFakeServices = "-MacPulseUseFakeServices"
