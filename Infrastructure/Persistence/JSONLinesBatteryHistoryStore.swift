@@ -54,15 +54,31 @@ public actor JSONLinesBatteryHistoryStore: BatteryHistoryRepository {
         line.append(0x0A)  // "\n"
 
         let url = fileURL(for: snapshot.timestamp)
-        if !fileManager.fileExists(atPath: url.path) {
-            guard fileManager.createFile(atPath: url.path, contents: nil, attributes: [.posixPermissions: 0o600]) else {
-                throw CocoaError(.fileWriteUnknown, userInfo: [NSFilePathErrorKey: url.path])
-            }
+        // If a previous write was interrupted (crash, power loss), the file may end
+        // mid-line. Start on a fresh line so only the damaged record is lost.
+        if try endsWithoutNewline(url) {
+            line.insert(0x0A, at: line.startIndex)
         }
-        let handle = try FileHandle(forWritingTo: url)
+        // O_APPEND makes each write land at the current end of file even if another
+        // instance appends too; O_CREAT with 0600 creates the file atomically without
+        // a separate exists/create race.
+        let descriptor = open(url.path, O_WRONLY | O_APPEND | O_CREAT | O_CLOEXEC, 0o600)
+        guard descriptor >= 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
         defer { try? handle.close() }
-        try handle.seekToEnd()
         try handle.write(contentsOf: line)
+    }
+
+    private func endsWithoutNewline(_ url: URL) throws -> Bool {
+        guard fileManager.fileExists(atPath: url.path) else { return false }
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+        let size = try handle.seekToEnd()
+        guard size > 0 else { return false }
+        try handle.seek(toOffset: size - 1)
+        return try handle.read(upToCount: 1) != Data([0x0A])
     }
 
     public func snapshots(from: Date, to: Date) throws -> [BatterySnapshot] {
@@ -70,11 +86,12 @@ public actor JSONLinesBatteryHistoryStore: BatteryHistoryRepository {
         let firstDay = dayString(for: from)
         let lastDay = dayString(for: to)
         var result: [BatterySnapshot] = []
+        var skipped = 0
         for (day, url) in try dayFiles() where day >= firstDay && day <= lastDay {
             let data = try Data(contentsOf: url)
             for line in data.split(separator: 0x0A) where !line.isEmpty {
                 guard let snapshot = try? decoder.decode(BatterySnapshot.self, from: Data(line)) else {
-                    Log.logger(.persistence).notice("Skipped an unreadable battery history line")
+                    skipped += 1
                     continue
                 }
                 if snapshot.timestamp >= from && snapshot.timestamp <= to {
@@ -82,20 +99,33 @@ public actor JSONLinesBatteryHistoryStore: BatteryHistoryRepository {
                 }
             }
         }
+        if skipped > 0 {
+            Log.logger(.persistence).notice("Skipped \(skipped, privacy: .public) unreadable battery history lines")
+        }
         return result.sorted { $0.timestamp < $1.timestamp }
     }
 
     public func prune(olderThan date: Date) throws {
         let cutoffDay = dayString(for: date)
-        for (day, url) in try dayFiles() where day < cutoffDay {
-            try fileManager.removeItem(at: url)
-        }
+        try removeFiles(try dayFiles().filter { $0.day < cutoffDay }.map(\.url))
     }
 
     public func deleteAll() throws {
-        for (_, url) in try dayFiles() {
-            try fileManager.removeItem(at: url)
+        try removeFiles(try dayFiles().map(\.url))
+    }
+
+    /// Removes every file it can, then rethrows the first failure, so one stuck file
+    /// doesn't keep the rest of the user's history around.
+    private func removeFiles(_ urls: [URL]) throws {
+        var firstError: (any Error)?
+        for url in urls {
+            do {
+                try fileManager.removeItem(at: url)
+            } catch {
+                firstError = firstError ?? error
+            }
         }
+        if let firstError { throw firstError }
     }
 
     // MARK: Files
