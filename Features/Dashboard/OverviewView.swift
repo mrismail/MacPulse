@@ -77,6 +77,7 @@ public struct OverviewView: View {
                 }
             }
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("overview.recommendations")
     }
 
