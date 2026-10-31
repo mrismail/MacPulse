@@ -5,6 +5,7 @@ import SwiftUI
 public struct SettingsView: View {
     private let viewModel: SettingsViewModel
     @State private var isConfirmingClearHistory = false
+    @State private var isConfirmingClearUsage = false
 
     public init(viewModel: SettingsViewModel) {
         self.viewModel = viewModel
@@ -49,6 +50,43 @@ public struct SettingsView: View {
                     case .failed(let error):
                         Label(error.userMessage, systemImage: "exclamationmark.triangle")
                             .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            if viewModel.canClearUsageHistory {
+                Section("App usage history") {
+                    Text("MacPulse keeps \(viewModel.usageHistoryRetentionDays) days of hourly CPU and energy use per app, to show trends. It stores app names and locations only — never documents, window titles or what you do in an app.")
+                        .foregroundStyle(.secondary)
+                    HStack {
+                        Button("Clear App Usage History…", role: .destructive) {
+                            isConfirmingClearUsage = true
+                        }
+                        .disabled(viewModel.clearUsageHistoryState == .clearing)
+                        .accessibilityIdentifier("settings.clearUsageHistory")
+                        .confirmationDialog(
+                            "Clear all app usage history?",
+                            isPresented: $isConfirmingClearUsage,
+                            titleVisibility: .visible
+                        ) {
+                            Button("Clear Usage History", role: .destructive) {
+                                Task { await viewModel.clearUsageHistory() }
+                            }
+                        } message: {
+                            Text("Per-app trends start again from now.")
+                        }
+                        switch viewModel.clearUsageHistoryState {
+                        case .idle:
+                            EmptyView()
+                        case .clearing:
+                            ProgressView().controlSize(.small)
+                        case .cleared:
+                            Label("History cleared", systemImage: "checkmark.circle")
+                                .foregroundStyle(.secondary)
+                        case .failed(let error):
+                            Label(error.userMessage, systemImage: "exclamationmark.triangle")
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
             }

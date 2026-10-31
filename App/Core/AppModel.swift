@@ -28,7 +28,8 @@ public final class AppModel {
         energy = EnergyViewModel(monitor: dependencies.energy)
         settings = SettingsViewModel(
             systemInfoRepository: dependencies.systemInfo,
-            batteryMonitor: dependencies.battery
+            batteryMonitor: dependencies.battery,
+            energyMonitor: dependencies.energy
         )
     }
 
