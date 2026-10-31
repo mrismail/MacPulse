@@ -37,7 +37,7 @@ public final class SettingsViewModel {
             Log.logger(.persistence).info("Battery history cleared by the user")
         } catch {
             let appError = AppError.wrapping(error, userMessage: "Couldn't clear battery history.")
-            Log.logger(.persistence).error("\(appError.description, privacy: .public)")
+            Log.logger(.persistence).log(appError, context: "Clear battery history")
             clearBatteryHistoryState = .failed(appError)
         }
     }
@@ -49,7 +49,7 @@ public final class SettingsViewModel {
             systemInfo = .loaded(try await systemInfoRepository.currentSystemInfo())
         } catch {
             let appError = AppError.wrapping(error, userMessage: "Couldn't read diagnostics.")
-            Log.logger(.system).error("Settings diagnostics failed: \(appError.description, privacy: .public)")
+            Log.logger(.system).log(appError, context: "Settings diagnostics")
             systemInfo = .failed(appError)
         }
     }

@@ -60,7 +60,7 @@ public final class OverviewViewModel {
             systemInfo = .loaded(info)
         } catch {
             let appError = AppError.wrapping(error, userMessage: "Couldn't read information about this Mac.")
-            Log.logger(.system).error("Overview system info failed: \(appError.description, privacy: .public)")
+            Log.logger(.system).log(appError, context: "Overview system info")
             systemInfo = .failed(appError)
         }
     }
