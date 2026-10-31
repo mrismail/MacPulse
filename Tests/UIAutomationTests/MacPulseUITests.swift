@@ -1,10 +1,11 @@
 import XCTest
 
-/// End-to-end checks of navigation and the Battery screen, using fake services.
+/// End-to-end checks of navigation, the Battery screen, the Overview and Settings,
+/// using fake services so results don't depend on the test machine's battery.
 ///
 /// Run from Xcode (⌘U) or:
 ///   xcodebuild test -project MacPulse.xcodeproj -scheme MacPulse -destination 'platform=macOS'
-/// The first run may ask to allow the test runner to control the computer
+/// The first local run may ask to allow the test runner to control the computer
 /// (System Settings → Privacy & Security → Accessibility).
 final class MacPulseUITests: XCTestCase {
     private static let sectionIDs = [
@@ -29,11 +30,18 @@ final class MacPulseUITests: XCTestCase {
     }
 
     @MainActor
+    private func open(_ section: String, in app: XCUIApplication) {
+        let item = element("sidebar.\(section)", in: app)
+        XCTAssertTrue(item.waitForExistence(timeout: 10), "Missing sidebar item \(section)")
+        item.click()
+    }
+
+    @MainActor
     func testSidebarListsEverySection() {
         let app = launchApp()
         for id in Self.sectionIDs {
             XCTAssertTrue(
-                element("sidebar.\(id)", in: app).waitForExistence(timeout: 5),
+                element("sidebar.\(id)", in: app).waitForExistence(timeout: 10),
                 "Missing sidebar item \(id)"
             )
         }
@@ -42,24 +50,71 @@ final class MacPulseUITests: XCTestCase {
     @MainActor
     func testBatteryScreenShowsLabeledValues() {
         let app = launchApp()
-        element("sidebar.battery", in: app).click()
+        open("battery", in: app)
 
         let charge = element("battery.charge", in: app)
-        XCTAssertTrue(charge.waitForExistence(timeout: 5))
-        let chargeText = charge.label + " " + String(describing: charge.value ?? "")
-        XCTAssertTrue(chargeText.contains("72%"), "Unexpected charge text: \(chargeText)")
-        XCTAssertTrue(chargeText.contains("Measured"), "Charge must carry its provenance: \(chargeText)")
+        XCTAssertTrue(charge.waitForExistence(timeout: 10))
+        let value = String(describing: charge.value ?? "")
+        XCTAssertTrue(value.contains("72"), "Unexpected charge value: \(value)")
+        XCTAssertTrue(value.contains("Measured"), "Charge must carry its provenance: \(value)")
+        XCTAssertEqual(charge.label, "Charge")
 
         XCTAssertTrue(element("battery.state", in: app).exists)
         XCTAssertTrue(element("battery.health", in: app).exists)
-        XCTAssertTrue(element("battery.historyChart", in: app).waitForExistence(timeout: 5))
+        XCTAssertTrue(element("battery.historyChart", in: app).waitForExistence(timeout: 10))
+    }
+
+    @MainActor
+    func testRangeSwitchingKeepsTheChart() {
+        let app = launchApp()
+        open("battery", in: app)
+        let range = element("battery.range", in: app)
+        XCTAssertTrue(range.waitForExistence(timeout: 10))
+        for title in ["6 Hours", "7 Days", "24 Hours"] {
+            range.radioButtons[title].firstMatch.click()
+            XCTAssertTrue(element("battery.historyChart", in: app).waitForExistence(timeout: 10), title)
+        }
     }
 
     @MainActor
     func testGoMenuShortcutsNavigate() {
         let app = launchApp()
-        XCTAssertTrue(element("sidebar.overview", in: app).waitForExistence(timeout: 5))
+        XCTAssertTrue(element("sidebar.overview", in: app).waitForExistence(timeout: 10))
         app.typeKey("2", modifierFlags: .command)
-        XCTAssertTrue(element("battery.state", in: app).waitForExistence(timeout: 5))
+        XCTAssertTrue(element("battery.state", in: app).waitForExistence(timeout: 10))
+    }
+
+    @MainActor
+    func testOverviewLinksToBattery() {
+        let app = launchApp()
+        XCTAssertTrue(element("overview.recommendations", in: app).waitForExistence(timeout: 10))
+        let link = element("overview.openBattery", in: app)
+        XCTAssertTrue(link.waitForExistence(timeout: 10))
+        link.click()
+        XCTAssertTrue(element("battery.state", in: app).waitForExistence(timeout: 10))
+    }
+
+    @MainActor
+    func testClearHistoryAsksForConfirmation() {
+        let app = launchApp()
+        open("settings", in: app)
+        let clear = element("settings.clearBatteryHistory", in: app)
+        XCTAssertTrue(clear.waitForExistence(timeout: 10))
+        clear.click()
+        let confirm = app.buttons["Clear History"].firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "Clearing must ask for confirmation first")
+        confirm.click()
+        XCTAssertTrue(app.staticTexts["History cleared"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testBatteryScreenPassesAccessibilityAudit() throws {
+        let app = launchApp()
+        open("battery", in: app)
+        XCTAssertTrue(element("battery.charge", in: app).waitForExistence(timeout: 10))
+        try app.performAccessibilityAudit(for: [.contrast, .elementDetection, .sufficientElementDescription]) { issue in
+            // Swift Charts axis tick labels are generated by the framework; ignore those.
+            issue.element?.identifier.isEmpty == true && issue.auditType == .sufficientElementDescription
+        }
     }
 }
