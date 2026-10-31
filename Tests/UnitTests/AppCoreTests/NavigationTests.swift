@@ -87,3 +87,13 @@ struct AppModelTests {
         #expect(model.battery.status == model.overview.batteryStatus)
     }
 }
+
+@Suite("LaunchDiagnostics")
+@MainActor
+struct LaunchDiagnosticsTests {
+    @Test func requiresEnvironmentVariableAndArgument() {
+        let argument = "--macpulse-process-access-probe"
+        #expect(!LaunchDiagnostics.runIfRequested(arguments: ["MacPulse", argument], environment: [:]))
+        #expect(!LaunchDiagnostics.runIfRequested(arguments: ["MacPulse"], environment: ["MACPULSE_DIAGNOSTICS": "1"]))
+    }
+}
