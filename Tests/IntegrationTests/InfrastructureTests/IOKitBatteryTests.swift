@@ -47,6 +47,8 @@ struct IOKitBatteryTests {
         // Amperage while discharging is stored as an unsigned 64-bit two's-complement value.
         let stored = NSNumber(value: UInt64(bitPattern: -1_480))
         #expect(IOKitBatteryProbe.int(stored) == -1_480)
+        // IOKit usually stores it as a signed 64-bit CFNumber.
+        #expect(IOKitBatteryProbe.int(NSNumber(value: Int64(-1_480))) == -1_480)
         #expect(IOKitBatteryProbe.int(NSNumber(value: 12_210)) == 12_210)
         #expect(IOKitBatteryProbe.int("12") == nil)
         #expect(IOKitBatteryProbe.int(nil) == nil)

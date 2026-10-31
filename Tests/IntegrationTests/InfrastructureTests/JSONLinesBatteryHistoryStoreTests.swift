@@ -4,7 +4,7 @@ import Testing
 @testable import MacPulseInfrastructure
 
 @Suite("JSONLinesBatteryHistoryStore")
-struct JSONLinesBatteryHistoryStoreTests {
+final class JSONLinesBatteryHistoryStoreTests {
     private let directory: URL
     private let store: JSONLinesBatteryHistoryStore
     /// 2026-10-31 12:00:00 UTC
@@ -14,6 +14,10 @@ struct JSONLinesBatteryHistoryStoreTests {
         directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("MacPulseTests-\(UUID().uuidString)", isDirectory: true)
         store = JSONLinesBatteryHistoryStore(directory: directory)
+    }
+
+    deinit {
+        try? FileManager.default.removeItem(at: directory)
     }
 
     private func snapshot(_ offset: TimeInterval, _ percentage: Double = 50) -> BatterySnapshot {
@@ -94,6 +98,41 @@ struct JSONLinesBatteryHistoryStoreTests {
 
         let read = try await store.snapshots(from: .distantPast, to: .distantFuture)
         #expect(read.map(\.percentage) == [70, 69])
+    }
+
+    @Test func interruptedWriteOnlyLosesTheDamagedRecord() async throws {
+        try await store.append(snapshot(0, 70))
+        // Simulate a crash mid-write: a partial record with no trailing newline.
+        let url = directory.appendingPathComponent("battery-2026-10-31.jsonl")
+        let handle = try FileHandle(forWritingTo: url)
+        try handle.seekToEnd()
+        try handle.write(contentsOf: Data("{\"id\":\"trunc".utf8))
+        try handle.close()
+
+        try await store.append(snapshot(60, 69))
+
+        let read = try await store.snapshots(from: .distantPast, to: .distantFuture)
+        #expect(read.map(\.percentage) == [70, 69])
+    }
+
+    @Test func directoryIsOwnerOnly() async throws {
+        try await store.append(snapshot(0))
+        let attributes = try FileManager.default.attributesOfItem(atPath: directory.path)
+        let permissions = try #require(attributes[.posixPermissions] as? NSNumber)
+        #expect(permissions.intValue == 0o700)
+    }
+
+    @Test func sevenDaysReadWithinBudget() async throws {
+        // One sample a minute for 7 days ≈ 10,080 lines.
+        for minute in 0..<10_080 {
+            try await store.append(snapshot(Double(minute - 10_080) * 60))
+        }
+        let clock = ContinuousClock()
+        let start = clock.now
+        let read = try await store.snapshots(from: noon.addingTimeInterval(-7 * 24 * 3_600), to: noon)
+        let elapsed = clock.now - start
+        #expect(read.count == 10_080)
+        #expect(elapsed < .seconds(1), "7-day read took \(elapsed)")
     }
 
     @Test func missingDirectoryReadsAsEmpty() async throws {
