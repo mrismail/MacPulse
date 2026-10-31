@@ -4,8 +4,9 @@ import SwiftUI
 /// Displays a titled metric with its provenance badge.
 /// Unavailable metrics show an em dash and the reason, never a fabricated value.
 ///
-/// VoiceOver reads: label = title, value = "<value>, <Measured|Estimate|Unavailable>",
-/// hint = how the value was obtained.
+/// VoiceOver reads one label, "<title>: <value>, <Measured|Estimate|Unavailable>",
+/// with the explanation as the hint. (On macOS a combined element's AXValue is not
+/// exposed reliably, so everything that matters is in the label.)
 public struct MetricValueView<Value: Sendable & Equatable>: View {
     public enum Prominence: Sendable {
         case standard
@@ -51,8 +52,7 @@ public struct MetricValueView<Value: Sendable & Equatable>: View {
         }
         .help(metric.provenance.explanation)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(title)
-        .accessibilityValue(accessibilityValue)
+        .accessibilityLabel(accessibilityText)
         .accessibilityHint(metric.provenance.explanation)
     }
 
@@ -63,8 +63,8 @@ public struct MetricValueView<Value: Sendable & Equatable>: View {
         }
     }
 
-    private var accessibilityValue: String {
+    private var accessibilityText: String {
         let value = valueText ?? String(localized: "Not available")
-        return "\(value), \(metric.provenance.badgeTitle)"
+        return "\(title): \(value), \(metric.provenance.badgeTitle)"
     }
 }
