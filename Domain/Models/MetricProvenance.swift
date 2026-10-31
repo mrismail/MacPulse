@@ -26,4 +26,7 @@ public enum UnavailabilityReason: Sendable, Hashable {
     case notYetImplemented
     /// The system source returned an error or an implausible value.
     case sourceError(String)
+    /// The metric does not apply in the current state. `detail` is user-facing,
+    /// for example "Not charging" for charging power.
+    case notApplicable(String)
 }

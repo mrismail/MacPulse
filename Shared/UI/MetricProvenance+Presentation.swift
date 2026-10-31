@@ -51,6 +51,8 @@ extension UnavailabilityReason {
             "Coming in a later version of MacPulse."
         case .sourceError(let detail):
             "macOS returned an unexpected value (\(detail))."
+        case .notApplicable(let detail):
+            detail
         }
     }
 }
