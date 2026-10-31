@@ -85,5 +85,53 @@ registry value is range-checked; out-of-range values show as Unavailable with th
 raw figure in the tooltip. On Apple silicon `MaxCapacity` is a percentage, so the
 full-charge capacity comes from `AppleRawMaxCapacity` / `NominalChargeCapacity`.
 
-**Sandbox:** IOPS and IORegistry property reads need no entitlement. Confirmed by the
-integration tests on the developer's MacBook (Phase 2 acceptance).
+**Sandbox:** IOPS and IORegistry property reads are expected to need no entitlement.
+This is **not yet verified**: `swift test` binaries are not sandboxed and the CI runner
+has no battery. Verification (Phase 2 acceptance) = run the signed, sandboxed
+`MacPulse.app` on a MacBook and compare the Battery screen with System Settings →
+Battery and `ioreg -rc AppleSmartBattery`; record the result here.
+
+**Health condition:** `BatteryHealth` values other than "Good" ("Fair", "Poor") and any
+`BatteryHealthCondition` are shown as needing service, never as Normal.
+
+**Runtime:** one "Estimated runtime" figure is shown everywhere: MacPulse's own
+recent-discharge estimate when it has ≥ 15 min and ≥ 2 percentage points of
+uninterrupted on-battery history, otherwise macOS's estimate; the provenance basis
+says which. History stores only MacPulse's own estimate.
+
+## ADR-006 — Sampling guarantees and history access pattern
+
+**Date:** 2026-10-31 · **Status:** Accepted (from the Phase 2 review)
+
+- `BatteryMonitor` serializes samples (each waits for the previous) and never publishes
+  an older reading over a newer one.
+- Power-source notifications inside the 5 s spacing window schedule one trailing sample,
+  so a plug/unplug right after a timer sample is never lost.
+- The 30-minute estimator window lives in memory; the store is read once at startup.
+  The Battery screen reads history from disk only when the range changes and appends
+  live samples in memory. Chart and session derivation run off the main actor.
+- Pruning runs at most once a day, inside the sampling loop.
+- If the on-disk store cannot be created or written, monitoring continues and
+  `BatteryStatus.historyIssue` is shown to the user (banner + recommendation).
+
+## ADR-007 — Release safety and logging privacy
+
+**Date:** 2026-10-31 · **Status:** Accepted
+
+- Fake services and preview data compile only in Debug (`#if DEBUG`); Release ignores
+  `-MacPulseUseFakeServices`. CI builds the Release configuration.
+- `AppError` is logged with `Logger.log(_:context:)`: kind and user message public,
+  technical detail private (it may contain file paths and therefore the user name).
+- CI fails if the app has any entitlement other than `app-sandbox` (and Debug's
+  `get-task-allow`). New entitlements require an ADR.
+
+## ADR-008 — Localization groundwork
+
+**Date:** 2026-10-31 · **Status:** Accepted
+
+The owner targets global customers including Arabic. Phase 2 sets
+`defaultLocalization: "en"`, formats every number, percentage, duration, temperature
+(°C/°F by locale), voltage, power and capacity with Foundation format styles, uses
+`String(localized:)` / `LocalizedStringKey` for UI text, and mirrors directional glyphs
+in RTL. Extracting a String Catalog and translating (Arabic first) is scheduled for
+Phase 7, when the UI text is stable; see `DEFERRED.md`.
