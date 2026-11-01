@@ -14,6 +14,8 @@ public struct OverheadReport: Sendable, Codable, Equatable {
     public var cpuPercentAtBackgroundRate: Double
     public var cpuPercentAtDetailedRate: Double
     public var footprintBytes: UInt64
+    /// Average wall-clock milliseconds per snapshot phase, to see where time goes.
+    public var averageTiming: LiveProcessSnapshotSource.Timing
 }
 
 /// Runs the real sampling path in an otherwise idle MacPulse process and measures its own
@@ -28,8 +30,14 @@ public enum OverheadBenchmark {
         let pid = getpid()
         var previous = await source.snapshot(at: Date())  // warm caches, as the monitor does
         let before = ProcessTable.resourceUsage(of: pid)
+        var timing = LiveProcessSnapshotSource.Timing()
         for index in 1...samples {
             let next = await source.snapshot(at: Date().addingTimeInterval(Double(index)))
+            let last = await source.lastTiming
+            timing.listMilliseconds += last.listMilliseconds / Double(samples)
+            timing.countersMilliseconds += last.countersMilliseconds / Double(samples)
+            timing.namesMilliseconds += last.namesMilliseconds / Double(samples)
+            timing.systemMilliseconds += last.systemMilliseconds / Double(samples)
             let activity = ProcessActivityCalculator.activity(from: previous, to: next)
             _ = AppUsageAggregator.aggregate(activity, displayNames: next.appDisplayNames, excludingPID: pid, basis: .cpu)
             previous = next
@@ -48,7 +56,8 @@ public enum OverheadBenchmark {
             wakeupsPerSample: wakeups,
             cpuPercentAtBackgroundRate: perSample / 60_000 * 100,
             cpuPercentAtDetailedRate: perSample / 10_000 * 100,
-            footprintBytes: after?.ri_phys_footprint ?? 0
+            footprintBytes: after?.ri_phys_footprint ?? 0,
+            averageTiming: timing
         )
     }
 

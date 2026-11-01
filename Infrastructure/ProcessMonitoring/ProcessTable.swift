@@ -53,6 +53,32 @@ enum ProcessTable {
         }
     }
 
+    /// pids of one user's processes, filtered by the kernel (much cheaper than copying the
+    /// whole process table, which is ~650 bytes per process).
+    static func pids(ofUser uid: uid_t) -> [pid_t] {
+        for _ in 0..<3 {
+            let estimate = proc_listpids(UInt32(PROC_UID_ONLY), UInt32(uid), nil, 0)
+            guard estimate > 0 else { return [] }
+            // Headroom for processes started between the two calls.
+            var buffer = [pid_t](repeating: 0, count: Int(estimate) / MemoryLayout<pid_t>.size + 64)
+            let bytes = buffer.withUnsafeMutableBufferPointer { pointer in
+                proc_listpids(UInt32(PROC_UID_ONLY), UInt32(uid), pointer.baseAddress, Int32(pointer.count * MemoryLayout<pid_t>.size))
+            }
+            guard bytes > 0 else { continue }
+            let count = Int(bytes) / MemoryLayout<pid_t>.size
+            if count < buffer.count {
+                return buffer.prefix(count).filter { $0 > 0 }
+            }
+        }
+        return []
+    }
+
+    /// Number of processes on the system (all users), without copying their details.
+    static func totalProcessCount() -> Int {
+        let bytes = proc_listpids(UInt32(PROC_ALL_PIDS), 0, nil, 0)
+        return bytes > 0 ? Int(bytes) / MemoryLayout<pid_t>.size : 0
+    }
+
     /// Full process name (longer than the 16-character command name), if readable.
     static func name(of pid: pid_t) -> String? {
         var buffer = [CChar](repeating: 0, count: 256)
