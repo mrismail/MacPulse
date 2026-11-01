@@ -18,6 +18,8 @@ public struct ProvenanceBadge: View {
             .font(.caption2.weight(.medium))
             .foregroundStyle(kind == .unavailable ? Color.secondary : Color.primary)
             .labelStyle(.titleAndIcon)
+            .lineLimit(1)
+            .fixedSize()  // never wrap or hyphenate ("Mea-sured") in narrow columns
             .padding(.horizontal, Spacing.small - 2)
             .padding(.vertical, 2)
             .overlay(
