@@ -225,8 +225,11 @@ spec forbids presenting CPU % as battery consumption.
   at ≥ 50 % CPU), on battery by default; macOS notifications are opt-in and permission is
   requested only when the user enables them; 30 min cooldown per app.
 
-**Open.** Whether billed energy is non-zero on Intel Macs (owner's MacBook) — run
-`MacPulse --macpulse-process-access-probe` and check `ownBilledEnergyNonZero`.
+**Measured on the owner's Intel MacBook Pro 16 (macOS 26.7.1, 2026-11-01):**
+`ownBilledEnergyNonZero = false` — this Intel Mac reports no per-app energy, so MacPulse
+uses the CPU-based basis there and says so ("Activity (CPU-based)"). Process access:
+`proc_pid_rusage` worked for 261/261 same-user processes in the sample (39 root/system
+refused), 192/195 running apps; 1,110 processes in total.
 
 ## ADR-012 — Monitoring overhead budget (Phase 3 acceptance evidence)
 
@@ -244,5 +247,13 @@ CPU time and wake-ups via `proc_pid_rusage`. CI fails above **15 ms CPU per samp
 only while the Energy window is active; 0.03 wake-ups per sample; 6 MB footprint.
 Timers use 5–10 s tolerance so macOS can coalesce wake-ups.
 
-**Open.** Repeat on the owner's Intel MacBook and a one-hour on-battery run with
-Activity Monitor's Energy tab, and record the numbers here.
+**Owner's Mac (2026-11-01, Intel MacBook Pro 16, macOS 26.7.1, 734 user processes):**
+18.6 ms CPU per sample → **0.031 % of one core** at 60 s, **0.19 %** at 10 s;
+0.33 wake-ups per sample; 9.7 MB footprint. This is above the 15 ms CI threshold
+because the Mac runs 2.6× as many user processes as the CI VM and an Intel CPU is
+slower per call (≈0.025 ms per process vs ≈0.015 ms on the arm64 VM). As a share of
+the CPU it remains negligible.
+
+**Open.** A one-hour on-battery run with Activity Monitor's Energy tab; and whether to
+express the CI budget per process (e.g. ≤ 0.05 ms) or as a percentage of a core rather
+than an absolute 15 ms per sample.
