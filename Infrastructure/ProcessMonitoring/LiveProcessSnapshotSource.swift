@@ -132,8 +132,10 @@ public actor LiveProcessSnapshotSource: ProcessSnapshotSource {
             return cached
         }
         let executable = ProcessTable.executablePath(of: identity.pid)
-        let name = ProcessTable.name(of: identity.pid)
-            ?? executable.map { ($0 as NSString).lastPathComponent }
+        // The executable's file name first: the kernel's process name is cut at 32
+        // characters ("com.apple.Virtualization.Virtua").
+        let name = executable.map { ($0 as NSString).lastPathComponent }.flatMap { $0.isEmpty ? nil : $0 }
+            ?? ProcessTable.name(of: identity.pid)
             ?? "pid \(identity.pid)"
         let info = PathInfo(
             executablePath: executable,
