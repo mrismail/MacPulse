@@ -20,6 +20,10 @@ struct LiveProcessSnapshotSourceTests {
         #expect((own.residentBytes ?? 0) > 0)
         #expect(own.footprintBytes != nil)  // proc_pid_rusage works without the sandbox
         #expect(!own.name.isEmpty)
+        // Names come from the full executable file name, not the kernel's 32-character one.
+        if let path = own.executablePath {
+            #expect(own.name == (path as NSString).lastPathComponent)
+        }
         #expect(snapshot.awakeUptime != nil)
         #expect(snapshot.memoryPressure != nil)
     }
