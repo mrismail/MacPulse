@@ -152,6 +152,28 @@ final class MacPulseUITests: XCTestCase {
         XCTAssertTrue(element("space.categories", in: app).exists)
         XCTAssertTrue(element("space.skipped", in: app).exists, "Protected folders are listed as not scanned")
         XCTAssertTrue(element("space.chooseProtected", in: app).exists)
+        XCTAssertTrue(element("space.history", in: app).waitForExistence(timeout: 10), "The scan is added to history")
+    }
+
+    @MainActor
+    func testExclusionsSheetOpensAndCloses() {
+        let app = launchApp()
+        open("spaceAnalyzer", in: app)
+        let edit = element("space.editExclusions", in: app)
+        XCTAssertTrue(edit.waitForExistence(timeout: 10))
+        edit.click()
+        XCTAssertTrue(element("space.addExclusion", in: app).waitForExistence(timeout: 10))
+        element("space.exclusionsDone", in: app).click()
+        XCTAssertTrue(edit.waitForExistence(timeout: 10))
+    }
+
+    @MainActor
+    func testOverviewLinksToSpaceAnalyzer() {
+        let app = launchApp()
+        let link = element("overview.openSpaceAnalyzer", in: app)
+        XCTAssertTrue(link.waitForExistence(timeout: 10))
+        link.click()
+        XCTAssertTrue(element("space.volume", in: app).waitForExistence(timeout: 10))
     }
 
     @MainActor
