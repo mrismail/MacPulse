@@ -65,6 +65,8 @@ public struct AppUsage: Identifiable, Sendable, Equatable {
     public let impact: Metric<BatteryImpactLevel>
     /// This app's share (0–1) of the activity measure used for `impact`.
     public let shareOfActivity: Double
+    /// The apps folded into a group row (see `BackgroundGrouping`); `nil` for a single app.
+    public let children: [AppUsage]?
 
     public init(
         id: String,
@@ -78,7 +80,8 @@ public struct AppUsage: Identifiable, Sendable, Equatable {
         diskBytesPerSecond: Double?,
         wakeupsPerSecond: Double?,
         impact: Metric<BatteryImpactLevel>,
-        shareOfActivity: Double
+        shareOfActivity: Double,
+        children: [AppUsage]? = nil
     ) {
         self.id = id
         self.displayName = displayName
@@ -92,6 +95,15 @@ public struct AppUsage: Identifiable, Sendable, Equatable {
         self.wakeupsPerSecond = wakeupsPerSecond
         self.impact = impact
         self.shareOfActivity = shareOfActivity
+        self.children = children
+    }
+
+    /// `true` for the "macOS & background" row.
+    public var isGroup: Bool { children != nil }
+
+    /// This usage and every usage folded into it.
+    public var flattened: [AppUsage] {
+        [self] + (children ?? []).flatMap(\.flattened)
     }
 }
 

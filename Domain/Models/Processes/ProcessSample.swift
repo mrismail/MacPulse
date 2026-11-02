@@ -116,6 +116,9 @@ public struct ProcessSnapshot: Sendable, Equatable {
     public let ownPID: Int32
     /// Display names for app bundle paths, e.g. "/Applications/Safari.app" → "Safari".
     public let appDisplayNames: [String: String]
+    /// Bundle paths of apps the user sees (a Dock icon and menu bar). Everything else is
+    /// shown as "macOS & background". Empty when unknown, which turns grouping off.
+    public let foregroundAppBundles: Set<String>
 
     public init(
         timestamp: Date,
@@ -126,7 +129,8 @@ public struct ProcessSnapshot: Sendable, Equatable {
         systemCPU: SystemCPUTicks? = nil,
         logicalCPUCount: Int = 1,
         ownPID: Int32 = -1,
-        appDisplayNames: [String: String] = [:]
+        appDisplayNames: [String: String] = [:],
+        foregroundAppBundles: Set<String> = []
     ) {
         self.timestamp = timestamp
         self.awakeUptime = awakeUptime
@@ -137,5 +141,6 @@ public struct ProcessSnapshot: Sendable, Equatable {
         self.logicalCPUCount = logicalCPUCount
         self.ownPID = ownPID
         self.appDisplayNames = appDisplayNames
+        self.foregroundAppBundles = foregroundAppBundles
     }
 }

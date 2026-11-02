@@ -50,12 +50,15 @@ enum ProcessFixtures {
         )
     }
 
-    static func usage(_ id: String, cpu: Double, name: String? = nil) -> AppUsage {
+    static func usage(
+        _ id: String, cpu: Double, name: String? = nil, bundle: String? = nil,
+        memory: UInt64? = nil, wakeups: Double? = nil, share: Double = 0
+    ) -> AppUsage {
         AppUsage(
-            id: id, displayName: name ?? id, appBundlePath: nil, processCount: 1,
-            cpuPercent: cpu, memoryBytes: nil, threadCount: nil, energyMilliwatts: nil,
-            diskBytesPerSecond: nil, wakeupsPerSecond: nil,
-            impact: .estimated(.low, basis: "test"), shareOfActivity: 0
+            id: id, displayName: name ?? id, appBundlePath: bundle, processCount: 1,
+            cpuPercent: cpu, memoryBytes: memory, threadCount: nil, energyMilliwatts: nil,
+            diskBytesPerSecond: nil, wakeupsPerSecond: wakeups,
+            impact: .estimated(.low, basis: "test"), shareOfActivity: share
         )
     }
 
