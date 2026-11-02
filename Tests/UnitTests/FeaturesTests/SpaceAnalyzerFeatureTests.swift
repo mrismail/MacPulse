@@ -13,7 +13,7 @@ private struct FailingVolumes: VolumeRepository {
 @MainActor
 struct SpaceAnalyzerVolumeTests {
     @Test func loadsVolumesAndSelectsTheStartupDisk() async {
-        let model = SpaceAnalyzerViewModel(volumes: PreviewVolumeRepository())
+        let model = SpaceAnalyzerViewModel(volumes: PreviewVolumeRepository(), scanner: PreviewScanner())
         await model.observeVolumes()  // the preview stream ends at once
         #expect(model.volumes.count == 2)
         #expect(model.selectedVolume?.kind == .startup)
@@ -23,7 +23,7 @@ struct SpaceAnalyzerVolumeTests {
     }
 
     @Test func failureIsReported() async {
-        let model = SpaceAnalyzerViewModel(volumes: FailingVolumes())
+        let model = SpaceAnalyzerViewModel(volumes: FailingVolumes(), scanner: PreviewScanner())
         await model.loadVolumes()
         #expect(model.volumeError != nil)
         #expect(model.volumes.isEmpty)
@@ -45,5 +45,113 @@ struct SpaceAnalyzerVolumeTests {
             availableForImportantUsageBytes: .unavailable(.notSupportedOnThisMac)
         )
         #expect(VolumePresentation.segments(volume) == nil)
+    }
+}
+
+/// Records requests; returns the preview result.
+private actor RecordingScanner: FileSystemScanning {
+    private(set) var requests: [ScanRequest] = []
+    nonisolated func scan(_ request: ScanRequest, progress: @escaping @Sendable (ScanProgress) -> Void) async -> ScanResult {
+        await record(request)
+        return PreviewScanner.result(root: request.rootPath)
+    }
+    private func record(_ request: ScanRequest) { requests.append(request) }
+}
+
+/// Runs until cancelled, then returns an incomplete result.
+private struct SlowScanner: FileSystemScanning {
+    func scan(_ request: ScanRequest, progress: @escaping @Sendable (ScanProgress) -> Void) async -> ScanResult {
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .milliseconds(5))
+        }
+        let builder = ScanTreeBuilder(rootPath: request.rootPath)
+        return builder.build(startedAt: Date(), finishedAt: Date(), isComplete: false)
+    }
+}
+
+@Suite("SpaceAnalyzerViewModel — scanning")
+@MainActor
+struct SpaceAnalyzerScanTests {
+    let home = "/Users/preview"
+
+    func scanned() async -> SpaceAnalyzerViewModel {
+        let model = SpaceAnalyzerViewModel(volumes: PreviewVolumeRepository(), scanner: PreviewScanner(), homePath: home)
+        model.scanHomeFolder()
+        await model.waitForScan()
+        return model
+    }
+
+    @Test func scanningTheHomeFolderShowsTheTree() async throws {
+        let model = await scanned()
+        let result = try #require(model.result)
+        #expect(result.rootPath == home)
+        #expect(model.folderContents.first?.name == "Movies")  // biggest first
+        #expect(model.breadcrumb.map(\.id) == [home])
+    }
+
+    @Test func drillDownAndBackUp() async throws {
+        let model = await scanned()
+        model.open(home + "/Library")
+        model.open(home + "/Library/Caches")
+        #expect(model.breadcrumb.map(\.name) == ["preview", "Library", "Caches"])
+        #expect(model.folderContents.map(\.name) == ["com.example.browser"])
+        model.goUp()
+        #expect(model.currentFolder?.id == home + "/Library")
+        model.open(home + "/Movies/Holiday 2025.mov")  // files don't open
+        #expect(model.currentFolder?.id == home + "/Library")
+    }
+
+    @Test func largestFilesCanBeFiltered() async {
+        let model = await scanned()
+        #expect(model.largestFiles.count == 8)
+        model.categoryFilter = .video
+        #expect(model.largestFiles.map(\.name) == ["Holiday 2025.mov", "Interview.mp4"])
+        model.categoryFilter = nil
+        model.sizeFilter = .over1GB
+        #expect(model.largestFiles.count == 3)
+        model.fileSortOrder = [KeyPathComparator(\ScanNode.allocatedBytes, order: .forward)]
+        #expect(model.largestFiles.map(\.allocatedBytes) == model.largestFiles.map(\.allocatedBytes).sorted())
+    }
+
+    @Test func summaryReportsSkippedAndRecoverable() async throws {
+        let model = await scanned()
+        #expect(model.skippedSummary == [SkipCount(reason: .protectedByPrivacy, count: 2)])
+        #expect(model.skippedProtectedFolders.count == 2)
+        let result = try #require(model.result)
+        #expect(result.recoverableBytes.value == 1_300_000_000 + 40_000_000 + 900_000_000)
+        #expect(!result.recoverableBytes.isMeasured)
+    }
+
+    @Test func pickedFoldersAreApprovedAndExclusionsPassed() async throws {
+        let scanner = RecordingScanner()
+        let model = SpaceAnalyzerViewModel(volumes: PreviewVolumeRepository(), scanner: scanner, homePath: home)
+        model.exclusions = [home + "/Movies"]
+        model.scanPickedFolder(home + "/Downloads/")
+        await model.waitForScan()
+        let request = try #require(await scanner.requests.last)
+        #expect(request.rootPath == home + "/Downloads")
+        #expect(request.policy.approvedRoots.contains(home + "/Downloads"))
+        #expect(request.policy.userExclusions == [home + "/Movies"])
+        #expect(request.policy.decision(forFolder: home + "/Downloads/x") == .scan)
+    }
+
+    @Test func scanningTheVolumeUsesItsMountPoint() async throws {
+        let scanner = RecordingScanner()
+        let model = SpaceAnalyzerViewModel(volumes: PreviewVolumeRepository(), scanner: scanner, homePath: home)
+        await model.loadVolumes()
+        model.selectedVolumeID = PreviewVolumeRepository.external.id
+        model.scanSelectedVolume()
+        await model.waitForScan()
+        #expect(await scanner.requests.last?.rootPath == "/Volumes/Backup")
+    }
+
+    @Test func stoppingKeepsAPartialResult() async {
+        let model = SpaceAnalyzerViewModel(volumes: PreviewVolumeRepository(), scanner: SlowScanner(), homePath: home)
+        model.scanHomeFolder()
+        #expect(model.isScanning)
+        model.cancelScan()
+        await model.waitForScan()
+        #expect(model.result?.isComplete == false)
+        #expect(!model.isScanning)
     }
 }

@@ -1,11 +1,14 @@
+import AppKit
 import Charts
 import MacPulseDomain
 import MacPulseShared
 import SwiftUI
+import UniformTypeIdentifiers
 
-/// Space Analyzer: volume overview, then folder scans (read-only).
+/// Space Analyzer: volume overview, then read-only folder scans.
 public struct SpaceAnalyzerView: View {
     @Bindable private var viewModel: SpaceAnalyzerViewModel
+    @State private var isPickingFolder = false
 
     public init(viewModel: SpaceAnalyzerViewModel) {
         self.viewModel = viewModel
@@ -15,11 +18,26 @@ public struct SpaceAnalyzerView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {
                 VolumeOverviewCard(viewModel: viewModel)
+                ScanControlsCard(viewModel: viewModel, pickFolder: { isPickingFolder = true })
+                if let result = viewModel.result {
+                    ScanSummaryCard(result: result, viewModel: viewModel, pickFolder: { isPickingFolder = true })
+                    FolderTreeCard(viewModel: viewModel)
+                    HStack(alignment: .top, spacing: Spacing.large) {
+                        LargestFilesCard(viewModel: viewModel)
+                        CategoriesCard(result: result)
+                            .frame(maxWidth: 340)
+                    }
+                }
             }
             .padding(Spacing.large)
         }
         .navigationTitle("Space Analyzer")
         .task { await viewModel.observeVolumes() }
+        .fileImporter(isPresented: $isPickingFolder, allowedContentTypes: [.folder]) { picked in
+            if case .success(let url) = picked {
+                viewModel.scanPickedFolder(url.path)
+            }
+        }
     }
 }
 

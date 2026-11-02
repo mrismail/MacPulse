@@ -114,7 +114,7 @@ public struct ScanNode: Identifiable, Sendable, Equatable {
 }
 
 /// Why something wasn't scanned.
-public enum SkipReason: Sendable, Equatable, Codable {
+public enum SkipReason: Sendable, Hashable, Codable {
     /// In the user's exclusion list.
     case excludedByUser
     /// System location MacPulse never scans (e.g. `/System`, `/dev`, VM swap).
