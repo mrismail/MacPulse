@@ -91,10 +91,10 @@ struct VolumeUsageView: View {
                 .accessibilityIdentifier("space.volumeChart")
             }
             HStack(alignment: .top, spacing: Spacing.large) {
-                MetricValueView("Capacity", metric: volume.totalBytes) { ByteFormatting.string(fromBytes: $0) }
-                MetricValueView("Used", metric: volume.usedBytes) { ByteFormatting.string(fromBytes: $0) }
-                MetricValueView("Available", metric: volume.availableBytes) { ByteFormatting.string(fromBytes: $0) }
-                MetricValueView("Purgeable", metric: volume.purgeableBytes) { ByteFormatting.string(fromBytes: $0) }
+                MetricValueView("Capacity", metric: volume.totalBytes) { ByteFormatting.string(fromByteCount: $0) }
+                MetricValueView("Used", metric: volume.usedBytes) { ByteFormatting.string(fromByteCount: $0) }
+                MetricValueView("Available", metric: volume.availableBytes) { ByteFormatting.string(fromByteCount: $0) }
+                MetricValueView("Purgeable", metric: volume.purgeableBytes) { ByteFormatting.string(fromByteCount: $0) }
             }
             Text("Figures reported by the file system. Purgeable space (caches and local snapshots) is freed by macOS when space is needed.")
                 .font(.caption)
@@ -130,8 +130,8 @@ public enum VolumePresentation {
     }
 
     public static func summary(_ volume: VolumeInfo) -> String {
-        let used = volume.usedBytes.value.map { ByteFormatting.string(fromBytes: $0) } ?? "—"
-        let total = volume.totalBytes.value.map { ByteFormatting.string(fromBytes: $0) } ?? "—"
+        let used = volume.usedBytes.value.map { ByteFormatting.string(fromByteCount: $0) } ?? "—"
+        let total = volume.totalBytes.value.map { ByteFormatting.string(fromByteCount: $0) } ?? "—"
         return String(localized: "\(volume.name): \(used) used of \(total)")
     }
 
