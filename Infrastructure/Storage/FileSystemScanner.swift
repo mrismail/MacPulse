@@ -88,7 +88,10 @@ struct Walk {
         var stack = [rootPath]
         while let folder = stack.popLast() {
             if checkCancellation() { break }
-            stack += contents(of: folder)
+            // Listing creates autoreleased URLs and resource values; drain them per folder
+            // or the whole walk's worth stays in memory until the scan ends.
+            let subfolders = autoreleasepool { contents(of: folder) }
+            stack += subfolders
         }
         sendProgress(folder: rootPath, force: true)
         return builder.build(startedAt: started, finishedAt: Date(), isComplete: !cancelled)
@@ -189,48 +192,56 @@ struct Walk {
     /// Sums a package with the same rules (no links, same volume, hard links once) and
     /// records it as one item.
     mutating func addPackage(_ path: String) {
-        var logical: Int64 = 0
-        var allocated: Int64 = 0
-        var incomplete = false
+        var totals = PackageTotals()
         var stack = [path]
         while let folder = stack.popLast() {
             if checkCancellation() { break }
-            guard let items = try? FileManager.default.contentsOfDirectory(
-                at: URL(fileURLWithPath: folder, isDirectory: true), includingPropertiesForKeys: FileSystemScanner.keys, options: []
-            ) else {
-                incomplete = true
-                continue
-            }
-            for item in items {
-                let itemPath = folder + "/" + item.lastPathComponent
-                guard let values = try? item.resourceValues(forKeys: Set(FileSystemScanner.keys)) else {
-                    incomplete = true
-                    continue
-                }
-                if values.isSymbolicLink == true {
-                    logical += Int64(values.totalFileSize ?? 0)
-                    allocated += Int64(values.totalFileAllocatedSize ?? 0)
-                } else if values.isDirectory == true {
-                    if let id = Walk.fileID(atPath: itemPath),
-                       allowedDevices.contains(id.device), visitedFolders.insert(id).inserted {
-                        stack.append(itemPath)
-                    }
-                } else {
-                    logical += Int64(values.totalFileSize ?? 0)
-                    if (values.linkCount ?? 1) > 1, let id = Walk.fileID(atPath: itemPath),
-                       !countedHardLinks.insert(id).inserted {
-                        continue
-                    }
-                    allocated += Int64(values.totalFileAllocatedSize ?? 0)
-                }
-            }
+            stack += autoreleasepool { sumPackageFolder(folder, into: &totals) }
         }
         let parent = (path as NSString).deletingLastPathComponent
         builder.add(ScannedFile(
-            path: path, parentPath: parent, logicalBytes: logical, allocatedBytes: allocated,
+            path: path, parentPath: parent, logicalBytes: totals.logical, allocatedBytes: totals.allocated,
             category: FileCategorizer.category(forPath: path, isPackage: true), isPackage: true
         ))
-        if incomplete { builder.markIncomplete(parent) }
+        if totals.incomplete { builder.markIncomplete(parent) }
+    }
+
+    struct PackageTotals {
+        var logical: Int64 = 0
+        var allocated: Int64 = 0
+        var incomplete = false
+    }
+
+    /// Adds one folder of a package to `totals`; returns its subfolders.
+    mutating func sumPackageFolder(_ folder: String, into totals: inout PackageTotals) -> [String] {
+        guard let items = try? FileManager.default.contentsOfDirectory(
+            at: URL(fileURLWithPath: folder, isDirectory: true), includingPropertiesForKeys: FileSystemScanner.keys, options: []
+        ) else {
+            totals.incomplete = true
+            return []
+        }
+        var subfolders: [String] = []
+        for item in items {
+            let itemPath = folder + "/" + item.lastPathComponent
+            guard let values = try? item.resourceValues(forKeys: Set(FileSystemScanner.keys)) else {
+                totals.incomplete = true
+                continue
+            }
+            if values.isDirectory == true, values.isSymbolicLink != true {
+                if let id = Walk.fileID(atPath: itemPath),
+                   allowedDevices.contains(id.device), visitedFolders.insert(id).inserted {
+                    subfolders.append(itemPath)
+                }
+                continue
+            }
+            totals.logical += Int64(values.totalFileSize ?? 0)
+            if values.isSymbolicLink != true, (values.linkCount ?? 1) > 1, let id = Walk.fileID(atPath: itemPath),
+               !countedHardLinks.insert(id).inserted {
+                continue  // another link to a file already counted
+            }
+            totals.allocated += Int64(values.totalFileAllocatedSize ?? 0)
+        }
+        return subfolders
     }
 
     // MARK: Progress and cancellation
