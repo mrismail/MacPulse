@@ -141,11 +141,13 @@ public final class SpaceAnalyzerViewModel {
         currentFolderID = nil
         state = .scanning(ScanProgress(itemsScanned: 0, allocatedBytes: 0, currentFolder: root))
         let scanner = scanner
-        scanTask = Task { [weak self] in
-            let result = await scanner.scan(request) { progress in
-                Task { @MainActor [weak self] in self?.update(progress) }
-            }
-            self?.finish(result)
+        // The view model lives as long as the app; holding it during a scan is fine.
+        let report: @Sendable (ScanProgress) -> Void = { progress in
+            Task { @MainActor in self.update(progress) }
+        }
+        scanTask = Task {
+            let result = await scanner.scan(request, progress: report)
+            self.finish(result)
         }
     }
 
