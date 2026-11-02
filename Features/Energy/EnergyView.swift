@@ -123,15 +123,17 @@ private struct AppUsageTable: View {
 
     var body: some View {
         let rows = viewModel.apps
+        // The "macOS & background" row expands to show its members.
         Table(
             rows,
+            children: \.children,
             selection: Binding(get: { viewModel.selectedAppID }, set: { viewModel.select($0) }),
             sortOrder: $viewModel.sortOrder,
             columnCustomization: $columns
         ) {
             TableColumn("App", value: \.displayName) { app in
                 HStack(spacing: Spacing.small) {
-                    AppIcon(bundlePath: app.appBundlePath)
+                    AppIcon(bundlePath: app.appBundlePath, isGroup: app.isGroup)
                     VStack(alignment: .leading, spacing: 0) {
                         Text(app.displayName)
                         if app.processCount > 1 {
@@ -216,10 +218,16 @@ enum AppIconCache {
 
 private struct AppIcon: View {
     let bundlePath: String?
+    var isGroup = false
 
     var body: some View {
         Group {
-            if let bundlePath {
+            if isGroup {
+                Image(systemName: "gearshape.2")
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundStyle(.secondary)
+            } else if let bundlePath {
                 Image(nsImage: AppIconCache.icon(for: bundlePath))
                     .resizable()
             } else {
