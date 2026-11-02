@@ -299,7 +299,13 @@ cancelled scan. `MACPULSE_DIAGNOSTICS=1 MacPulse --macpulse-scan-benchmark` buil
 sparse synthetic tree (`MACPULSE_SCAN_FILES`, default 200,000), scans it, measures scan
 time, CPU, peak footprint and the longest main-thread stall (10 ms heartbeat), then
 removes the tree. CI budget for 200,000 files: complete result, main-thread stall
-≤ 250 ms, peak footprint ≤ 400 MB, scan ≤ 120 s.
+≤ 250 ms, peak footprint ≤ 150 MB, scan ≤ 120 s.
+
+**First results (CI, macOS 15.8 arm64 VM, 200,000 files in 2,200 folders):** complete;
+14.2 s (≈14,100 files/s), 12.1 s CPU; longest main-thread stall 43 ms; peak footprint
+**75 MB**. The first run peaked at 318 MB because autoreleased URLs and resource values
+from every listing lived until the scan ended; each folder listing now drains its own
+autorelease pool.
 
 **Open.** Owner's Mac: 1,000,000-file run (`MACPULSE_SCAN_FILES=1000000`), and a home
 scan to confirm no unexpected privacy prompt.
