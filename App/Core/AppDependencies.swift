@@ -13,11 +13,18 @@ public struct AppDependencies: Sendable {
     public let systemInfo: any SystemInfoRepository
     public let battery: any BatteryMonitoring
     public let energy: any EnergyMonitoring
+    public let volumes: any VolumeRepository
 
-    public init(systemInfo: any SystemInfoRepository, battery: any BatteryMonitoring, energy: any EnergyMonitoring) {
+    public init(
+        systemInfo: any SystemInfoRepository,
+        battery: any BatteryMonitoring,
+        energy: any EnergyMonitoring,
+        volumes: any VolumeRepository
+    ) {
         self.systemInfo = systemInfo
         self.battery = battery
         self.energy = energy
+        self.volumes = volumes
     }
 
     /// Real system services. Used by the shipping app.
@@ -26,7 +33,8 @@ public struct AppDependencies: Sendable {
         return AppDependencies(
             systemInfo: LiveSystemInfoRepository(),
             battery: battery,
-            energy: makeLiveProcessMonitor(battery: battery)
+            energy: makeLiveProcessMonitor(battery: battery),
+            volumes: LiveVolumeRepository()
         )
     }
 
@@ -78,7 +86,8 @@ public struct AppDependencies: Sendable {
             AppDependencies(
                 systemInfo: PreviewSystemInfoRepository(),
                 battery: PreviewBatteryMonitor(),
-                energy: PreviewEnergyMonitor()
+                energy: PreviewEnergyMonitor(),
+                volumes: PreviewVolumeRepository()
             )
         }
     }
