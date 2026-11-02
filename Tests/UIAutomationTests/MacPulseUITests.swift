@@ -131,6 +131,15 @@ final class MacPulseUITests: XCTestCase {
     }
 
     @MainActor
+    func testSpaceAnalyzerShowsTheVolumeOverview() {
+        let app = launchApp()
+        open("spaceAnalyzer", in: app)
+        XCTAssertTrue(element("space.volume", in: app).waitForExistence(timeout: 10))
+        XCTAssertTrue(element("space.volumeChart", in: app).waitForExistence(timeout: 10))
+        XCTAssertTrue(element("space.volumePicker", in: app).exists, "Two preview volumes offer a picker")
+    }
+
+    @MainActor
     func testOverviewLinksToEnergy() {
         let app = launchApp()
         let link = element("overview.openEnergy", in: app)
