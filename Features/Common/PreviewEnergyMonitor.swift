@@ -35,7 +35,30 @@ public actor PreviewEnergyMonitor: EnergyMonitoring {
             app("Code Editor", cpu: 24, memory: 1_100_000_000, impact: .moderate, share: 0.23, processes: 3),
             app("Chat", cpu: 6, memory: 650_000_000, impact: .low, share: 0.06, processes: 4),
             app("Music", cpu: 2, memory: 210_000_000, impact: .low, share: 0.02, processes: 1),
+            background(),
         ]
+    }
+
+    /// The "macOS & background" row with two members.
+    nonisolated static func background() -> AppUsage {
+        func member(_ id: String, name: String, bundle: String?, cpu: Double, share: Double) -> AppUsage {
+            AppUsage(
+                id: id, displayName: name, appBundlePath: bundle, processCount: 1, cpuPercent: cpu,
+                memoryBytes: 90_000_000, threadCount: 6, energyMilliwatts: nil, diskBytesPerSecond: 0,
+                wakeupsPerSecond: 2, impact: .estimated(.low, basis: AppUsageAggregator.cpuBasis),
+                shareOfActivity: share
+            )
+        }
+        let members = [
+            member("/System/Library/CoreServices/Dock.app", name: "Dock", bundle: "/System/Library/CoreServices/Dock.app", cpu: 1, share: 0.01),
+            member("process:backupd-helper", name: "backupd-helper", bundle: nil, cpu: 0.5, share: 0.005),
+        ]
+        return AppUsage(
+            id: BackgroundGrouping.groupID, displayName: BackgroundGrouping.groupName, appBundlePath: nil,
+            processCount: 2, cpuPercent: 1.5, memoryBytes: 180_000_000, threadCount: 12, energyMilliwatts: nil,
+            diskBytesPerSecond: 0, wakeupsPerSecond: 4, impact: .estimated(.low, basis: AppUsageAggregator.cpuBasis),
+            shareOfActivity: 0.015, children: members
+        )
     }
 
     public func status() -> EnergyStatus {
@@ -80,7 +103,8 @@ public actor PreviewEnergyMonitor: EnergyMonitoring {
         let currentHour = calendar.dateInterval(of: .hour, for: referenceDate)?.start ?? referenceDate
         return (0..<24).flatMap { hoursAgo -> [AppUsageRecord] in
             let hour = currentHour.addingTimeInterval(-Double(hoursAgo) * 3_600)
-            return Self.sampleApps().map { app in
+            // History is per app; the group row has none of its own.
+            return Self.sampleApps().flatMap(\.flattened).filter { !$0.isGroup }.map { app in
                 let wave = 0.5 + 0.5 * sin(Double(hoursAgo) / 3)
                 return AppUsageRecord(
                     hourStart: hour,
