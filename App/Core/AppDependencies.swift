@@ -15,19 +15,25 @@ public struct AppDependencies: Sendable {
     public let energy: any EnergyMonitoring
     public let volumes: any VolumeRepository
     public let scanner: any FileSystemScanning
+    public let scanHistory: any ScanHistoryRepository
+    public let scanSettings: any ScanSettingsStore
 
     public init(
         systemInfo: any SystemInfoRepository,
         battery: any BatteryMonitoring,
         energy: any EnergyMonitoring,
         volumes: any VolumeRepository,
-        scanner: any FileSystemScanning
+        scanner: any FileSystemScanning,
+        scanHistory: any ScanHistoryRepository = InMemoryScanHistory(),
+        scanSettings: any ScanSettingsStore = InMemoryScanSettingsStore()
     ) {
         self.systemInfo = systemInfo
         self.battery = battery
         self.energy = energy
         self.volumes = volumes
         self.scanner = scanner
+        self.scanHistory = scanHistory
+        self.scanSettings = scanSettings
     }
 
     /// Real system services. Used by the shipping app.
@@ -38,7 +44,9 @@ public struct AppDependencies: Sendable {
             battery: battery,
             energy: makeLiveProcessMonitor(battery: battery),
             volumes: LiveVolumeRepository(),
-            scanner: FileSystemScanner()
+            scanner: FileSystemScanner(),
+            scanHistory: makeLiveScanHistory(),
+            scanSettings: UserDefaultsScanSettingsStore()
         )
     }
 
@@ -52,6 +60,18 @@ public struct AppDependencies: Sendable {
             }
         #endif
         return .live()
+    }
+
+    private static func makeLiveScanHistory() -> any ScanHistoryRepository {
+        do {
+            return JSONLinesScanHistoryStore(directory: try JSONLinesScanHistoryStore.defaultDirectory())
+        } catch {
+            Log.logger(.persistence).log(
+                AppError.wrapping(error, userMessage: "Scan history can't be saved."),
+                context: "Scan history store"
+            )
+            return InMemoryScanHistory()
+        }
     }
 
     private static func makeLiveBatteryMonitor() -> BatteryMonitor {

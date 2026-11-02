@@ -55,17 +55,77 @@ public final class SpaceAnalyzerViewModel {
     public var sizeFilter: FileSizeFilter = .any
     /// Folders the user picked in the folder panel; protected locations inside them are scanned.
     public private(set) var approvedRoots: [String] = []
-    public var exclusions: [String] = []
+    /// Folders the user excluded from every scan (saved).
+    public private(set) var exclusions: [String] = []
+    /// Past scans, newest first.
+    public private(set) var history: [ScanSummary] = []
+    public private(set) var historyError: AppError?
 
     @ObservationIgnored private let volumeRepository: any VolumeRepository
     @ObservationIgnored private let scanner: any FileSystemScanning
+    @ObservationIgnored private let historyRepository: any ScanHistoryRepository
+    @ObservationIgnored private let settingsStore: any ScanSettingsStore
     @ObservationIgnored private let homePath: String
     @ObservationIgnored private var scanTask: Task<Void, Never>?
 
-    public init(volumes: any VolumeRepository, scanner: any FileSystemScanning, homePath: String = NSHomeDirectory()) {
+    public init(
+        volumes: any VolumeRepository,
+        scanner: any FileSystemScanning,
+        history: any ScanHistoryRepository = InMemoryScanHistory(),
+        settings: any ScanSettingsStore = InMemoryScanSettingsStore(),
+        homePath: String = NSHomeDirectory()
+    ) {
         volumeRepository = volumes
         self.scanner = scanner
+        historyRepository = history
+        settingsStore = settings
         self.homePath = homePath
+        exclusions = settings.loadExclusions()
+    }
+
+    // MARK: Exclusions
+
+    public func addExclusion(_ path: String) {
+        let path = ScanPathPolicy.normalized(path)
+        guard !exclusions.contains(path) else { return }
+        exclusions.append(path)
+        exclusions.sort { $0.localizedStandardCompare($1) == .orderedAscending }
+        settingsStore.saveExclusions(exclusions)
+    }
+
+    public func removeExclusion(_ path: String) {
+        exclusions.removeAll { $0 == path }
+        settingsStore.saveExclusions(exclusions)
+    }
+
+    // MARK: History
+
+    public func loadHistory() async {
+        do {
+            history = ScanHistory.recent(try await historyRepository.summaries())
+            historyError = nil
+        } catch {
+            let appError = AppError.wrapping(error, userMessage: String(localized: "Couldn't read scan history."))
+            Log.logger(.fileSystem).log(appError, context: "Scan history")
+            historyError = appError
+        }
+    }
+
+    /// Change in size on disk since the previous complete scan of the same folder.
+    public func change(for summary: ScanSummary) -> Int64? {
+        ScanHistory.change(for: summary, in: history)
+    }
+
+    private func record(_ result: ScanResult) async {
+        guard result.itemsScanned > 0 else { return }
+        do {
+            try await historyRepository.append(ScanSummary(result: result))
+        } catch {
+            let appError = AppError.wrapping(error, userMessage: String(localized: "Couldn't save this scan to history."))
+            Log.logger(.fileSystem).log(appError, context: "Scan history")
+            historyError = appError
+        }
+        await loadHistory()
     }
 
     // MARK: Volumes
@@ -92,6 +152,7 @@ public final class SpaceAnalyzerViewModel {
     /// Reloads volumes whenever one is mounted, unmounted or renamed, until cancelled.
     public func observeVolumes() async {
         await loadVolumes()
+        await loadHistory()
         for await _ in await volumeRepository.changes() {
             await loadVolumes()
         }
@@ -148,6 +209,7 @@ public final class SpaceAnalyzerViewModel {
         scanTask = Task {
             let result = await scanner.scan(request, progress: report)
             self.finish(result)
+            await self.record(result)
         }
     }
 

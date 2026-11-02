@@ -126,7 +126,7 @@ struct SpaceAnalyzerScanTests {
     @Test func pickedFoldersAreApprovedAndExclusionsPassed() async throws {
         let scanner = RecordingScanner()
         let model = SpaceAnalyzerViewModel(volumes: PreviewVolumeRepository(), scanner: scanner, homePath: home)
-        model.exclusions = [home + "/Movies"]
+        model.addExclusion(home + "/Movies")
         model.scanPickedFolder(home + "/Downloads/")
         await model.waitForScan()
         let request = try #require(await scanner.requests.last)
@@ -154,5 +154,35 @@ struct SpaceAnalyzerScanTests {
         await model.waitForScan()
         #expect(model.result?.isComplete == false)
         #expect(!model.isScanning)
+    }
+}
+
+@Suite("SpaceAnalyzerViewModel — exclusions and history")
+@MainActor
+struct SpaceAnalyzerHistoryTests {
+    let home = "/Users/preview"
+
+    @Test func exclusionsAreSavedAndLoaded() {
+        let store = InMemoryScanSettingsStore()
+        let model = SpaceAnalyzerViewModel(volumes: PreviewVolumeRepository(), scanner: PreviewScanner(), settings: store, homePath: home)
+        model.addExclusion(home + "/Movies/")
+        model.addExclusion(home + "/Movies")
+        model.addExclusion(home + "/Archive")
+        #expect(store.loadExclusions() == [home + "/Archive", home + "/Movies"])
+        model.removeExclusion(home + "/Archive")
+        let reloaded = SpaceAnalyzerViewModel(volumes: PreviewVolumeRepository(), scanner: PreviewScanner(), settings: store, homePath: home)
+        #expect(reloaded.exclusions == [home + "/Movies"])
+    }
+
+    @Test func finishedScansAreRecordedWithTheChangeSinceLastTime() async throws {
+        let history = InMemoryScanHistory()
+        let model = SpaceAnalyzerViewModel(volumes: PreviewVolumeRepository(), scanner: PreviewScanner(), history: history, homePath: home)
+        model.scanHomeFolder()
+        await model.waitForScan()
+        #expect(model.history.count == 1)
+        let first = try #require(model.history.first)
+        #expect(first.rootPath == home)
+        #expect(first.topFolders.first?.name == "Movies")
+        #expect(model.change(for: first) == nil)  // nothing to compare with yet
     }
 }

@@ -44,7 +44,7 @@ struct OverviewViewModelTests {
         #expect(!model.storageAvailableBytes.isAvailable)
         #expect(!model.reclaimableBytes.isAvailable)
         #expect(model.batteryCharge.provenance == .unavailable(.notYetSampled))
-        #expect(model.storageAvailableBytes.provenance == .unavailable(.notYetImplemented))
+        #expect(model.storageAvailableBytes.provenance == .unavailable(.notYetSampled))
     }
 
     @Test func loadsSystemInfo() async {
@@ -67,8 +67,39 @@ struct OverviewViewModelTests {
         let model = OverviewViewModel(systemInfoRepository: StubSystemInfoRepository(result: .success(sampleInfo)), batteryMonitor: PreviewBatteryMonitor())
         let phases = model.upcomingFeatures.map(\.phase)
         #expect(phases == phases.sorted())
-        #expect(phases.count == 3)
+        #expect(phases.count == 2)  // Space Analyzer shipped in Phase 4
         #expect(!model.upcomingFeatures.contains { $0.title == "Battery" || $0.title == "Energy" })
+    }
+}
+
+@Suite("OverviewViewModel — storage")
+@MainActor
+struct OverviewStorageTests {
+    @Test func showsFreeSpaceAndTheLastScansRecoverableEstimate() async {
+        let summary = ScanSummary(result: PreviewScanner.result(root: "/Users/preview"))
+        let model = OverviewViewModel(
+            systemInfoRepository: StubSystemInfoRepository(result: .success(sampleInfo)),
+            batteryMonitor: PreviewBatteryMonitor(),
+            volumes: PreviewVolumeRepository(),
+            scanHistory: InMemoryScanHistory([summary])
+        )
+        await model.loadStorage()
+        #expect(model.storageAvailableBytes == .measured(120_000_000_000))
+        #expect(model.reclaimableBytes.value == summary.recoverableBytes)
+        #expect(!model.reclaimableBytes.isMeasured)
+        #expect(model.lastScan == summary)
+    }
+
+    @Test func withoutAScanReclaimableSaysHowToGetIt() async {
+        let model = OverviewViewModel(
+            systemInfoRepository: StubSystemInfoRepository(result: .success(sampleInfo)),
+            batteryMonitor: PreviewBatteryMonitor(),
+            volumes: PreviewVolumeRepository(),
+            scanHistory: InMemoryScanHistory()
+        )
+        await model.loadStorage()
+        #expect(!model.reclaimableBytes.isAvailable)
+        #expect(model.lastScan == nil)
     }
 }
 

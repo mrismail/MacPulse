@@ -46,7 +46,8 @@ public struct RootView: View {
             OverviewView(
                 viewModel: model.overview,
                 openBattery: { model.coordinator.select(.battery) },
-                openEnergy: { model.coordinator.select(.energy) }
+                openEnergy: { model.coordinator.select(.energy) },
+                openSpaceAnalyzer: { model.coordinator.select(.spaceAnalyzer) }
             )
         case .battery:
             BatteryView(viewModel: model.battery, energy: model.energy) {

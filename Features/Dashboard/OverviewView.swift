@@ -6,15 +6,18 @@ public struct OverviewView: View {
     private let viewModel: OverviewViewModel
     private let openBattery: () -> Void
     private let openEnergy: () -> Void
+    private let openSpaceAnalyzer: () -> Void
 
     public init(
         viewModel: OverviewViewModel,
         openBattery: @escaping () -> Void = {},
-        openEnergy: @escaping () -> Void = {}
+        openEnergy: @escaping () -> Void = {},
+        openSpaceAnalyzer: @escaping () -> Void = {}
     ) {
         self.viewModel = viewModel
         self.openBattery = openBattery
         self.openEnergy = openEnergy
+        self.openSpaceAnalyzer = openSpaceAnalyzer
     }
 
     public var body: some View {
@@ -52,6 +55,7 @@ public struct OverviewView: View {
         .task { await viewModel.load() }
         .task { await viewModel.observeBattery() }
         .task { await viewModel.observeEnergy() }
+        .task { await viewModel.loadStorage() }
     }
 
     private var recommendationsCard: some View {
@@ -129,11 +133,20 @@ public struct OverviewView: View {
     private var storageCard: some View {
         Card("Storage", systemImage: "internaldrive") {
             MetricValueView("Available", metric: viewModel.storageAvailableBytes) {
-                ByteFormatting.string(fromBytes: $0)
+                ByteFormatting.string(fromByteCount: $0)
             }
             MetricValueView("Potentially reclaimable", metric: viewModel.reclaimableBytes) {
-                ByteFormatting.string(fromBytes: $0)
+                ByteFormatting.string(fromByteCount: $0)
             }
+            if let scan = viewModel.lastScan {
+                Text("Last scan: \(scan.rootName), \(scan.finishedAt.formatted(date: .abbreviated, time: .shortened))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("overview.lastScan")
+            }
+            Button("Open Space Analyzer", action: openSpaceAnalyzer)
+                .buttonStyle(.link)
+                .accessibilityIdentifier("overview.openSpaceAnalyzer")
         }
     }
 
