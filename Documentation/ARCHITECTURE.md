@@ -129,6 +129,7 @@ LiveProcessSnapshotSource ──ProcessSnapshot──▶ ProcessMonitor (actor)
                                                  ├─▶ AppUsageAggregator (helpers → app, estimated impact)
                                                  ├─▶ DrainAlertEvaluator (sustained CPU, battery-only)
                                                  ├─▶ UsageHourAccumulator ─▶ JSONLinesAppUsageStore (hourly, 7 days)
+                                                 ├─▶ BackgroundGrouping (published lists only)
                                                  └─▶ AsyncStream<EnergyStatus> ─▶ Energy, Battery card, Overview
 ```
 
@@ -138,3 +139,11 @@ LiveProcessSnapshotSource ──ProcessSnapshot──▶ ProcessMonitor (actor)
 - MacPulse excludes itself from the ranking and reports its own CPU in every status.
 - Root/system processes are counted ("N system processes aren't included"), never read.
 - Battery impact is always an estimate (ADR-011).
+- Processes that aren't apps with a Dock icon (`NSRunningApplication.activationPolicy
+  == .regular`) are folded into one expandable "macOS & background" row, ranked with
+  the apps so heavy background work stays visible. Grouping is presentation only:
+  hourly history and drain alerts stay per app or process. Activity Monitor instead
+  files XPC services under the app that launched them; that needs a private call, so
+  MacPulse doesn't (ADR-010).
+- Processes are named by their executable file name (the kernel name stops at 32
+  characters).
