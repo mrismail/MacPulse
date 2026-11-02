@@ -120,7 +120,12 @@ final class MacPulseUITests: XCTestCase {
         open("energy", in: app)
         let group = element("energy.row.group:background", in: app)
         XCTAssertTrue(group.waitForExistence(timeout: 10), "Background processes are folded into one row")
-        group.click()
+        // The group is the last row and may be below the fold, so select it with the
+        // keyboard from the first row rather than clicking it.
+        let first = element("energy.row./Applications/Web Browser.app", in: app)
+        XCTAssertTrue(first.waitForExistence(timeout: 10))
+        first.click()
+        for _ in 0..<4 { app.typeKey(.downArrow, modifierFlags: []) }
         XCTAssertTrue(element("energy.detail", in: app).waitForExistence(timeout: 10))
         XCTAssertTrue(element("energy.trendChart", in: app).waitForExistence(timeout: 10))
     }
