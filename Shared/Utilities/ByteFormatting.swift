@@ -36,6 +36,13 @@ public enum ByteFormatting {
     }
 }
 
+extension ByteFormatting {
+    /// Signed sizes from `URLResourceValues` and scans; negative values show as 0 bytes.
+    public static func string(fromBytes bytes: Int64, locale: Locale = .current) -> String {
+        string(fromBytes: UInt64(max(0, bytes)), locale: locale)
+    }
+}
+
 extension Double {
     fileprivate func rounded(toPlaces places: Int) -> Double {
         let factor = pow(10, Double(places))
