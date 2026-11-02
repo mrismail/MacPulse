@@ -314,8 +314,13 @@ public actor ProcessMonitor: EnergyMonitoring {
         let status = EnergyStatus(
             timestamp: timestamp,
             intervalSeconds: elapsed,
-            current: apps,
-            recent: recent,
+            // Grouping is presentation only: history and alerts above stay per app.
+            current: BackgroundGrouping.fold(
+                apps, foregroundApps: snapshot.foregroundAppBundles, basis: basis, thresholds: configuration.thresholds
+            ),
+            recent: BackgroundGrouping.fold(
+                recent, foregroundApps: snapshot.foregroundAppBundles, basis: basis, thresholds: configuration.thresholds
+            ),
             recentWindowMinutes: Int(configuration.recentWindow / 60),
             systemCPUPercent: systemCPU,
             memoryPressure: pressure,
