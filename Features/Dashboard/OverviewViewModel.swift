@@ -24,25 +24,54 @@ public final class OverviewViewModel {
         batteryStatus.map { BatteryStatusPresentation.stateDescription($0.reading) }
     }
 
-    // Filled in by later phases. Shown as "Unavailable" so the dashboard
-    // never displays a made-up number.
-    public private(set) var storageAvailableBytes: Metric<UInt64> = .unavailable(.notYetImplemented)
-    public private(set) var reclaimableBytes: Metric<UInt64> = .unavailable(.notYetImplemented)
+    /// Free space on the startup disk, as the file system reports it.
+    public private(set) var storageAvailableBytes: Metric<Int64> = .unavailable(.notYetSampled)
+    /// Caches, logs, temporary files and Trash found by the last complete scan (estimate).
+    public private(set) var reclaimableBytes: Metric<Int64> = .unavailable(.notYetSampled)
+    /// The most recent scan, if any.
+    public private(set) var lastScan: ScanSummary?
 
     public let upcomingFeatures: [PlannedFeature] = PlannedFeature.all
 
     @ObservationIgnored private let systemInfoRepository: any SystemInfoRepository
     @ObservationIgnored private let batteryMonitor: any BatteryMonitoring
     @ObservationIgnored private let energyMonitor: (any EnergyMonitoring)?
+    @ObservationIgnored private let volumes: (any VolumeRepository)?
+    @ObservationIgnored private let scanHistory: (any ScanHistoryRepository)?
 
     public init(
         systemInfoRepository: any SystemInfoRepository,
         batteryMonitor: any BatteryMonitoring,
-        energyMonitor: (any EnergyMonitoring)? = nil
+        energyMonitor: (any EnergyMonitoring)? = nil,
+        volumes: (any VolumeRepository)? = nil,
+        scanHistory: (any ScanHistoryRepository)? = nil
     ) {
         self.systemInfoRepository = systemInfoRepository
         self.batteryMonitor = batteryMonitor
         self.energyMonitor = energyMonitor
+        self.volumes = volumes
+        self.scanHistory = scanHistory
+    }
+
+    /// Reads free space on the startup disk and the last scan. Called when the Overview
+    /// appears, so it reflects scans made since.
+    public func loadStorage() async {
+        if let volumes {
+            let startup = (try? await volumes.volumes())?.first { $0.kind == .startup }
+            storageAvailableBytes = startup?.availableBytes ?? .unavailable(.notSupportedOnThisMac)
+        }
+        guard let scanHistory else { return }
+        let summaries = (try? await scanHistory.summaries()) ?? []
+        lastScan = ScanHistory.recent(summaries, limit: 1).first
+        if let complete = ScanHistory.recent(summaries.filter(\.isComplete), limit: 1).first {
+            let date = complete.finishedAt.formatted(date: .abbreviated, time: .omitted)
+            reclaimableBytes = .estimated(
+                complete.recoverableBytes,
+                basis: String(localized: "Caches, logs, temporary files and Trash found when you scanned \(complete.rootName) on \(date).")
+            )
+        } else {
+            reclaimableBytes = .unavailable(.notApplicable(String(localized: "Scan a folder in Space Analyzer to estimate this.")))
+        }
     }
 
     /// Follows app activity until the calling task is cancelled.

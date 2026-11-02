@@ -9,6 +9,7 @@ import UniformTypeIdentifiers
 public struct SpaceAnalyzerView: View {
     @Bindable private var viewModel: SpaceAnalyzerViewModel
     @State private var isPickingFolder = false
+    @State private var isEditingExclusions = false
 
     public init(viewModel: SpaceAnalyzerViewModel) {
         self.viewModel = viewModel
@@ -18,7 +19,11 @@ public struct SpaceAnalyzerView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.large) {
                 VolumeOverviewCard(viewModel: viewModel)
-                ScanControlsCard(viewModel: viewModel, pickFolder: { isPickingFolder = true })
+                ScanControlsCard(
+                    viewModel: viewModel,
+                    pickFolder: { isPickingFolder = true },
+                    editExclusions: { isEditingExclusions = true }
+                )
                 if let result = viewModel.result {
                     ScanSummaryCard(result: result, viewModel: viewModel, pickFolder: { isPickingFolder = true })
                     FolderTreeCard(viewModel: viewModel)
@@ -28,11 +33,17 @@ public struct SpaceAnalyzerView: View {
                             .frame(maxWidth: 340)
                     }
                 }
+                if !viewModel.history.isEmpty {
+                    ScanHistoryCard(viewModel: viewModel)
+                }
             }
             .padding(Spacing.large)
         }
         .navigationTitle("Space Analyzer")
         .task { await viewModel.observeVolumes() }
+        .sheet(isPresented: $isEditingExclusions) {
+            ExclusionsSheet(viewModel: viewModel)
+        }
         .fileImporter(isPresented: $isPickingFolder, allowedContentTypes: [.folder]) { picked in
             if case .success(let url) = picked {
                 viewModel.scanPickedFolder(url.path)

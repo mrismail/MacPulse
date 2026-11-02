@@ -3,12 +3,14 @@ import Charts
 import MacPulseDomain
 import MacPulseShared
 import SwiftUI
+import UniformTypeIdentifiers
 
 // MARK: - Scan controls
 
 struct ScanControlsCard: View {
     @Bindable var viewModel: SpaceAnalyzerViewModel
     let pickFolder: () -> Void
+    let editExclusions: () -> Void
 
     var body: some View {
         Card("Scan", systemImage: "magnifyingglass") {
@@ -22,6 +24,8 @@ struct ScanControlsCard: View {
                 Button("Choose Folder…", action: pickFolder)
                     .accessibilityIdentifier("space.chooseFolder")
                 Spacer()
+                Button("Excluded Folders (\(viewModel.exclusions.count))…", action: editExclusions)
+                    .accessibilityIdentifier("space.editExclusions")
                 if viewModel.isScanning {
                     Button("Stop", role: .cancel) { viewModel.cancelScan() }
                         .keyboardShortcut(.cancelAction)
@@ -297,5 +301,111 @@ enum SpacePresentation {
     @MainActor
     static func reveal(_ path: String) {
         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
+    }
+}
+
+// MARK: - Exclusions
+
+struct ExclusionsSheet: View {
+    @Bindable var viewModel: SpaceAnalyzerViewModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var isPicking = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.medium) {
+            Text("Excluded Folders").font(.title3.weight(.semibold))
+            Text("Scans skip these folders and everything inside them.")
+                .foregroundStyle(.secondary)
+            List {
+                ForEach(viewModel.exclusions, id: \.self) { path in
+                    HStack {
+                        Label(path, systemImage: "folder.badge.minus")
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Spacer()
+                        Button {
+                            viewModel.removeExclusion(path)
+                        } label: {
+                            Image(systemName: "minus.circle")
+                        }
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel("Remove \(path)")
+                    }
+                }
+            }
+            .frame(minHeight: 160)
+            .overlay {
+                if viewModel.exclusions.isEmpty {
+                    Text("No folders are excluded.").foregroundStyle(.secondary)
+                }
+            }
+            .accessibilityIdentifier("space.exclusionsList")
+            HStack {
+                Button("Add Folder…") { isPicking = true }
+                    .accessibilityIdentifier("space.addExclusion")
+                Spacer()
+                Button("Done") { dismiss() }
+                    .keyboardShortcut(.defaultAction)
+                    .accessibilityIdentifier("space.exclusionsDone")
+            }
+        }
+        .padding(Spacing.large)
+        .frame(minWidth: 460)
+        .fileImporter(isPresented: $isPicking, allowedContentTypes: [.folder]) { picked in
+            if case .success(let url) = picked {
+                viewModel.addExclusion(url.path)
+            }
+        }
+    }
+}
+
+// MARK: - History
+
+struct ScanHistoryCard: View {
+    @Bindable var viewModel: SpaceAnalyzerViewModel
+
+    var body: some View {
+        Card("Scan History", systemImage: "clock.arrow.circlepath") {
+            if let error = viewModel.historyError {
+                Label(error.userMessage, systemImage: "exclamationmark.triangle")
+            }
+            ForEach(viewModel.history) { summary in
+                HStack(alignment: .firstTextBaseline, spacing: Spacing.medium) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(summary.rootName).font(.body.weight(.medium))
+                        Text(summary.finishedAt.formatted(date: .abbreviated, time: .shortened))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if !summary.isComplete {
+                        Text("Stopped").font(.caption).foregroundStyle(.secondary)
+                    }
+                    Text(ByteFormatting.string(fromByteCount: summary.allocatedBytes)).monospacedDigit()
+                    Text(SpacePresentation.changeText(viewModel.change(for: summary)))
+                        .font(.caption)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                        .frame(minWidth: 110, alignment: .trailing)
+                }
+                .accessibilityElement(children: .combine)
+                Divider()
+            }
+            Text("History keeps totals and the five biggest folders of each scan for 180 days, never file names.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("space.history")
+    }
+}
+
+extension SpacePresentation {
+    /// "+1.2 GB since last scan", "No change", or "First scan".
+    static func changeText(_ change: Int64?) -> String {
+        guard let change else { return String(localized: "First scan") }
+        if change == 0 { return String(localized: "No change") }
+        let size = ByteFormatting.string(fromByteCount: abs(change))
+        return change > 0 ? String(localized: "+\(size) since last scan") : String(localized: "−\(size) since last scan")
     }
 }
