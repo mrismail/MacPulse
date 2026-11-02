@@ -118,7 +118,8 @@ struct SpaceAnalyzerScanTests {
         #expect(model.skippedSummary == [SkipCount(reason: .protectedByPrivacy, count: 2)])
         #expect(model.skippedProtectedFolders.count == 2)
         let result = try #require(model.result)
-        #expect(result.recoverableBytes.value == 1_300_000_000 + 40_000_000 + 900_000_000)
+        let expected: Int64 = 1_300_000_000 + 40_000_000 + 900_000_000  // caches + logs + Trash
+        #expect(result.recoverableBytes.value == expected)
         #expect(!result.recoverableBytes.isMeasured)
     }
 
