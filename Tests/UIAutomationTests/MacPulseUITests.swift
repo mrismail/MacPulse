@@ -140,6 +140,21 @@ final class MacPulseUITests: XCTestCase {
     }
 
     @MainActor
+    func testHomeScanShowsTreeLargestFilesAndSkippedFolders() {
+        let app = launchApp()
+        open("spaceAnalyzer", in: app)
+        let scan = element("space.scanHome", in: app)
+        XCTAssertTrue(scan.waitForExistence(timeout: 10))
+        scan.click()
+        XCTAssertTrue(element("space.summary", in: app).waitForExistence(timeout: 10))
+        XCTAssertTrue(element("space.tree", in: app).waitForExistence(timeout: 10))
+        XCTAssertTrue(element("space.largestFiles", in: app).exists)
+        XCTAssertTrue(element("space.categories", in: app).exists)
+        XCTAssertTrue(element("space.skipped", in: app).exists, "Protected folders are listed as not scanned")
+        XCTAssertTrue(element("space.chooseProtected", in: app).exists)
+    }
+
+    @MainActor
     func testOverviewLinksToEnergy() {
         let app = launchApp()
         let link = element("overview.openEnergy", in: app)
