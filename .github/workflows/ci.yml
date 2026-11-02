@@ -151,12 +151,43 @@ jobs:
               sys.exit(1)
           '
 
+      - name: Scan budget (Phase 4 acceptance, ADR-013)
+        run: |
+          LINE=$(MACPULSE_DIAGNOSTICS=1 MACPULSE_SCAN_FILES=200000 build-release/Build/Products/Release/MacPulse.app/Contents/MacOS/MacPulse --macpulse-scan-benchmark | grep '^MACPULSE_SCAN_BENCHMARK ')
+          JSON=${LINE#MACPULSE_SCAN_BENCHMARK }
+          echo "::notice title=Scan benchmark (Release, CI VM)::$JSON"
+          echo "$JSON" | python3 -c '
+          import json, sys
+          r = json.load(sys.stdin)
+          errors = []
+          if not r["resultIsComplete"]:
+              errors.append("the scan missed files (%d items scanned)" % r["itemsScanned"])
+          # The UI must stay responsive: the main thread never stalls more than 250 ms.
+          if r["maxMainThreadStallMilliseconds"] > 250:
+              errors.append("main thread stalled %.0f ms (budget 250 ms)" % r["maxMainThreadStallMilliseconds"])
+          # Memory stays bounded: 200,000 files in under 400 MB peak footprint.
+          if r["peakFootprintBytes"] > 400 * 1000 * 1000:
+              errors.append("peak memory %.0f MB (budget 400 MB)" % (r["peakFootprintBytes"] / 1e6))
+          if r["secondsToScan"] > 120:
+              errors.append("scan took %.0f s (budget 120 s)" % r["secondsToScan"])
+          for e in errors:
+              print("::error::Scan benchmark: " + e)
+          sys.exit(1 if errors else 0)
+          '
+
       - name: Guardrails — no networking, no process control (ADR-010)
         run: |
           # Source: APIs MacPulse must never use without a new ADR.
           if grep -RInE '\b(URLSession|NWConnection|NWListener|import Network|task_for_pid|kill\(|AuthorizationExecuteWithPrivileges|SMJobBless|NSAppleScript)' \
                --include='*.swift' App Domain Features Infrastructure Shared; then
             echo "::error::Forbidden API found in sources (see ADR-010)"; exit 1
+          fi
+          # Files are only changed by MacPulse's own data stores and the scan benchmark's
+          # temporary tree. Removing or moving user files needs the Phase 6 Cleaner ADR.
+          if grep -RInE '\b(removeItem|trashItem|moveItem|replaceItem|replaceItemAt|unlink\(|rmdir\(|recycle\()' \
+               --include='*.swift' App Domain Features Infrastructure Shared \
+               | grep -vE '^Infrastructure/Persistence/|^Infrastructure/Storage/ScanBenchmark\.swift:'; then
+            echo "::error::File-changing API outside the allowed files (see ADR-013)"; exit 1
           fi
           # Binary: no direct references to socket/process-control symbols.
           BIN=build-release/Build/Products/Release/MacPulse.app/Contents/MacOS/MacPulse
