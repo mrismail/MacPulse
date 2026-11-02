@@ -28,7 +28,15 @@ jobs:
           swift --version
 
       - name: Build package (warnings are errors)
-        run: swift build -Xswiftc -warnings-as-errors
+        run: |
+          set -o pipefail
+          if ! swift build -Xswiftc -warnings-as-errors 2>&1 | tee build.log; then
+            # Logs can't always be downloaded; surface compiler errors as annotations.
+            grep -E 'error:' build.log | sort -u | head -30 | while IFS= read -r line; do
+              echo "::error::${line}"
+            done
+            exit 1
+          fi
 
       - name: Run unit and integration tests
         run: |
