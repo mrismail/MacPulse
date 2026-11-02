@@ -38,7 +38,7 @@ public enum ByteFormatting {
 
 extension ByteFormatting {
     /// Signed sizes from `URLResourceValues` and scans; negative values show as 0 bytes.
-    public static func string(fromBytes bytes: Int64, locale: Locale = .current) -> String {
+    public static func string(fromByteCount bytes: Int64, locale: Locale = .current) -> String {
         string(fromBytes: UInt64(max(0, bytes)), locale: locale)
     }
 }
