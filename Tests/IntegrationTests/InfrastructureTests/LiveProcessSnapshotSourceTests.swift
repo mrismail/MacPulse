@@ -25,6 +25,8 @@ struct LiveProcessSnapshotSourceTests {
             #expect(own.name == (path as NSString).lastPathComponent)
         }
         #expect(snapshot.awakeUptime != nil)
+        // Foreground apps are a subset of the app bundles seen in this snapshot.
+        #expect(snapshot.foregroundAppBundles.isSubset(of: Set(snapshot.appDisplayNames.keys)))
         #expect(snapshot.memoryPressure != nil)
     }
 
