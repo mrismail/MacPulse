@@ -16,6 +16,7 @@ public final class AppModel {
     public let battery: BatteryViewModel
     public let energy: EnergyViewModel
     public let settings: SettingsViewModel
+    public let spaceAnalyzer: SpaceAnalyzerViewModel
 
     public init(dependencies: AppDependencies, coordinator: AppCoordinator = AppCoordinator()) {
         self.dependencies = dependencies
@@ -27,6 +28,7 @@ public final class AppModel {
         )
         battery = BatteryViewModel(monitor: dependencies.battery)
         energy = EnergyViewModel(monitor: dependencies.energy)
+        spaceAnalyzer = SpaceAnalyzerViewModel(volumes: dependencies.volumes)
         settings = SettingsViewModel(
             systemInfoRepository: dependencies.systemInfo,
             batteryMonitor: dependencies.battery,

@@ -53,7 +53,7 @@ public struct RootView: View {
                 model.coordinator.select(.energy)
             }
         case .energy: EnergyView(viewModel: model.energy)
-        case .spaceAnalyzer: SpaceAnalyzerView()
+        case .spaceAnalyzer: SpaceAnalyzerView(viewModel: model.spaceAnalyzer)
         case .duplicateFinder: DuplicateFinderView()
         case .cleaner: CleanerView()
         case .settings: SettingsView(viewModel: model.settings)
