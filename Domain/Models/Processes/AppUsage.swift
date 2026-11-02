@@ -101,6 +101,17 @@ public struct AppUsage: Identifiable, Sendable, Equatable {
     /// `true` for the "macOS & background" row.
     public var isGroup: Bool { children != nil }
 
+    /// A copy with different members (e.g. re-sorted).
+    public func withChildren(_ children: [AppUsage]?) -> AppUsage {
+        AppUsage(
+            id: id, displayName: displayName, appBundlePath: appBundlePath, processCount: processCount,
+            cpuPercent: cpuPercent, memoryBytes: memoryBytes, threadCount: threadCount,
+            energyMilliwatts: energyMilliwatts, diskBytesPerSecond: diskBytesPerSecond,
+            wakeupsPerSecond: wakeupsPerSecond, impact: impact, shareOfActivity: shareOfActivity,
+            children: children
+        )
+    }
+
     /// This usage and every usage folded into it.
     public var flattened: [AppUsage] {
         [self] + (children ?? []).flatMap(\.flattened)

@@ -119,12 +119,23 @@ public final class EnergyViewModel {
     public var apps: [AppUsage] {
         guard let status else { return [] }
         let ranked = timeframe == .now ? status.current : status.recent
-        guard let first = sortOrder.first else { return ranked }
+        return Self.sorted(ranked, by: sortOrder)
+    }
+
+    /// Sorts rows, and the members of the "macOS & background" row the same way.
+    static func sorted(_ rows: [AppUsage], by sortOrder: [KeyPathComparator<AppUsage>]) -> [AppUsage] {
+        guard let first = sortOrder.first else { return rows }
+        let sorted: [AppUsage]
         if first.keyPath == \AppUsage.shareOfActivity {
             // The ranking also weighs impact level; keep it and only honour the direction.
-            return first.order == .reverse ? ranked : ranked.reversed()
+            sorted = first.order == .reverse ? rows : rows.reversed()
+        } else {
+            sorted = rows.sorted(using: sortOrder)
         }
-        return ranked.sorted(using: sortOrder)
+        return sorted.map { row in
+            guard let children = row.children else { return row }
+            return row.withChildren(Self.sorted(children, by: sortOrder))
+        }
     }
 
     public var topApps: [AppUsage] {
@@ -134,7 +145,8 @@ public final class EnergyViewModel {
     /// The selected app in the current timeframe, if it is still in it.
     public var selectedApp: AppUsage? {
         guard let selectedAppID else { return nil }
-        return apps.first { $0.id == selectedAppID }
+        // Members of the background row can be selected too.
+        return apps.lazy.flatMap(\.flattened).first { $0.id == selectedAppID }
     }
 
     /// `true` when an app is selected but has no activity in the current timeframe.
@@ -234,16 +246,21 @@ public final class EnergyViewModel {
             trend = []
             return
         }
-        trend = history
-            .filter { $0.appKey == selectedAppID }
-            .map {
-                EnergyTrendPoint(
-                    hour: $0.hourStart,
-                    averageCPUPercent: $0.averageCPUPercent,
-                    averageMemoryBytes: $0.averageMemoryBytes,
-                    onBattery: $0.onBatterySeconds > $0.sampledSeconds / 2
-                )
-            }
+        // History is kept per app; the background row's trend is the sum of its members.
+        let keys = Set(selectedApp?.children.map { $0.map(\.id) } ?? [selectedAppID])
+        let byHour = Dictionary(grouping: history.filter { keys.contains($0.appKey) }, by: \.hourStart)
+        trend = byHour.map { hour, records in
+            let memory = records.compactMap(\.averageMemoryBytes)
+            let sampled = records.map(\.sampledSeconds).max() ?? 0
+            let onBattery = records.map(\.onBatterySeconds).max() ?? 0
+            return EnergyTrendPoint(
+                hour: hour,
+                averageCPUPercent: records.map(\.averageCPUPercent).reduce(0, +),
+                averageMemoryBytes: memory.isEmpty ? nil : memory.reduce(0, +),
+                onBattery: onBattery > sampled / 2
+            )
+        }
+        .sorted { $0.hour < $1.hour }
     }
 
     /// The chart's x-axis covers the whole selected range, ending at the current hour.

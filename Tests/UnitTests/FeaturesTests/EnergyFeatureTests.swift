@@ -121,6 +121,35 @@ struct EnergyViewModelTests {
         #expect(model.apps.map(\.cpuPercent) == model.apps.map(\.cpuPercent).sorted())
     }
 
+    @Test func backgroundMembersCanBeSelectedAndTheGroupTrendIsTheirSum() async throws {
+        let model = EnergyViewModel(monitor: PreviewEnergyMonitor(referenceDate: referenceDate), now: { referenceDate })
+        await model.observe(detailed: false)
+        await model.loadHistory()
+        let group = try #require(model.apps.first { $0.isGroup })
+        let members = try #require(group.children)
+
+        model.select(members[0].id)
+        #expect(model.selectedApp?.id == members[0].id)
+        #expect(!model.selectedAppIsIdle)
+        let memberTrend = model.trend
+
+        model.select(group.id)
+        #expect(model.selectedApp?.isGroup == true)
+        #expect(model.trend.count == memberTrend.count)
+        let hour = try #require(memberTrend.last?.hour)
+        let groupCPU = try #require(model.trend.first { $0.hour == hour }?.averageCPUPercent)
+        let memberCPU = try #require(memberTrend.last?.averageCPUPercent)
+        #expect(groupCPU > memberCPU)
+    }
+
+    @Test func sortingAlsoOrdersTheBackgroundMembers() async throws {
+        let model = EnergyViewModel(monitor: PreviewEnergyMonitor(referenceDate: referenceDate), now: { referenceDate })
+        await model.observe(detailed: false)
+        model.sortOrder = [KeyPathComparator(\AppUsage.cpuPercent, order: .forward)]
+        let members = try #require(model.apps.first { $0.isGroup }?.children)
+        #expect(members.map(\.cpuPercent) == members.map(\.cpuPercent).sorted())
+    }
+
     @Test func selectedAppWithoutActivityIsReported() async {
         let model = EnergyViewModel(monitor: PreviewEnergyMonitor(referenceDate: referenceDate), now: { referenceDate })
         await model.observe(detailed: false)
