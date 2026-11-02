@@ -115,6 +115,17 @@ final class MacPulseUITests: XCTestCase {
     }
 
     @MainActor
+    func testBackgroundProcessesShareOneRowWithATrend() {
+        let app = launchApp()
+        open("energy", in: app)
+        let group = element("energy.row.group:background", in: app)
+        XCTAssertTrue(group.waitForExistence(timeout: 10), "Background processes are folded into one row")
+        group.click()
+        XCTAssertTrue(element("energy.detail", in: app).waitForExistence(timeout: 10))
+        XCTAssertTrue(element("energy.trendChart", in: app).waitForExistence(timeout: 10))
+    }
+
+    @MainActor
     func testOverviewLinksToEnergy() {
         let app = launchApp()
         let link = element("overview.openEnergy", in: app)
