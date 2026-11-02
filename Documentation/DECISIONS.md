@@ -257,3 +257,49 @@ the CPU it remains negligible.
 **Open.** A one-hour on-battery run with Activity Monitor's Energy tab; and whether to
 express the CI budget per process (e.g. ≤ 0.05 ms) or as a percentage of a core rather
 than an absolute 15 ms per sample.
+
+## ADR-013 — Space Analyzer scanner: safety rules and budget (Phase 4)
+
+**Date:** 2026-11-02 · **Status:** Accepted
+
+**Context.** Spec Phase 4 acceptance: "scanning works on large directory trees without
+blocking the UI or following unsafe filesystem paths". Without the sandbox (ADR-010)
+MacPulse can read anything the user can, so the scanner itself must be safe. macOS 14+
+shows privacy prompts for Desktop, Documents, Downloads, iCloud Drive, removable and
+network volumes and other apps' data; some locations need Full Disk Access.
+
+**Decision.**
+- `FileSystemScanner` lists folders with `FileManager.contentsOfDirectory` and reads
+  metadata (`URLResourceValues`, `lstat`) only; it never opens a file.
+- Symbolic links are never followed. Each folder is entered once, keyed by device +
+  inode, which also defeats firmlinks and hard-linked folders. The scan stays on the
+  starting volume (for `/`, the System and Data volumes count as one).
+- `ScanPathPolicy` runs before each folder: user exclusions; system locations
+  (`/System`, `/dev`, `/private/var/vm`, `/private/var/db`, `/Volumes`, Spotlight,
+  FSEvents, Time Machine, …); and privacy-protected locations, which are skipped unless
+  the user picked that location (or something inside it) in the folder panel. Picking
+  `/` or the home folder does not approve Documents. No Full Disk Access is requested.
+- Hard-linked files are counted once; packages are sized as one item; unreadable
+  folders are recorded as "no permission" and never retried or escalated.
+- Memory is bounded: every folder is kept, but only the 50 largest files per folder
+  (the rest summed) and the 1,000 largest overall.
+- The walk runs in a detached utility-priority task; cancelling returns a partial
+  result. Progress is throttled to 10 updates per second.
+- Sizes are labelled: size on disk (`totalFileAllocatedSize`, measured), file size
+  (`totalFileSize`, measured), volume figures (filesystem-reported, measured) and
+  "recoverable" (caches, logs, temporary files, Trash — an estimate).
+- CI guardrail: file-changing APIs (`removeItem`, `trashItem`, `moveItem`,
+  `replaceItem`, `unlink`, `rmdir`) are allowed only in MacPulse's own data stores
+  (`Infrastructure/Persistence`) and the scan benchmark's temporary tree, until the
+  Phase 6 Cleaner ADR.
+
+**Evidence.** Integration tests build real trees with a symlink loop, a link out of the
+tree, hard links, a package, exclusions, a protected folder, a locked folder, and a
+cancelled scan. `MACPULSE_DIAGNOSTICS=1 MacPulse --macpulse-scan-benchmark` builds a
+sparse synthetic tree (`MACPULSE_SCAN_FILES`, default 200,000), scans it, measures scan
+time, CPU, peak footprint and the longest main-thread stall (10 ms heartbeat), then
+removes the tree. CI budget for 200,000 files: complete result, main-thread stall
+≤ 250 ms, peak footprint ≤ 400 MB, scan ≤ 120 s.
+
+**Open.** Owner's Mac: 1,000,000-file run (`MACPULSE_SCAN_FILES=1000000`), and a home
+scan to confirm no unexpected privacy prompt.
