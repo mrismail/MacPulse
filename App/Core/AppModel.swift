@@ -28,7 +28,7 @@ public final class AppModel {
         )
         battery = BatteryViewModel(monitor: dependencies.battery)
         energy = EnergyViewModel(monitor: dependencies.energy)
-        spaceAnalyzer = SpaceAnalyzerViewModel(volumes: dependencies.volumes)
+        spaceAnalyzer = SpaceAnalyzerViewModel(volumes: dependencies.volumes, scanner: dependencies.scanner)
         settings = SettingsViewModel(
             systemInfoRepository: dependencies.systemInfo,
             batteryMonitor: dependencies.battery,
