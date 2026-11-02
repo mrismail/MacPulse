@@ -54,7 +54,7 @@ struct EnergyViewModelTests {
         await model.observe(detailed: true)
 
         #expect(model.apps.first?.displayName == "Web Browser")
-        #expect(model.topApps.count == 4)
+        #expect(model.topApps.count == 5)  // four apps and the "macOS & background" row
         #expect(model.systemCPU == .measured(23))
         #expect(model.ownCPU.isMeasured)
         #expect(await stub.detailedCalls == [true, false])  // fast while visible, back to slow after
