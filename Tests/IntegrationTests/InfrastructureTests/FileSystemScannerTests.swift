@@ -160,3 +160,22 @@ private final class ProgressCounter: @unchecked Sendable {
     var count: Int { lock.withLock { value } }
     func record(_ progress: ScanProgress) { lock.withLock { value += 1 } }
 }
+
+@Suite("ScanBenchmark", .serialized)
+struct ScanBenchmarkTests {
+    @Test func smallRunScansEveryFileAndCleansUp() async {
+        let report = await ScanBenchmark.run(files: 1_000)
+        #expect(report.resultIsComplete)
+        #expect(report.files == 1_000)
+        #expect(report.peakFootprintBytes > 0)
+        let leftovers = (try? FileManager.default.contentsOfDirectory(atPath: FileManager.default.temporaryDirectory.path)) ?? []
+        #expect(!leftovers.contains { $0.hasPrefix(ScanBenchmark.folderPrefix) })
+    }
+
+    @Test func fileCountComesFromTheEnvironmentWithinBounds() {
+        #expect(ScanBenchmark.fileCount(from: [:]) == 200_000)
+        #expect(ScanBenchmark.fileCount(from: [ScanBenchmark.filesEnvironmentKey: "1000000"]) == 1_000_000)
+        #expect(ScanBenchmark.fileCount(from: [ScanBenchmark.filesEnvironmentKey: "5"]) == 1_000)
+        #expect(ScanBenchmark.fileCount(from: [ScanBenchmark.filesEnvironmentKey: "x"]) == 200_000)
+    }
+}
