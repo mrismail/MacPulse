@@ -117,6 +117,33 @@ struct ProcessMonitorTests {
         #expect(status.systemCPUPercent.isAvailable)
     }
 
+    @Test func backgroundProcessesAreGroupedButAlertsAndHistoryStayPerProcess() async throws {
+        let chrome = "/Applications/Chrome.app"
+        let snapshots = (0..<8).map { index -> ProcessSnapshot in
+            let t = Double(index) * 60
+            return F.snapshot(at: t, [
+                F.sample(pid: 1, name: "hog", cpuSeconds: t * 0.8),
+                F.sample(pid: 2, name: "Google Chrome", bundle: chrome, cpuSeconds: t * 0.05),
+                F.sample(pid: 999, name: "MacPulse", cpuSeconds: t * 0.01),
+            ], busy: UInt64(index) * 1_000, foreground: [chrome])
+        }
+        let history = InMemoryUsageHistory()
+        let (monitor, clock) = makeMonitor(source: ScriptedSnapshotSource(snapshots), history: history)
+        var last: EnergyStatus?
+        for _ in 0..<8 {
+            last = await monitor.refresh() ?? last
+            clock.advance(by: 60)
+        }
+        let status = try #require(last)
+
+        #expect(status.current.map(\.id) == [BackgroundGrouping.groupID, chrome])
+        #expect(status.recent.first?.children?.map(\.id) == ["process:hog"])
+        #expect(status.alerts.map(\.appKey) == ["process:hog"])
+        await monitor.flush()
+        let keys = Set(await history.stored.map(\.appKey))
+        #expect(keys == ["process:hog", chrome])
+    }
+
     @Test func sustainedUseRaisesAlertAndNotifiesOncePerCooldown() async throws {
         let notifier = RecordingNotifier(allow: true)
         let settings = DrainAlertSettings(sustainedMinutes: 5, sendsNotifications: true)

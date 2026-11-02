@@ -35,7 +35,8 @@ enum ProcessFixtures {
         _ processes: [ProcessSample],
         ownPID: Int32 = 999,
         busy: UInt64? = nil,
-        uptime: TimeInterval? = nil
+        uptime: TimeInterval? = nil,
+        foreground: Set<String> = []
     ) -> ProcessSnapshot {
         ProcessSnapshot(
             timestamp: start.addingTimeInterval(offset),
@@ -46,7 +47,8 @@ enum ProcessFixtures {
             systemCPU: busy.map { SystemCPUTicks(user: $0, system: 0, idle: 1_000_000 + UInt64(max(0, offset)) * 100, nice: 0) },
             logicalCPUCount: 8,
             ownPID: ownPID,
-            appDisplayNames: ["/Applications/Chrome.app": "Google Chrome"]
+            appDisplayNames: ["/Applications/Chrome.app": "Google Chrome"],
+            foregroundAppBundles: foreground
         )
     }
 
