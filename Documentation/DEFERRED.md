@@ -14,7 +14,12 @@ appear. Each has a target phase and a reason. Update this file whenever scope mo
 | Ending an app from MacPulse | Spec non-goal | Not planned | Spec forbids automatic termination; a manual "Quit" button may be considered with the owner later. |
 | Configurable data retention | §3 Settings | Phase 7 | Fixed at 30 days (`BatteryMonitor.Configuration.defaultHistoryRetentionDays`). |
 | Monitoring while the app is closed | §2 Module A history | Phase 7 | Requires a login item / menu-bar companion (`SMAppService`). History is recorded only while MacPulse runs. |
-| Overview "recent scans and cleanup activity" | §3 Overview | Phases 4–6 | No scans exist yet; the Overview shows battery recommendations meanwhile. |
+| Overview "recent scans and cleanup activity" | §3 Overview | Phase 6 | Phase 4: the Overview shows free space, the last scan and its recoverable estimate. Cleanup activity arrives with the Cleaner. |
+| Storage chart as a treemap or sunburst | §3 Space Analyzer screen | Phase 7 | Phase 4 ships a stacked volume bar, a category bar chart and a size bar per folder row. |
+| Live updates while files change (FSEvents) | §2 Module C | Phase 7 | Results reflect the moment of the scan; rescan to refresh. |
+| "Large application data" for other apps | §2 Module C | Phase 6 | Other apps' containers are behind a per-app macOS prompt; the Cleaner will ask per category. Readable app data (e.g. ~/Library/Application Support, Caches) is already in scans. |
+| Acting on recoverable space from the Space Analyzer | §2 Module C "estimated recoverable storage" | Phase 6 | Phase 4 is read-only and shows the estimate; the Cleaner removes with confirmation. |
+| Clearing scan history from Settings | §3 Settings | Phase 7 | Settings gets one Privacy section for all histories. |
 | String Catalog extraction and Arabic translation | (owner requirement) | Phase 7 | Groundwork done in Phase 2 (ADR-008). |
 | Snapshot tests (light/dark/RTL) | Review finding | Phase 7 | Needs a third-party snapshot library; decide with the UI polish pass. |
 | macOS 14 launch verification | Phase 1 acceptance | Before Phase 8 | CI runners are macOS 15; verify on a macOS 14 VM before release. |
@@ -24,7 +29,8 @@ appear. Each has a target phase and a reason. Update this file whenever scope mo
 
 - **Phase 3:** resolved — ADR-009 measured sandbox limits; ADR-010 dropped the sandbox.
 - **Phases 4–6:** which cleanup categories are reachable without Full Disk Access
-  (user Trash, other apps' caches, TCC-protected folders)? Capability matrix before Phase 4.
+  (user Trash, other apps' caches, TCC-protected folders)? Phase 4 skips protected
+  folders unless picked (ADR-013); confirm on the owner's Mac which locations prompt.
 - **Apple silicon fixture:** only Intel real-hardware data exists so far
   (`BatteryFixtures.realIntelMacBookPro16`); add an Apple silicon capture when available.
 - **Phase 8:** Apple Developer Program enrolment, Developer ID signing and notarization.

@@ -147,3 +147,25 @@ LiveProcessSnapshotSource ──ProcessSnapshot──▶ ProcessMonitor (actor)
   MacPulse doesn't (ADR-010).
 - Processes are named by their executable file name (the kernel name stops at 32
   characters).
+
+## Space Analyzer (Phase 4)
+
+```
+LiveVolumeRepository ──[VolumeInfo]──────────────┐
+ mountedVolumeURLs + URLResourceValues           │
+FileSystemScanner ──ScanResult──▶ SpaceAnalyzerViewModel ─▶ volume chart, scan controls,
+ contentsOfDirectory + lstat (detached task)     │           folder tree, largest files,
+   ├─ ScanPathPolicy (exclusions, system,        │           categories, history
+   │   privacy-protected folders)                │
+   ├─ FileCategorizer (path + extension)         └─▶ ScanSummary ─▶ JSONLinesScanHistoryStore
+   └─ ScanTreeBuilder (bounded memory)                              (180 days, no file names)
+```
+
+- Read-only: listing and metadata only; nothing is opened, moved or deleted (ADR-013).
+- Never follows links; folders entered once by device + inode; stays on the volume.
+- Protected folders (Desktop, Documents, Downloads, iCloud Drive, other apps' data) are
+  skipped unless the user picks them in the folder panel; the result lists them.
+- Size vocabulary: size on disk (allocated), file size (logical), volume figures
+  (filesystem-reported) — all measured; recoverable — an estimate.
+- Exclusions are saved in user defaults; scan history keeps totals, the five biggest
+  folders and category totals for 180 days.
