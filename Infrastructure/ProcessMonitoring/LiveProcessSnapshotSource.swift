@@ -34,7 +34,18 @@ public actor LiveProcessSnapshotSource: ProcessSnapshotSource {
     private let ownPID: pid_t
     /// Per-process path and name, cached by identity.
     private var pathCache: [ProcessIdentity: PathInfo] = [:]
-    private var displayNameCache: [String: String] = [:]
+    private struct BundleInfo: Sendable {
+        let name: String
+        /// Has a Dock icon (`NSApplication.ActivationPolicy.regular`).
+        let isForeground: Bool
+        let checkedAt: Date
+    }
+
+    /// Background bundles are looked up again after this long, in case the app's main
+    /// process registered with the window server after its helpers were first seen.
+    private static let backgroundRecheckInterval: TimeInterval = 60
+
+    private var bundleCache: [String: BundleInfo] = [:]
     public private(set) var lastTiming = Timing()
 
     public init() {
@@ -96,8 +107,8 @@ public actor LiveProcessSnapshotSource: ProcessSnapshotSource {
         if pathCache.count > seen.count {
             pathCache = pathCache.filter { seen.contains($0.key) }
         }
-        let bundles = Set(samples.compactMap(\.appBundlePath))
-        let names = await displayNames(for: bundles)
+        let bundleSet = Set(samples.compactMap(\.appBundlePath))
+        let bundles = await bundleInfo(for: bundleSet, at: timestamp)
         timing.namesMilliseconds = lap()
 
         let ticks = ProcessTable.hostCPUTicks()
@@ -121,7 +132,8 @@ public actor LiveProcessSnapshotSource: ProcessSnapshotSource {
             },
             logicalCPUCount: ProcessInfo.processInfo.activeProcessorCount,
             ownPID: ownPID,
-            appDisplayNames: names
+            appDisplayNames: bundles.mapValues(\.name),
+            foregroundAppBundles: Set(bundles.compactMap { $0.value.isForeground ? $0.key : nil })
         )
     }
 
@@ -147,29 +159,42 @@ public actor LiveProcessSnapshotSource: ProcessSnapshotSource {
         return info
     }
 
-    /// Display names come from running apps (`NSRunningApplication.localizedName`) or the
-    /// bundle's folder name. Nothing is read from disk, so apps running from Downloads or
-    /// a disk image never trigger a macOS privacy prompt.
-    private func displayNames(for bundles: Set<String>) async -> [String: String] {
-        let missing = bundles.filter { displayNameCache[$0] == nil }
-        if !missing.isEmpty {
-            let running = await MainActor.run { () -> [String: String] in
-                var names: [String: String] = [:]
+    /// Display names and Dock-icon status come from running apps
+    /// (`NSRunningApplication`), falling back to the bundle's folder name. Nothing is read
+    /// from disk, so apps running from Downloads or a disk image never trigger a macOS
+    /// privacy prompt. The main actor is visited only when a bundle is new, or a
+    /// background bundle is due for a recheck.
+    private func bundleInfo(for bundles: Set<String>, at now: Date) async -> [String: BundleInfo] {
+        let stale = bundles.filter { bundle in
+            guard let cached = bundleCache[bundle] else { return true }
+            return !cached.isForeground && now.timeIntervalSince(cached.checkedAt) >= Self.backgroundRecheckInterval
+        }
+        if !stale.isEmpty {
+            let running = await MainActor.run { () -> [String: (name: String?, foreground: Bool)] in
+                var apps: [String: (name: String?, foreground: Bool)] = [:]
                 for app in NSWorkspace.shared.runningApplications {
-                    if let path = app.bundleURL?.path, let name = app.localizedName {
-                        names[path] = name
+                    if let path = app.bundleURL?.path {
+                        apps[path] = (app.localizedName, app.activationPolicy == .regular)
                     }
                 }
-                return names
+                return apps
             }
-            for bundle in missing {
-                displayNameCache[bundle] = running[bundle] ?? Self.folderName(of: bundle)
+            for bundle in stale {
+                let app = running[bundle]
+                bundleCache[bundle] = BundleInfo(
+                    name: app?.name ?? Self.folderName(of: bundle),
+                    isForeground: app?.foreground ?? false,
+                    checkedAt: now
+                )
             }
         }
-        var result: [String: String] = [:]
+        if bundleCache.count > bundles.count * 2 + 64 {
+            bundleCache = bundleCache.filter { bundles.contains($0.key) }
+        }
+        var result: [String: BundleInfo] = [:]
         result.reserveCapacity(bundles.count)
         for bundle in bundles {
-            result[bundle] = displayNameCache[bundle]
+            result[bundle] = bundleCache[bundle]
         }
         return result
     }
