@@ -173,9 +173,9 @@ jobs:
           # The UI must stay responsive: the main thread never stalls more than 250 ms.
           if r["maxMainThreadStallMilliseconds"] > 250:
               errors.append("main thread stalled %.0f ms (budget 250 ms)" % r["maxMainThreadStallMilliseconds"])
-          # Memory stays bounded: 200,000 files in under 400 MB peak footprint.
-          if r["peakFootprintBytes"] > 400 * 1000 * 1000:
-              errors.append("peak memory %.0f MB (budget 400 MB)" % (r["peakFootprintBytes"] / 1e6))
+          # Memory stays bounded: 200,000 files in under 150 MB peak footprint (measured 75 MB).
+          if r["peakFootprintBytes"] > 150 * 1000 * 1000:
+              errors.append("peak memory %.0f MB (budget 150 MB)" % (r["peakFootprintBytes"] / 1e6))
           if r["secondsToScan"] > 120:
               errors.append("scan took %.0f s (budget 120 s)" % r["secondsToScan"])
           for e in errors:
