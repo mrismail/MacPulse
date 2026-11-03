@@ -125,6 +125,9 @@ public enum DuplicateExclusion: String, Sendable, Hashable, Codable, CaseIterabl
     case unreadable
     /// Its size or modification date changed while it was being compared.
     case changedDuringScan
+    /// It is in iCloud (or another file provider) and not downloaded. Reading it would
+    /// make macOS download it, so it is left out.
+    case notDownloaded
 }
 
 /// Counts for each stage, to show how candidates were narrowed down.
