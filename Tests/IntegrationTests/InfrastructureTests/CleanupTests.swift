@@ -123,6 +123,32 @@ struct CleanupTests {
         #expect(FileManager.default.fileExists(atPath: home + "/Downloads/a.bin"))
     }
 
+    @Test func putBackRestoresOnlyIntoAFreePlace() async throws {
+        let home = try Tree.makeRoot()
+        defer { Tree.cleanUp(home) }
+        try Tree.write(home + "/Downloads/keep-me.txt", bytes: 100)
+        let report = await move([try Self.candidate(home + "/Downloads/keep-me.txt")], home: home)
+        guard case .movedToTrash(let trashPath) = report.items.first?.outcome else {
+            Issue.record("Not moved")
+            return
+        }
+        let service = FileManagerTrashService()
+        // Something new took the name: refuse instead of overwriting it.
+        try Tree.write(home + "/Downloads/keep-me.txt", bytes: 5)
+        let blocked = await service.putBack(trashPath: trashPath, to: home + "/Downloads/keep-me.txt", policy: Self.policy(home))
+        #expect(blocked == .originalPlaceTaken)
+        try FileManager.default.removeItem(atPath: home + "/Downloads/keep-me.txt")
+
+        let restored = await service.putBack(trashPath: trashPath, to: home + "/Downloads/keep-me.txt", policy: Self.policy(home))
+        #expect(restored == nil)
+        #expect(FileManager.default.fileExists(atPath: home + "/Downloads/keep-me.txt"))
+        let again = await service.putBack(trashPath: trashPath, to: home + "/Downloads/keep-me.txt", policy: Self.policy(home))
+        #expect(again == .notInTrash)
+        // Never into a protected place, and never from outside a Trash folder.
+        let elsewhere = await service.putBack(trashPath: home + "/Downloads/keep-me.txt", to: home + "/Library/Preferences/x", policy: Self.policy(home))
+        #expect(elsewhere == .notInTrash)
+    }
+
     // MARK: Candidates
 
     @Test func cachesAreListedPerAppWithReasonsAndAppleCachesLeftAlone() async throws {

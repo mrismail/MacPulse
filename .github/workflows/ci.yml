@@ -224,8 +224,8 @@ jobs:
           fi
           if grep -RInE '\b(removeItem|moveItem|replaceItem|replaceItemAt|unlink\(|rmdir\()' \
                --include='*.swift' App Domain Features Infrastructure Shared \
-               | grep -vE '^Infrastructure/Persistence/|^Infrastructure/Storage/ScanBenchmark\.swift:|^Infrastructure/Duplicates/DuplicateBenchmark\.swift:'; then
-            echo "::error::File-changing API outside the allowed files (see ADR-013/015)"; exit 1
+               | grep -vE '^Infrastructure/Persistence/|^Infrastructure/Storage/ScanBenchmark\.swift:|^Infrastructure/Duplicates/DuplicateBenchmark\.swift:|^Infrastructure/Cleanup/FileManagerTrashService\.swift:.*moveItem\(atPath: trash'; then
+            echo "::error::File-changing API outside the allowed files (see ADR-013/015/016)"; exit 1
           fi
           # Binary: no direct references to socket/process-control symbols.
           BIN=build-release/Build/Products/Release/MacPulse.app/Contents/MacOS/MacPulse

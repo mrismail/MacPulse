@@ -49,5 +49,9 @@ public struct PreviewTrashService: TrashService {
         progress(items.count)
         return CleanupReport(category: category, finishedAt: Date(timeIntervalSince1970: 1_793_448_000), items: items, isComplete: true)
     }
+
+    public func putBack(trashPath: String, to originalPath: String, policy: CleanupSafetyPolicy) async -> PutBackFailure? {
+        nil
+    }
 }
 #endif

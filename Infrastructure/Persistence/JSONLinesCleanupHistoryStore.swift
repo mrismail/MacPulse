@@ -39,6 +39,21 @@ public actor JSONLinesCleanupHistoryStore: CleanupHistoryRepository {
         try files.removeDays(before: files.dayString(for: cutoff))
     }
 
+    /// Rewrites the day file holding `report` with the new version.
+    public func replace(_ report: CleanupReport) throws {
+        let day = files.dayString(for: report.finishedAt)
+        let lines = try files.lines(fromDay: day, toDay: day)
+        let updated = try lines.map { line -> Data in
+            guard let stored = try? decoder.decode(CleanupReport.self, from: line), stored.id == report.id else { return line }
+            return try encoder.encode(report)
+        }
+        try files.replace(day: day, with: updated)
+    }
+
+    public func deleteAll() throws {
+        try files.removeAll()
+    }
+
     public func reports() throws -> [CleanupReport] {
         let days = try files.days()
         guard let first = days.first, let last = days.last else { return [] }

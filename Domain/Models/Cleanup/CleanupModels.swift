@@ -145,6 +145,8 @@ public enum CleanupItemOutcome: Sendable, Hashable, Codable {
     case skipped(CleanupSkipReason)
     /// macOS refused; the message explains why.
     case failed(message: String)
+    /// Moved to the Trash, then put back where it was from MacPulse's cleanup history.
+    case putBack
 
     public var isMoved: Bool {
         if case .movedToTrash = self { return true }
