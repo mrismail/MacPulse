@@ -21,6 +21,10 @@ public enum LaunchDiagnostics {
             write(ProcessAccessProbe.runAndEncode())
             return true
         }
+        if arguments.contains(DuplicateBenchmark.launchArgument) {
+            write(DuplicateBenchmark.encode(runToCompletion { await DuplicateBenchmark.run() }))
+            return true
+        }
         if arguments.contains(ScanBenchmark.launchArgument) {
             let files = ScanBenchmark.fileCount(from: environment)
             write(ScanBenchmark.encode(runToCompletion { await ScanBenchmark.run(files: files) }))

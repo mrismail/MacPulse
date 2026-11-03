@@ -121,7 +121,7 @@ public enum ScanBenchmark {
 
 /// Measures how late a 10 ms main-actor timer fires while the scan runs.
 @MainActor
-private final class Heartbeat {
+final class Heartbeat {
     private(set) var worst: Double = 0
 
     nonisolated init() {}
