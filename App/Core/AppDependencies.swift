@@ -21,6 +21,8 @@ public struct AppDependencies: Sendable {
     public let cleanupSource: any CleanupCandidateSource
     public let trash: any TrashService
     public let cleanupHistory: any CleanupHistoryRepository
+    public let preferences: any PreferencesStore
+    public let loginItem: any LoginItemControlling
 
     public init(
         systemInfo: any SystemInfoRepository,
@@ -33,7 +35,9 @@ public struct AppDependencies: Sendable {
         duplicates: any DuplicateScanning,
         cleanupSource: any CleanupCandidateSource,
         trash: any TrashService,
-        cleanupHistory: any CleanupHistoryRepository = InMemoryCleanupHistory()
+        cleanupHistory: any CleanupHistoryRepository = InMemoryCleanupHistory(),
+        preferences: any PreferencesStore = InMemoryPreferencesStore(),
+        loginItem: any LoginItemControlling = InMemoryLoginItem()
     ) {
         self.systemInfo = systemInfo
         self.battery = battery
@@ -46,15 +50,20 @@ public struct AppDependencies: Sendable {
         self.cleanupSource = cleanupSource
         self.trash = trash
         self.cleanupHistory = cleanupHistory
+        self.preferences = preferences
+        self.loginItem = loginItem
     }
 
     /// Real system services. Used by the shipping app.
     public static func live() -> AppDependencies {
-        let battery = makeLiveBatteryMonitor()
+        // Intervals and retention are read once, at launch (ADR-016).
+        let preferences = UserDefaultsPreferencesStore()
+        let chosen = preferences.load()
+        let battery = makeLiveBatteryMonitor(chosen)
         return AppDependencies(
             systemInfo: LiveSystemInfoRepository(),
             battery: battery,
-            energy: makeLiveProcessMonitor(battery: battery),
+            energy: makeLiveProcessMonitor(battery: battery, preferences: chosen),
             volumes: LiveVolumeRepository(),
             scanner: FileSystemScanner(),
             scanHistory: makeLiveScanHistory(),
@@ -62,7 +71,9 @@ public struct AppDependencies: Sendable {
             duplicates: DuplicateFinder(),
             cleanupSource: LiveCleanupCandidateSource(),
             trash: FileManagerTrashService(),
-            cleanupHistory: makeLiveCleanupHistory()
+            cleanupHistory: makeLiveCleanupHistory(),
+            preferences: preferences,
+            loginItem: ServiceManagementLoginItem()
         )
     }
 
@@ -102,7 +113,7 @@ public struct AppDependencies: Sendable {
         }
     }
 
-    private static func makeLiveBatteryMonitor() -> BatteryMonitor {
+    private static func makeLiveBatteryMonitor(_ preferences: AppPreferences) -> BatteryMonitor {
         let logger = Log.logger(.battery)
         let history: any BatteryHistoryRepository
         var isPersistent = true
@@ -121,7 +132,11 @@ public struct AppDependencies: Sendable {
             source: IOKitBatteryReadingSource(),
             history: history,
             powerEvents: IOKitPowerSourceEvents(),
-            configuration: .init(historyIsPersistent: isPersistent),
+            configuration: .init(
+                samplingInterval: preferences.batteryInterval.duration,
+                historyRetention: TimeInterval(preferences.batteryRetentionDays) * 24 * 60 * 60,
+                historyIsPersistent: isPersistent
+            ),
             // Tolerance lets macOS coalesce the wake-up with other timers to save energy.
             sleep: { try await Task.sleep(for: $0, tolerance: .seconds(10)) },
             reportError: { error in
@@ -150,9 +165,11 @@ public struct AppDependencies: Sendable {
 #endif
 
 extension AppDependencies {
-    fileprivate static func makeLiveProcessMonitor(battery: BatteryMonitor) -> ProcessMonitor {
+    fileprivate static func makeLiveProcessMonitor(battery: BatteryMonitor, preferences: AppPreferences) -> ProcessMonitor {
         let history: any AppUsageHistoryRepository
         var configuration = ProcessMonitor.Configuration()
+        configuration.backgroundInterval = preferences.activityInterval.duration
+        configuration.historyRetention = TimeInterval(preferences.usageRetentionDays) * 24 * 60 * 60
         do {
             history = JSONLinesAppUsageStore(directory: try JSONLinesAppUsageStore.defaultDirectory())
         } catch {
