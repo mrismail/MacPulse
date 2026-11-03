@@ -177,6 +177,22 @@ final class MacPulseUITests: XCTestCase {
     }
 
     @MainActor
+    func testDuplicateSearchShowsVerifiedGroupsAndMarking() {
+        let app = launchApp()
+        open("duplicateFinder", in: app)
+        let addHome = element("duplicates.addHome", in: app)
+        XCTAssertTrue(addHome.waitForExistence(timeout: 10))
+        addHome.click()
+        element("duplicates.search", in: app).click()
+        XCTAssertTrue(element("duplicates.summary", in: app).waitForExistence(timeout: 10))
+        XCTAssertTrue(element("duplicates.groups", in: app).exists)
+        let mark = element("duplicates.mark.Holiday.mov", in: app)
+        XCTAssertTrue(mark.waitForExistence(timeout: 10))
+        mark.click()
+        XCTAssertTrue(element("duplicates.revealMarked", in: app).isEnabled, "One copy is marked")
+    }
+
+    @MainActor
     func testOverviewLinksToEnergy() {
         let app = launchApp()
         let link = element("overview.openEnergy", in: app)
