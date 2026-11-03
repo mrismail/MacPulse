@@ -178,3 +178,31 @@ struct DuplicateFinderTests {
         #expect(!result.isComplete)
     }
 }
+
+@Suite("DuplicateFinder — files changing and placeholders", .serialized)
+struct DuplicateChangeTests {
+    typealias Tree = FileSystemScannerTests
+
+    @Test func aFileThatChangesDuringTheSearchIsLeftOut() async throws {
+        let root = try Tree.makeRoot()
+        defer { Tree.cleanUp(root) }
+        let content = DuplicateFinderTests.bytes(300_000, seed: 21)
+        try DuplicateFinderTests.write(root + "/a.bin", content)
+        try DuplicateFinderTests.write(root + "/b.bin", content)
+        let changed = root + "/b.bin"
+        // Just before b.bin is read, another app rewrites it (same size, new time).
+        let finder = DuplicateFinder(beforeReading: { path in
+            guard path == changed else { return }
+            try? DuplicateFinderTests.bytes(300_000, seed: 22).write(to: URL(fileURLWithPath: path))
+        })
+        let policy = ScanPathPolicy(homePath: "/nonexistent-home", approvedRoots: [root])
+        let result = await finder.findDuplicates(DuplicateScanRequest(roots: [root], policy: policy)) { _ in }
+        #expect(result.groups.isEmpty, "A file that changed is never shown as a duplicate")
+        #expect(result.statistics.excluded[.changedDuringScan] == 1)
+    }
+
+    @Test func datalessFlagIsRecognized() {
+        #expect(DuplicateSearch.isDataless(flags: 0x4000_0000))
+        #expect(!DuplicateSearch.isDataless(flags: 0x0000_0020))
+    }
+}

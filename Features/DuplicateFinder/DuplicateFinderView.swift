@@ -321,7 +321,11 @@ enum DuplicatePresentation {
         if statistics.hardLinks > 0 {
             text += " " + String(localized: "\(statistics.hardLinks) hard links were counted once.")
         }
-        let excluded = statistics.excluded.values.reduce(0, +)
+        let notDownloaded = statistics.excluded[.notDownloaded] ?? 0
+        if notDownloaded > 0 {
+            text += " " + String(localized: "\(notDownloaded) files in iCloud that aren't downloaded were skipped, so nothing was downloaded.")
+        }
+        let excluded = statistics.excluded.values.reduce(0, +) - notDownloaded
         if excluded > 0 {
             text += " " + String(localized: "\(excluded) files were left out because they couldn't be read or changed during the search.")
         }

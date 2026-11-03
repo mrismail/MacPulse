@@ -13,14 +13,24 @@ import MacPulseDomain
 /// Files are opened read-only with `O_NOFOLLOW`; a file whose identity, size or
 /// modification time changes during the search is left out.
 public struct DuplicateFinder: DuplicateScanning {
-    public init() {}
+    /// Test hook: called just before a file is opened for comparison.
+    let beforeReading: (@Sendable (String) -> Void)?
+
+    public init() {
+        beforeReading = nil
+    }
+
+    init(beforeReading: @escaping @Sendable (String) -> Void) {
+        self.beforeReading = beforeReading
+    }
 
     public func findDuplicates(
         _ request: DuplicateScanRequest,
         progress: @escaping @Sendable (DuplicateScanProgress) -> Void
     ) async -> DuplicateScanResult {
+        let hook = beforeReading
         let work = Task.detached(priority: .utility) {
-            var search = DuplicateSearch(request: request, progress: progress)
+            var search = DuplicateSearch(request: request, progress: progress, beforeReading: hook)
             return search.run()
         }
         return await withTaskCancellationHandler {
@@ -47,6 +57,8 @@ struct DuplicateSearch {
         let size: Int64
         let modifiedSeconds: Int
         let modifiedNanoseconds: Int
+        /// `SF_DATALESS`: the contents are in the cloud, not on this Mac.
+        let isDataless: Bool
     }
 
     let request: DuplicateScanRequest
@@ -61,9 +73,16 @@ struct DuplicateSearch {
     var lastProgress: ContinuousClock.Instant
     let started = Date()
 
-    init(request: DuplicateScanRequest, progress: @escaping @Sendable (DuplicateScanProgress) -> Void) {
+    let beforeReading: (@Sendable (String) -> Void)?
+
+    init(
+        request: DuplicateScanRequest,
+        progress: @escaping @Sendable (DuplicateScanProgress) -> Void,
+        beforeReading: (@Sendable (String) -> Void)? = nil
+    ) {
         self.request = request
         self.progress = progress
+        self.beforeReading = beforeReading
         lastProgress = clock.now
     }
 
@@ -79,6 +98,9 @@ struct DuplicateSearch {
         candidates = []
         let sameSize = DuplicateGrouping.sameSize(stored)
         statistics.sameSizeFiles = sameSize.map(\.count).reduce(0, +)
+        // Files with a unique size can't have a duplicate; forget them to keep memory flat.
+        let comparable = Set(sameSize.flatMap { $0.map(\.candidate.path) })
+        snapshots = snapshots.filter { comparable.contains($0.key) }
 
         var groups: [DuplicateGroup] = []
         // Biggest files first, so a stopped search has already found what matters most.
@@ -171,6 +193,11 @@ struct DuplicateSearch {
             let category = FileCategorizer.category(forPath: path)
             if let wanted = request.categories, !wanted.contains(category) { continue }
             guard let snapshot = Self.snapshot(atPath: path) else { continue }
+            if snapshot.isDataless {
+                // Never read: opening it would download it from iCloud.
+                statistics.excluded[.notDownloaded, default: 0] += 1
+                continue
+            }
             snapshots[path] = snapshot
             candidates.append(DuplicateCandidate(
                 path: path, logicalBytes: size, allocatedBytes: Int64(values.totalFileAllocatedSize ?? 0),
@@ -314,7 +341,10 @@ struct DuplicateSearch {
     /// Opens read-only without following a link, and only if the file is still the one
     /// that was listed (same device, inode, size and modification time).
     mutating func openUnchanged(_ path: String) -> FileHandle? {
-        let descriptor = open(path, O_RDONLY | O_NOFOLLOW | O_CLOEXEC)
+        beforeReading?(path)
+        // O_NONBLOCK: a FIFO swapped in after listing can't block the search; the fstat
+        // check below then rejects it as changed.
+        let descriptor = open(path, O_RDONLY | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK)
         guard descriptor >= 0 else {
             exclude(path, .unreadable)
             return nil
@@ -354,8 +384,15 @@ struct DuplicateSearch {
             inode: UInt64(info.st_ino),
             size: Int64(info.st_size),
             modifiedSeconds: Int(info.st_mtimespec.tv_sec),
-            modifiedNanoseconds: Int(info.st_mtimespec.tv_nsec)
+            modifiedNanoseconds: Int(info.st_mtimespec.tv_nsec),
+            isDataless: isDataless(flags: UInt32(info.st_flags))
         )
+    }
+
+    /// `SF_DATALESS` (0x40000000) in `st_flags`: a placeholder whose contents macOS
+    /// downloads on first read.
+    static func isDataless(flags: UInt32) -> Bool {
+        flags & 0x4000_0000 != 0
     }
 
     /// APFS reports `EF_MAY_SHARE_BLOCKS` for clones; removing one may free less.
