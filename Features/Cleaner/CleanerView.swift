@@ -271,18 +271,36 @@ private struct CleanupHistoryCard: View {
             if let error = viewModel.historyError {
                 Label(error.userMessage, systemImage: "exclamationmark.triangle")
             }
+            if let message = viewModel.putBackError {
+                Label(message, systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
+            }
             ForEach(viewModel.history.prefix(20)) { report in
-                HStack {
-                    Image(systemName: report.category.systemImage).foregroundStyle(.secondary)
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(report.category.title)
-                        Text(report.finishedAt.formatted(date: .abbreviated, time: .shortened))
-                            .font(.caption).foregroundStyle(.secondary)
+                DisclosureGroup {
+                    ForEach(report.items) { item in
+                        HStack {
+                            Text((item.path as NSString).lastPathComponent).lineLimit(1)
+                            Spacer()
+                            if item.outcome.isMoved {
+                                Button("Put Back") { Task { await viewModel.putBack(item, in: report) } }
+                                    .accessibilityIdentifier("cleaner.putBack.\((item.path as NSString).lastPathComponent)")
+                            } else {
+                                Text(CleanerPresentation.explanation(item.outcome)).font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                        .help(item.path)
                     }
-                    Spacer()
-                    Text(CleanerPresentation.summary(report)).font(.caption).foregroundStyle(.secondary)
+                } label: {
+                    HStack {
+                        Image(systemName: report.category.systemImage).foregroundStyle(.secondary)
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(report.category.title)
+                            Text(report.finishedAt.formatted(date: .abbreviated, time: .shortened))
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Text(CleanerPresentation.summary(report)).font(.caption).foregroundStyle(.secondary)
+                    }
                 }
-                .accessibilityElement(children: .combine)
             }
             Text("Kept for 30 days on this Mac, including where each item went in the Trash.")
                 .font(.caption).foregroundStyle(.secondary)
@@ -318,6 +336,17 @@ enum CleanerPresentation {
         case .skipped(.changed): String(localized: "Skipped: it changed since the preview, so it was left alone.")
         case .skipped(.notAllowed): String(localized: "Skipped: MacPulse never removes this kind of item.")
         case .failed(let message): String(localized: "macOS didn't move it: \(message)")
+        case .putBack: String(localized: "Put back where it was.")
+        }
+    }
+
+    static func putBackMessage(_ failure: PutBackFailure) -> String {
+        switch failure {
+        case .notInTrash: String(localized: "It is no longer in the Trash.")
+        case .originalPlaceTaken: String(localized: "Something else now has its name in the original folder.")
+        case .originalFolderMissing: String(localized: "The folder it came from no longer exists.")
+        case .notAllowed: String(localized: "MacPulse can't put items back in that place.")
+        case .failed(let message): String(localized: "macOS didn't move it back: \(message)")
         }
     }
 

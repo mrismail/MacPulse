@@ -418,6 +418,17 @@ private struct AlertSettingsCard: View {
 
     var body: some View {
         Card("Alerts", systemImage: "bell") {
+            DrainAlertControls(viewModel: viewModel)
+        }
+    }
+}
+
+/// Drain-alert settings, shared by the Energy screen and Settings.
+struct DrainAlertControls: View {
+    @Bindable var viewModel: EnergyViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.small) {
             Toggle("Alert me when an app uses a lot of CPU", isOn: binding(\.isEnabled))
                 .accessibilityIdentifier("energy.alerts.enabled")
             Group {

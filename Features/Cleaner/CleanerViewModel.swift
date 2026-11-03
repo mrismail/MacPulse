@@ -46,6 +46,7 @@ public final class CleanerViewModel {
     @ObservationIgnored private var largeFiles: @MainActor () -> [(path: String, allocatedBytes: Int64)] = { [] }
     @ObservationIgnored private var duplicates: @MainActor () -> [(path: String, keptCopy: String)] = { [] }
     @ObservationIgnored private var didClean: @MainActor (CleanupReport) async -> Void = { _ in }
+    @ObservationIgnored private var exclusions: @MainActor () -> [String] = { [] }
     @ObservationIgnored private var task: Task<Void, Never>?
 
     public init(
@@ -67,10 +68,14 @@ public final class CleanerViewModel {
     public func connect(
         largeFiles: @escaping @MainActor () -> [(path: String, allocatedBytes: Int64)],
         duplicates: @escaping @MainActor () -> [(path: String, keptCopy: String)],
+        exclusions: @escaping @MainActor () -> [String] = { [] },
+        initialAgeDays: Int = 30,
         didClean: @escaping @MainActor (CleanupReport) async -> Void
     ) {
         self.largeFiles = largeFiles
         self.duplicates = duplicates
+        self.exclusions = exclusions
+        minimumAgeDays = initialAgeDays
         self.didClean = didClean
     }
 
@@ -124,7 +129,8 @@ public final class CleanerViewModel {
         CleanupSafetyPolicy(
             homePath: homePath,
             pickedFolders: [downloadsFolder, emptyFoldersRoot].compactMap { $0 },
-            appDataPath: appDataPath
+            appDataPath: appDataPath,
+            excludedFolders: exclusions()
         )
     }
 
@@ -268,4 +274,28 @@ public final class CleanerViewModel {
     }
 
     public var trashPath: String { homePath + "/.Trash" }
+
+    // MARK: Put back
+
+    public private(set) var putBackError: String?
+
+    /// Moves one item from the Trash back to where it was and records that in history.
+    public func putBack(_ item: CleanupItemResult, in report: CleanupReport) async {
+        guard case .movedToTrash(let trashPath) = item.outcome, !trashPath.isEmpty else { return }
+        if let failure = await trash.putBack(trashPath: trashPath, to: item.path, policy: policy) {
+            putBackError = CleanerPresentation.putBackMessage(failure)
+        } else {
+            putBackError = nil
+            let items = report.items.map { $0.path == item.path ? CleanupItemResult(path: $0.path, allocatedBytes: $0.allocatedBytes, outcome: .putBack) : $0 }
+            let updated = CleanupReport(category: report.category, finishedAt: report.finishedAt, items: items, isComplete: report.isComplete)
+            do {
+                try await historyRepository.replace(updated)
+            } catch {
+                Log.logger(.cleanup).log(AppError.wrapping(error, userMessage: "Couldn't update cleanup history."), context: "Put back")
+            }
+            if case .finished(let current) = phase, current.id == report.id { phase = .finished(updated) }
+            await loadHistory()
+            await didClean(updated)
+        }
+    }
 }

@@ -10,6 +10,8 @@ import Observation
 @MainActor
 @Observable
 public final class AppModel {
+    /// The main window's scene identifier.
+    public static let mainWindowID = "main"
     public let coordinator: AppCoordinator
     public let dependencies: AppDependencies
     public let overview: OverviewViewModel
@@ -52,7 +54,11 @@ public final class AppModel {
         settings = SettingsViewModel(
             systemInfoRepository: dependencies.systemInfo,
             batteryMonitor: dependencies.battery,
-            energyMonitor: dependencies.energy
+            energyMonitor: dependencies.energy,
+            preferences: dependencies.preferences,
+            loginItem: dependencies.loginItem,
+            scanHistory: dependencies.scanHistory,
+            cleanupHistory: dependencies.cleanupHistory
         )
         let spaceAnalyzer = self.spaceAnalyzer
         let duplicateFinder = self.duplicateFinder
@@ -60,6 +66,8 @@ public final class AppModel {
         cleaner.connect(
             largeFiles: { spaceAnalyzer.largeFilesForCleanup },
             duplicates: { duplicateFinder.markedCopies },
+            exclusions: { scanSettings.loadExclusions() },
+            initialAgeDays: settings.preferences.cleanupDownloadsAgeDays,
             didClean: { report in
                 // Storage refresh: free space, history and the other screens' results.
                 duplicateFinder.forget(Set(report.moved.map(\.path)))
@@ -67,6 +75,16 @@ public final class AppModel {
                 await overview.loadStorage()
             }
         )
+    }
+
+    /// Opens a screen from the menu bar companion.
+    public func open(_ destination: MenuBarDestination) {
+        switch destination {
+        case .overview: coordinator.select(.overview)
+        case .battery: coordinator.select(.battery)
+        case .energy: coordinator.select(.energy)
+        case .spaceAnalyzer: coordinator.select(.spaceAnalyzer)
+        }
     }
 
     /// Starts background services. Battery and process sampling run for the life of
