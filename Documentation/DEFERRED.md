@@ -20,6 +20,8 @@ appear. Each has a target phase and a reason. Update this file whenever scope mo
 | "Large application data" for other apps | §2 Module C | Phase 6 | Other apps' containers are behind a per-app macOS prompt; the Cleaner will ask per category. Readable app data (e.g. ~/Library/Application Support, Caches) is already in scans. |
 | Acting on recoverable space from the Space Analyzer | §2 Module C "estimated recoverable storage" | Phase 6 | Phase 4 is read-only and shows the estimate; the Cleaner removes with confirmation. |
 | Clearing scan history from Settings | §3 Settings | Phase 7 | Settings gets one Privacy section for all histories. |
+| Removing marked duplicates (move to Trash) | §2 Module D "manual selection of files to keep or remove" | Phase 6 | Phase 5 marks copies and shows savings; removal uses the Cleaner's shared confirmation and re-validation (one ADR for all file removal). |
+| Similar (not identical) images | — | Not planned | The spec asks for identical files only. |
 | String Catalog extraction and Arabic translation | (owner requirement) | Phase 7 | Groundwork done in Phase 2 (ADR-008). |
 | Snapshot tests (light/dark/RTL) | Review finding | Phase 7 | Needs a third-party snapshot library; decide with the UI polish pass. |
 | macOS 14 launch verification | Phase 1 acceptance | Before Phase 8 | CI runners are macOS 15; verify on a macOS 14 VM before release. |
