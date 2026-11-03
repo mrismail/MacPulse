@@ -183,6 +183,30 @@ jobs:
           sys.exit(1 if errors else 0)
           '
 
+      - name: Duplicate search budget (Phase 5 acceptance, ADR-014)
+        run: |
+          LINE=$(MACPULSE_DIAGNOSTICS=1 build-release/Build/Products/Release/MacPulse.app/Contents/MacOS/MacPulse --macpulse-duplicate-benchmark | grep '^MACPULSE_DUPLICATE_BENCHMARK ')
+          JSON=${LINE#MACPULSE_DUPLICATE_BENCHMARK }
+          echo "::notice title=Duplicate benchmark (Release, CI VM)::$JSON"
+          echo "$JSON" | python3 -c '
+          import json, sys
+          r = json.load(sys.stdin)
+          errors = []
+          if r["lookAlikesGrouped"] != 0:
+              errors.append("%d groups contain files that differ in content" % r["lookAlikesGrouped"])
+          if not r["resultIsCorrect"]:
+              errors.append("found %d groups (expected %d), largest %d (expected 100)" % (r["groupsFound"], r["groupsExpected"], r["largestGroup"]))
+          if r["maxMainThreadStallMilliseconds"] > 250:
+              errors.append("main thread stalled %.0f ms (budget 250 ms)" % r["maxMainThreadStallMilliseconds"])
+          if r["peakFootprintBytes"] > 200 * 1000 * 1000:
+              errors.append("peak memory %.0f MB (budget 200 MB)" % (r["peakFootprintBytes"] / 1e6))
+          if r["secondsToSearch"] > 180:
+              errors.append("search took %.0f s (budget 180 s)" % r["secondsToSearch"])
+          for e in errors:
+              print("::error::Duplicate benchmark: " + e)
+          sys.exit(1 if errors else 0)
+          '
+
       - name: Guardrails — no networking, no process control (ADR-010)
         run: |
           # Source: APIs MacPulse must never use without a new ADR.
@@ -194,7 +218,7 @@ jobs:
           # temporary tree. Removing or moving user files needs the Phase 6 Cleaner ADR.
           if grep -RInE '\b(removeItem|trashItem|moveItem|replaceItem|replaceItemAt|unlink\(|rmdir\(|recycle\()' \
                --include='*.swift' App Domain Features Infrastructure Shared \
-               | grep -vE '^Infrastructure/Persistence/|^Infrastructure/Storage/ScanBenchmark\.swift:'; then
+               | grep -vE '^Infrastructure/Persistence/|^Infrastructure/Storage/ScanBenchmark\.swift:|^Infrastructure/Duplicates/DuplicateBenchmark\.swift:'; then
             echo "::error::File-changing API outside the allowed files (see ADR-013)"; exit 1
           fi
           # Binary: no direct references to socket/process-control symbols.
