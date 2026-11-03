@@ -215,12 +215,17 @@ jobs:
                --include='*.swift' App Domain Features Infrastructure Shared; then
             echo "::error::Forbidden API found in sources (see ADR-010)"; exit 1
           fi
-          # Files are only changed by MacPulse's own data stores and the scan benchmark's
-          # temporary tree. Removing or moving user files needs the Phase 6 Cleaner ADR.
-          if grep -RInE '\b(removeItem|trashItem|moveItem|replaceItem|replaceItemAt|unlink\(|rmdir\(|recycle\()' \
+          # User items leave their place only through the Trash service (ADR-015). Other
+          # file-changing APIs are limited to MacPulse's own data stores and the
+          # benchmarks' temporary trees. Nothing deletes user files permanently.
+          if grep -RInE '\btrashItem\b|\brecycle\(' --include='*.swift' App Domain Features Infrastructure Shared \
+               | grep -vE '^Infrastructure/Cleanup/FileManagerTrashService\.swift:'; then
+            echo "::error::Trash API outside the Trash service (see ADR-015)"; exit 1
+          fi
+          if grep -RInE '\b(removeItem|moveItem|replaceItem|replaceItemAt|unlink\(|rmdir\()' \
                --include='*.swift' App Domain Features Infrastructure Shared \
                | grep -vE '^Infrastructure/Persistence/|^Infrastructure/Storage/ScanBenchmark\.swift:|^Infrastructure/Duplicates/DuplicateBenchmark\.swift:'; then
-            echo "::error::File-changing API outside the allowed files (see ADR-013)"; exit 1
+            echo "::error::File-changing API outside the allowed files (see ADR-013/015)"; exit 1
           fi
           # Binary: no direct references to socket/process-control symbols.
           BIN=build-release/Build/Products/Release/MacPulse.app/Contents/MacOS/MacPulse
