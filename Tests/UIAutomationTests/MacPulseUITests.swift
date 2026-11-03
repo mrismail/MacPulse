@@ -183,8 +183,17 @@ final class MacPulseUITests: XCTestCase {
         let addHome = element("duplicates.addHome", in: app)
         XCTAssertTrue(addHome.waitForExistence(timeout: 10))
         addHome.click()
-        element("duplicates.search", in: app).click()
-        XCTAssertTrue(element("duplicates.summary", in: app).waitForExistence(timeout: 10))
+        let search = element("duplicates.search", in: app)
+        XCTAssertTrue(search.waitForExistence(timeout: 10))
+        XCTAssertTrue(search.isEnabled, "Adding the home folder enables the search")
+        search.click()
+        let summary = element("duplicates.summary", in: app)
+        if !summary.waitForExistence(timeout: 10) {
+            // Show what is on screen when the results don't appear.
+            let ids = app.descendants(matching: .any).allElementsBoundByIndex
+                .map(\.identifier).filter { $0.hasPrefix("duplicates") || $0.hasPrefix("card") }
+            XCTFail("No results. Identifiers on screen: \(ids)")
+        }
         XCTAssertTrue(element("duplicates.groups", in: app).exists)
         let mark = element("duplicates.mark.Holiday.mov", in: app)
         XCTAssertTrue(mark.waitForExistence(timeout: 10))
