@@ -8,7 +8,7 @@ actor CleanerRecordingTrash: TrashService {
     private(set) var calls: [[String]] = []
     nonisolated func moveToTrash(
         _ candidates: [CleanupCandidate], category: CleanupCategory, policy: CleanupSafetyPolicy,
-        progress: @escaping @Sendable (Int) -> Void
+        progress: @escaping @Sendable (CleanupItemResult) -> Void
     ) async -> CleanupReport {
         await record(candidates.map(\.path))
         let items = candidates.enumerated().map { index, candidate in
@@ -19,7 +19,7 @@ actor CleanerRecordingTrash: TrashService {
         }
         return CleanupReport(category: category, finishedAt: Date(), items: items, isComplete: true)
     }
-    nonisolated func putBack(trashPath: String, to originalPath: String, policy: CleanupSafetyPolicy) async -> PutBackFailure? {
+    nonisolated func putBack(trashPath: String, to originalPath: String, expected: FileIdentity?, policy: CleanupSafetyPolicy) async -> PutBackFailure? {
         nil
     }
     private func record(_ paths: [String]) { calls.append(paths) }
@@ -38,6 +38,7 @@ actor CleanerRecordingSource: CleanupCandidateSource {
 @MainActor
 struct CleanerViewModelTests {
     let home = "/Users/preview"
+    static let identity = FileIdentity(device: 1, inode: 2, size: 3, modifiedSeconds: 4, modifiedNanoseconds: 0, isFolder: false)
 
     func reviewed(_ trash: CleanerRecordingTrash = CleanerRecordingTrash(), history: InMemoryCleanupHistory = InMemoryCleanupHistory()) async -> CleanerViewModel {
         let model = CleanerViewModel(source: PreviewCleanupSource(), trash: trash, history: history, homePath: home, appDataPath: nil)
@@ -137,7 +138,7 @@ struct CleanerViewModelTests {
         var refreshed = 0
         model.connect(
             largeFiles: { [(path: "/Users/preview/Movies/big.mov", allocatedBytes: 9)] },
-            duplicates: { [(path: "/Users/preview/b.jpg", keptCopy: "/Users/preview/a.jpg")] },
+            duplicates: { [MarkedDuplicate(path: "/Users/preview/b.jpg", identity: Self.identity, keptPath: "/Users/preview/a.jpg", keptIdentity: Self.identity)] },
             didClean: { _ in refreshed += 1 }
         )
         await model.open(.largeFiles)

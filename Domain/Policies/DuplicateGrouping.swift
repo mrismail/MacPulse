@@ -60,7 +60,8 @@ public enum DuplicateGrouping {
                 allocatedBytes: file.candidate.allocatedBytes,
                 modified: file.candidate.modified,
                 category: file.candidate.category,
-                mayShareBlocks: file.candidate.mayShareBlocks
+                mayShareBlocks: file.candidate.mayShareBlocks,
+                identity: file.candidate.identity
             )
         }
         .sorted { lhs, rhs in

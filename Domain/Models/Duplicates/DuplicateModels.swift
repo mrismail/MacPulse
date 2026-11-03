@@ -30,11 +30,14 @@ public struct DuplicateCandidate: Sendable, Equatable {
     public let inode: UInt64
     /// APFS reports that the file may share blocks with another (a clone).
     public let mayShareBlocks: Bool
+    /// Identity captured when the file was listed (size and modification time included).
+    public let identity: FileIdentity?
 
     public init(
         path: String, logicalBytes: Int64, allocatedBytes: Int64, modified: Date?, category: FileCategory,
-        device: Int64, inode: UInt64, mayShareBlocks: Bool = false
+        device: Int64, inode: UInt64, mayShareBlocks: Bool = false, identity: FileIdentity? = nil
     ) {
+        self.identity = identity
         self.path = path
         self.logicalBytes = logicalBytes
         self.allocatedBytes = allocatedBytes
@@ -60,11 +63,15 @@ public struct DuplicateFile: Identifiable, Sendable, Equatable {
     public let modified: Date?
     public let category: FileCategory
     public let mayShareBlocks: Bool
+    /// What the file was when its bytes were compared. The Cleaner moves a copy only if it
+    /// and the kept copy are still exactly this (ADR-015).
+    public let identity: FileIdentity?
 
     public init(
         path: String, hardLinkPaths: [String] = [], logicalBytes: Int64, allocatedBytes: Int64,
-        modified: Date?, category: FileCategory, mayShareBlocks: Bool = false
+        modified: Date?, category: FileCategory, mayShareBlocks: Bool = false, identity: FileIdentity? = nil
     ) {
+        self.identity = identity
         self.path = path
         self.hardLinkPaths = hardLinkPaths
         self.logicalBytes = logicalBytes

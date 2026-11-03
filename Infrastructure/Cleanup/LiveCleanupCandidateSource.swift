@@ -41,11 +41,12 @@ public struct LiveCleanupCandidateSource: CleanupCandidateSource {
             let list = await children(of: folder, category: category, policy: policy, approved: true) { node in
                 (String(localized: "Not changed for more than \(options.minimumAgeDays) days."), nil)
             }
-            return CleanupCandidateList(
-                category: category,
-                candidates: list.candidates.filter { ($0.modified ?? .distantFuture) < cutoff },
-                note: list.note, unavailableReason: list.unavailableReason
-            )
+            // A folder counts as old only if nothing inside it changed recently either.
+            let old = list.candidates.filter { candidate in
+                let newest = candidate.isFolder ? Self.newestModification(inside: candidate.path, since: cutoff) : candidate.modified
+                return (newest ?? candidate.modified ?? .distantFuture) < cutoff
+            }
+            return CleanupCandidateList(category: category, candidates: old, note: list.note, unavailableReason: list.unavailableReason)
         case .largeFiles:
             let found = options.largeFiles.compactMap { file -> CleanupCandidate? in
                 candidate(file.path, category: category, allocated: file.allocatedBytes, policy: policy,
@@ -57,10 +58,19 @@ public struct LiveCleanupCandidateSource: CleanupCandidateSource {
             )
         case .duplicates:
             let found = options.duplicates.compactMap { copy -> CleanupCandidate? in
-                let kept = (copy.keptCopy as NSString).lastPathComponent
-                let keptFolder = (copy.keptCopy as NSString).deletingLastPathComponent
-                return candidate(copy.path, category: category, allocated: nil, policy: policy,
-                                 reason: String(localized: "Identical to \(kept) in \(keptFolder), verified byte by byte. That copy is kept."))
+                // Offered only while both copies are still what was compared; the identity
+                // and the kept copy are checked again immediately before moving.
+                guard let current = FileManagerTrashService.identity(atPath: copy.path), copy.identity.matches(current),
+                      let kept = FileManagerTrashService.identity(atPath: copy.keptPath), copy.keptIdentity.matches(kept)
+                else { return nil }
+                let keptName = (copy.keptPath as NSString).lastPathComponent
+                let keptFolder = (copy.keptPath as NSString).deletingLastPathComponent
+                return candidate(
+                    copy.path, category: category, allocated: nil, policy: policy,
+                    reason: String(localized: "Identical to \(keptName) in \(keptFolder), verified byte by byte. That copy is kept."),
+                    identity: copy.identity,
+                    requirement: .keptCopyUnchanged(path: copy.keptPath, identity: copy.keptIdentity)
+                )
             }
             return CleanupCandidateList(
                 category: category, candidates: found,
@@ -116,7 +126,10 @@ public struct LiveCleanupCandidateSource: CleanupCandidateSource {
         var stack = [root]
         var visited = Set<UInt64>()
         let keys: [URLResourceKey] = [.isDirectoryKey, .isSymbolicLinkKey, .isPackageKey]
+        var allowedDevices: Set<Int64> = [rootID.device]
+        if let data = FileManagerTrashService.identity(atPath: "/System/Volumes/Data") { allowedDevices.insert(data.device) }
         while let folder = stack.popLast() {
+            if Task.isCancelled { break }
             autoreleasepool {
                 guard let items = try? FileManager.default.contentsOfDirectory(
                     at: URL(fileURLWithPath: folder, isDirectory: true), includingPropertiesForKeys: keys, options: []
@@ -126,7 +139,7 @@ public struct LiveCleanupCandidateSource: CleanupCandidateSource {
                     let reason = items.isEmpty
                         ? String(localized: "Empty folder.")
                         : String(localized: "Contains only a Finder view-settings file (.DS_Store).")
-                    if let item = candidate(folder, category: .emptyFolders, allocated: 0, policy: policy, reason: reason) {
+                    if let item = candidate(folder, category: .emptyFolders, allocated: 0, policy: policy, reason: reason, requirement: .stillEmpty) {
                         found.append(item)
                     }
                     return
@@ -137,7 +150,7 @@ public struct LiveCleanupCandidateSource: CleanupCandidateSource {
                     let path = folder + "/" + item.lastPathComponent
                     guard scanPolicy.decision(forFolder: path) == .scan,
                           let id = FileManagerTrashService.identity(atPath: path),
-                          id.device == rootID.device, visited.insert(id.inode).inserted else { continue }
+                          allowedDevices.contains(id.device), visited.insert(id.inode).inserted else { continue }
                     stack.append(path)
                 }
             }
@@ -161,17 +174,37 @@ public struct LiveCleanupCandidateSource: CleanupCandidateSource {
 
     func candidate(
         _ path: String, category: CleanupCategory, allocated: Int64?, policy: CleanupSafetyPolicy,
-        reason: String, warning: String? = nil
+        reason: String, warning: String? = nil, identity known: FileIdentity? = nil, requirement: CleanupRequirement? = nil
     ) -> CleanupCandidate? {
         guard policy.verdict(for: path) == .allowed,
-              let identity = FileManagerTrashService.identity(atPath: path), identity.device >= 0 else { return nil }
+              let current = FileManagerTrashService.identity(atPath: path), current.device >= 0 else { return nil }
+        let identity = known ?? current
         let values = try? URL(fileURLWithPath: path).resourceValues(forKeys: [.contentModificationDateKey, .totalFileAllocatedSizeKey])
         return CleanupCandidate(
             path: path, category: category, reason: reason,
             allocatedBytes: allocated ?? Int64(values?.totalFileAllocatedSize ?? 0),
             modified: values?.contentModificationDate,
-            identity: identity, warning: warning
+            identity: identity, warning: warning, requirement: requirement
         )
+    }
+
+    /// The newest modification date inside a folder, stopping early once something newer
+    /// than `cutoff` is found. Links aren't followed; at most 20,000 items are looked at.
+    static func newestModification(inside folder: String, since cutoff: Date) -> Date? {
+        guard let enumerator = FileManager.default.enumerator(
+            at: URL(fileURLWithPath: folder, isDirectory: true),
+            includingPropertiesForKeys: [.contentModificationDateKey],
+            options: [.skipsPackageDescendants]
+        ) else { return nil }
+        var newest: Date?
+        var seen = 0
+        while let url = enumerator.nextObject() as? URL, seen < 20_000 {
+            seen += 1
+            guard let date = try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate else { continue }
+            if date > (newest ?? .distantPast) { newest = date }
+            if date >= cutoff { break }
+        }
+        return newest
     }
 
     /// "com.tinyspeck.slackmacgap" → "slackmacgap"; plain names stay as they are.

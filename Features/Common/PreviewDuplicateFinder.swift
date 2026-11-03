@@ -18,7 +18,11 @@ public struct PreviewDuplicateFinder: DuplicateScanning {
         func file(_ relative: String, _ bytes: Int64, _ category: FileCategory, age: TimeInterval, links: [String] = []) -> DuplicateFile {
             DuplicateFile(
                 path: root + "/" + relative, hardLinkPaths: links.map { root + "/" + $0 },
-                logicalBytes: bytes, allocatedBytes: bytes, modified: date.addingTimeInterval(-age), category: category
+                logicalBytes: bytes, allocatedBytes: bytes, modified: date.addingTimeInterval(-age), category: category,
+                identity: FileIdentity(
+                    device: 1, inode: UInt64(abs(relative.hashValue % 1_000_000)), size: bytes,
+                    modifiedSeconds: Int(date.timeIntervalSince1970 - age), modifiedNanoseconds: 0, isFolder: false
+                )
             )
         }
         let video = DuplicateGroup(contentHash: String(repeating: "a", count: 64), files: [

@@ -88,8 +88,10 @@ public final class DuplicateFinderViewModel {
     }
 
     public func search() {
-        guard !folders.isEmpty else { return }
+        guard !folders.isEmpty, !isSearching else { return }
         searchTask?.cancel()
+        searchGeneration += 1
+        let generation = searchGeneration
         // The home folder itself doesn't approve Desktop, Documents or Downloads; a folder
         // picked in the panel does (see ScanPathPolicy).
         let picked = folders.filter { $0 != homePath }
@@ -102,13 +104,16 @@ public final class DuplicateFinderViewModel {
         state = .searching(DuplicateScanProgress(stage: .listing, done: 0, total: nil, bytesRead: 0))
         let finder = finder
         let report: @Sendable (DuplicateScanProgress) -> Void = { progress in
-            Task { @MainActor in self.update(progress) }
+            Task { @MainActor in self.update(progress, generation: generation) }
         }
         searchTask = Task {
             let result = await finder.findDuplicates(request, progress: report)
+            guard generation == self.searchGeneration else { return }
             self.finish(result)
         }
     }
+
+    @ObservationIgnored private var searchGeneration = 0
 
     public func cancelSearch() {
         searchTask?.cancel()
@@ -119,8 +124,8 @@ public final class DuplicateFinderViewModel {
         await searchTask?.value
     }
 
-    private func update(_ progress: DuplicateScanProgress) {
-        guard isSearching else { return }
+    private func update(_ progress: DuplicateScanProgress, generation: Int) {
+        guard isSearching, generation == searchGeneration else { return }
         state = .searching(progress)
     }
 
@@ -175,10 +180,12 @@ public final class DuplicateFinderViewModel {
     }
 
     /// Marked copies with the copy each one duplicates (kept), for the Cleaner.
-    public var markedCopies: [(path: String, keptCopy: String)] {
-        (result?.groups ?? []).flatMap { group -> [(path: String, keptCopy: String)] in
-            guard let kept = group.files.first(where: { !selection.isMarked($0) }) else { return [] }
-            return group.files.filter(selection.isMarked).map { ($0.path, kept.path) }
+    public var markedCopies: [MarkedDuplicate] {
+        (result?.groups ?? []).flatMap { group -> [MarkedDuplicate] in
+            guard let kept = group.files.first(where: { !selection.isMarked($0) }), let keptIdentity = kept.identity else { return [] }
+            return group.files.filter(selection.isMarked).compactMap { file in
+                file.identity.map { MarkedDuplicate(path: file.path, identity: $0, keptPath: kept.path, keptIdentity: keptIdentity) }
+            }
         }
     }
 
