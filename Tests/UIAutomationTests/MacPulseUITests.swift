@@ -214,13 +214,14 @@ final class MacPulseUITests: XCTestCase {
         element("cleaner.moveToTrash", in: app).click()
 
         // Cancelling the dialog moves nothing.
-        let cancel = app.buttons["Cancel"].firstMatch
+        // The dialog is a sheet; plain app.buttons would also match Touch Bar buttons.
+        let cancel = app.sheets.buttons["Cancel"].firstMatch
         XCTAssertTrue(cancel.waitForExistence(timeout: 10), "A confirmation is always asked")
         cancel.click()
         XCTAssertFalse(element("cleaner.result", in: app).exists)
 
         element("cleaner.moveToTrash", in: app).click()
-        let confirm = app.buttons["Move to Trash"].firstMatch
+        let confirm = app.sheets.buttons["Move to Trash"].firstMatch
         XCTAssertTrue(confirm.waitForExistence(timeout: 10))
         confirm.click()
         XCTAssertTrue(element("cleaner.result", in: app).waitForExistence(timeout: 10))
