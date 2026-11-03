@@ -201,3 +201,15 @@ Duplicate Finder (marked)  ───┴─▶ CleanupScanOptions      │       
 
 - Trash only, never permanent deletion (ADR-015).
 - Each item is checked again immediately before it moves; results are per item.
+
+## Integration (Phase 7)
+
+```
+MacPulseApp
+ ├─ Window "main" ─ RootView (sidebar: Overview, Battery, Energy, Space Analyzer, Duplicates, Cleaner, Settings)
+ ├─ Settings ─ SettingsView (preferences, login item, alerts, exclusions, retention, histories)
+ └─ MenuBarExtra ─ MenuBarView (Overview view model: battery, top apps, free space)
+AppDelegate: keeps running without windows while the menu bar companion is shown
+AppPreferences (user defaults) ─ read at launch ─▶ BatteryMonitor / ProcessMonitor intervals and retention
+Excluded folders (one store) ─▶ ScanPathPolicy (Space Analyzer, Duplicates) and CleanupSafetyPolicy (Cleaner)
+```
