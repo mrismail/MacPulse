@@ -70,11 +70,13 @@ public struct ScanPathPolicy: Sendable, Equatable {
     ]
 
     public func decision(forFolder path: String) -> Decision {
-        let path = Self.normalized(path)
-        if userExclusions.contains(where: { Self.path(path, isInside: $0) }) {
+        // Compared case-insensitively: APFS volumes are case-insensitive by default, so
+        // "/Users/x/documents" is the protected Documents folder.
+        let path = Self.comparable(path)
+        if userExclusions.contains(where: { Self.path(path, isInside: Self.comparable($0)) }) {
             return .skip(.excludedByUser)
         }
-        if let location = Self.systemLocations.first(where: { Self.path(path, isInside: $0) }),
+        if let location = Self.systemLocations.map(Self.comparable).first(where: { Self.path(path, isInside: $0) }),
            !isApproved(path, within: location) {
             return .skip(.systemLocation)
         }
@@ -86,9 +88,9 @@ public struct ScanPathPolicy: Sendable, Equatable {
 
     /// The protected location containing `path`, if any.
     public func protectedLocation(containing path: String) -> String? {
-        let path = Self.normalized(path)
+        let path = Self.comparable(path)
         return Self.protectedHomeLocations
-            .map { homePath + "/" + $0 }
+            .map { Self.comparable(homePath + "/" + $0) }
             .first { Self.path(path, isInside: $0) }
     }
 
@@ -101,7 +103,7 @@ public struct ScanPathPolicy: Sendable, Equatable {
     /// approving `/` (or the home folder) does not approve Documents. The approved root
     /// must be inside the protected location itself.
     func isApproved(_ path: String, within location: String) -> Bool {
-        approvedRoots.contains { root in
+        approvedRoots.map(Self.comparable).contains { root in
             Self.path(path, isInside: root) && Self.path(root, isInside: location)
         }
     }
@@ -116,7 +118,18 @@ public struct ScanPathPolicy: Sendable, Equatable {
     /// Removes duplicate and trailing slashes and resolves `.` and `..`, without touching
     /// the filesystem (`standardizingPath` would strip `/private` when the result exists,
     /// so `/private/var/vm` and `/var/vm` would compare differently from run to run).
+    /// The form used for policy comparisons: normalized and lowercased.
+    public static func comparable(_ path: String) -> String {
+        normalized(path).lowercased()
+    }
+
     public static func normalized(_ path: String) -> String {
+        // The startup disk's Data volume is also reachable through its mount point;
+        // "/System/Volumes/Data/Users/x" is the same place as "/Users/x".
+        var path = path
+        if path.hasPrefix("/System/Volumes/Data/") {
+            path = String(path.dropFirst("/System/Volumes/Data".count))
+        }
         var components: [Substring] = []
         for component in path.split(separator: "/", omittingEmptySubsequences: true) {
             switch component {

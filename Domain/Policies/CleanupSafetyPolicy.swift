@@ -34,9 +34,45 @@ public struct CleanupSafetyPolicy: Sendable, Equatable {
     /// Parts of `~/Library` the Cleaner may touch. Everything else there is app data.
     public static let cleanableLibraryFolders = ["Library/Caches", "Library/Logs"]
 
+    /// Where a picked folder may be. Picking a folder allows the items inside it, so a pick
+    /// must never be a system location, the home folder, a standard folder or a volume root.
+    public func verdict(forPick folder: String) -> Verdict {
+        let path = ScanPathPolicy.comparable(folder)
+        let home = ScanPathPolicy.comparable(homePath)
+        let refusedExactly = ["/", "/applications", "/library", "/system", "/users", "/volumes", "/private", "/usr",
+                              "/opt", "/bin", "/sbin", "/cores", "/etc", "/var", "/tmp", home]
+        if refusedExactly.contains(path) {
+            return .refused(String(localized: "Choose a folder inside your home folder or on an external drive, not a system location or your whole home folder."))
+        }
+        if Self.standardHomeFolders.contains(where: { path == home + "/" + $0.lowercased() })
+            && path != home + "/downloads" {
+            return .refused(String(localized: "Choose a folder inside it instead."))
+        }
+        let components = path.split(separator: "/")
+        if path.hasPrefix("/volumes/") {
+            // An external drive: any folder on it except the drive itself.
+            return components.count >= 3 ? .allowed : .refused(String(localized: "Choose a folder on the drive, not the whole drive."))
+        }
+        guard ScanPathPolicy.path(path, isInside: home) else {
+            return .refused(String(localized: "Choose a folder inside your home folder or on an external drive."))
+        }
+        if ScanPathPolicy.path(path, isInside: home + "/library") {
+            return .refused(String(localized: "App data in your Library folder can't be chosen."))
+        }
+        if components.dropFirst(home.split(separator: "/").count).contains(where: { $0.hasPrefix(".") }) {
+            return .refused(String(localized: "Hidden folders can't be chosen."))
+        }
+        return .allowed
+    }
+
     public func verdict(for path: String) -> Verdict {
-        let path = ScanPathPolicy.normalized(path)
-        let home = homePath
+        // Compared case-insensitively (APFS is case-insensitive by default) after
+        // normalizing `..` and the Data-volume prefix.
+        let path = ScanPathPolicy.comparable(path)
+        let home = ScanPathPolicy.comparable(homePath)
+        let appDataPath = appDataPath.map(ScanPathPolicy.comparable)
+        let excludedFolders = excludedFolders.map(ScanPathPolicy.comparable)
+        let pickedFolders = pickedFolders.map(ScanPathPolicy.comparable).filter { verdict(forPick: $0) == .allowed }
         if let appDataPath, ScanPathPolicy.path(path, isInside: appDataPath) {
             return .refused(String(localized: "MacPulse's own data"))
         }
@@ -51,17 +87,23 @@ public struct CleanupSafetyPolicy: Sendable, Equatable {
         if path == home || pickedFolders.contains(path) {
             return .refused(String(localized: "A folder you chose to clean, not an item in it"))
         }
-        if Self.standardHomeFolders.contains(where: { path == home + "/" + $0 }) {
+        if Self.standardHomeFolders.contains(where: { path == home + "/" + $0.lowercased() }) {
             return .refused(String(localized: "A standard folder of your account"))
         }
-        if inHome, ScanPathPolicy.path(path, isInside: home + "/Library") {
-            let cleanable = Self.cleanableLibraryFolders.map { home + "/" + $0 }
+        // Hidden items (".ssh", ".config", …) hold settings and keys, never clutter.
+        let base = inHome ? home : (pickedFolders.first { ScanPathPolicy.path(path, isInside: $0) } ?? home)
+        let relative = path.split(separator: "/").dropFirst(base.split(separator: "/").count)
+        if relative.contains(where: { $0.hasPrefix(".") }) {
+            return .refused(String(localized: "A hidden item"))
+        }
+        if inHome, ScanPathPolicy.path(path, isInside: home + "/library") {
+            let cleanable = Self.cleanableLibraryFolders.map { home + "/" + $0.lowercased() }
             guard let root = cleanable.first(where: { ScanPathPolicy.path(path, isInside: $0) }), path != root else {
                 return .refused(String(localized: "App data in your Library folder"))
             }
             // Apple's own caches and logs belong to macOS.
             let first = String(path.dropFirst(root.count + 1).split(separator: "/").first ?? "")
-            if first.hasPrefix("com.apple.") || first == "CloudKit" || first == "FamilyCircle" {
+            if first.hasPrefix("com.apple.") || first == "cloudkit" || first == "familycircle" || first == "diagnosticreports" {
                 return .refused(String(localized: "Used by macOS"))
             }
         }
