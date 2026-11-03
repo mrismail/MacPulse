@@ -4,7 +4,7 @@ import Testing
 @testable import MacPulseFeatures
 
 /// Records every call so tests can prove nothing is moved without confirmation.
-private actor RecordingTrash: TrashService {
+actor CleanerRecordingTrash: TrashService {
     private(set) var calls: [[String]] = []
     nonisolated func moveToTrash(
         _ candidates: [CleanupCandidate], category: CleanupCategory, policy: CleanupSafetyPolicy,
@@ -22,7 +22,7 @@ private actor RecordingTrash: TrashService {
     private func record(_ paths: [String]) { calls.append(paths) }
 }
 
-private actor RecordingSource: CleanupCandidateSource {
+actor CleanerRecordingSource: CleanupCandidateSource {
     private(set) var options: [CleanupScanOptions] = []
     nonisolated func candidates(for category: CleanupCategory, options: CleanupScanOptions, policy: CleanupSafetyPolicy) async -> CleanupCandidateList {
         await record(options)
@@ -36,14 +36,14 @@ private actor RecordingSource: CleanupCandidateSource {
 struct CleanerViewModelTests {
     let home = "/Users/preview"
 
-    func reviewed(_ trash: RecordingTrash = RecordingTrash(), history: InMemoryCleanupHistory = InMemoryCleanupHistory()) async -> CleanerViewModel {
+    func reviewed(_ trash: CleanerRecordingTrash = CleanerRecordingTrash(), history: InMemoryCleanupHistory = InMemoryCleanupHistory()) async -> CleanerViewModel {
         let model = CleanerViewModel(source: PreviewCleanupSource(), trash: trash, history: history, homePath: home, appDataPath: nil)
         await model.open(.appCaches)
         return model
     }
 
     @Test func nothingIsSelectedOrMovedUntilTheUserConfirms() async {
-        let trash = RecordingTrash()
+        let trash = CleanerRecordingTrash()
         let model = await reviewed(trash)
         #expect(model.candidates.count == 2)
         #expect(model.selectedCandidates.isEmpty, "Nothing is pre-selected")
@@ -67,7 +67,7 @@ struct CleanerViewModelTests {
     }
 
     @Test func confirmingMovesExactlyTheConfirmedItemsAndRecordsTheResult() async throws {
-        let trash = RecordingTrash()
+        let trash = CleanerRecordingTrash()
         let history = InMemoryCleanupHistory()
         let model = await reviewed(trash, history: history)
         let first = try #require(model.candidates.first)
@@ -103,7 +103,7 @@ struct CleanerViewModelTests {
     }
 
     @Test func theTrashCategoryIsReadOnly() async {
-        let trash = RecordingTrash()
+        let trash = CleanerRecordingTrash()
         let model = CleanerViewModel(source: PreviewCleanupSource(), trash: trash, homePath: home, appDataPath: nil)
         await model.open(.trash)
         #expect(model.isReadOnlyCategory)
@@ -114,8 +114,8 @@ struct CleanerViewModelTests {
     }
 
     @Test func foldersAreNeededAndPassedForDownloadsAndEmptyFolders() async throws {
-        let source = RecordingSource()
-        let model = CleanerViewModel(source: source, trash: RecordingTrash(), homePath: home, appDataPath: nil)
+        let source = CleanerRecordingSource()
+        let model = CleanerViewModel(source: source, trash: CleanerRecordingTrash(), homePath: home, appDataPath: nil)
         model.select(.oldDownloads)
         #expect(model.needsFolder)
         model.chooseDownloadsFolder(home + "/Downloads/")
@@ -129,8 +129,8 @@ struct CleanerViewModelTests {
     }
 
     @Test func otherScreensFeedLargeFilesAndDuplicatesAndAreRefreshed() async throws {
-        let source = RecordingSource()
-        let model = CleanerViewModel(source: source, trash: RecordingTrash(), homePath: home, appDataPath: nil)
+        let source = CleanerRecordingSource()
+        let model = CleanerViewModel(source: source, trash: CleanerRecordingTrash(), homePath: home, appDataPath: nil)
         var refreshed = 0
         model.connect(
             largeFiles: { [(path: "/Users/preview/Movies/big.mov", allocatedBytes: 9)] },
