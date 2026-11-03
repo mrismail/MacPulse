@@ -43,5 +43,5 @@ public struct PlannedFeature: Sendable, Equatable {
         phase: 6
     )
 
-    public static let all: [PlannedFeature] = [duplicateFinder, cleaner]
+    public static let all: [PlannedFeature] = [cleaner]
 }

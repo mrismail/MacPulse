@@ -17,6 +17,7 @@ public final class AppModel {
     public let energy: EnergyViewModel
     public let settings: SettingsViewModel
     public let spaceAnalyzer: SpaceAnalyzerViewModel
+    public let duplicateFinder: DuplicateFinderViewModel
 
     public init(dependencies: AppDependencies, coordinator: AppCoordinator = AppCoordinator()) {
         self.dependencies = dependencies
@@ -35,6 +36,11 @@ public final class AppModel {
             scanner: dependencies.scanner,
             history: dependencies.scanHistory,
             settings: dependencies.scanSettings
+        )
+        let scanSettings = dependencies.scanSettings
+        duplicateFinder = DuplicateFinderViewModel(
+            finder: dependencies.duplicates,
+            exclusions: { scanSettings.loadExclusions() }
         )
         settings = SettingsViewModel(
             systemInfoRepository: dependencies.systemInfo,
