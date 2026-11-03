@@ -59,3 +59,16 @@ public final class InMemoryScanSettingsStore: ScanSettingsStore, @unchecked Send
     public func loadExclusions() -> [String] { lock.withLock { exclusions } }
     public func saveExclusions(_ paths: [String]) { lock.withLock { exclusions = paths } }
 }
+
+/// Finds files with identical contents, read-only.
+///
+/// Implementations follow the scanner's safety rules (`FileSystemScanning`), compare
+/// contents only (never names or dates), verify every group byte for byte before
+/// returning it, never count hard links as copies, and stop promptly when the calling
+/// task is cancelled (returning what was verified so far with `isComplete == false`).
+public protocol DuplicateScanning: Sendable {
+    func findDuplicates(
+        _ request: DuplicateScanRequest,
+        progress: @escaping @Sendable (DuplicateScanProgress) -> Void
+    ) async -> DuplicateScanResult
+}
