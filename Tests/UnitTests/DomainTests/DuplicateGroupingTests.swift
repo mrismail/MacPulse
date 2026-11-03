@@ -67,7 +67,7 @@ struct DuplicateGroupingTests {
         )
         #expect(result.groups.first?.contentHash == "h")
         #expect(result.extraCopies == 3)
-        #expect(result.potentialSavings.value == 3 * 1_096)
+        #expect(result.potentialSavings.value == Int64(3 * 1_096))
         #expect(!result.potentialSavings.isMeasured)
     }
 }
