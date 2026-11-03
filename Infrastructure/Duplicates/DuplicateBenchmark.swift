@@ -95,6 +95,7 @@ public enum DuplicateBenchmark {
             var state = UInt64(truncatingIfNeeded: seed) &* 0x9E37_79B9_7F4A_7C15 | 1
             var written = 0
             while written < size {
+              autoreleasepool {
                 let count = min(1_024 * 1_024, size - written)
                 var chunk = Data(count: count)
                 chunk.withUnsafeMutableBytes { raw in
@@ -112,6 +113,7 @@ public enum DuplicateBenchmark {
                 }
                 try? handle.write(contentsOf: chunk)
                 written += count
+              }
             }
             files += 1
             bytes += Int64(size)
