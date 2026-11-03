@@ -47,6 +47,34 @@ struct CleanupSafetyPolicyTests {
         #expect(policy.verdict(for: home + "/Library/Caches/com.example.other") == .allowed)
     }
 
+    @Test func picksAreLimitedToSafeFolders() {
+        let policy = CleanupSafetyPolicy(homePath: home)
+        for refused in ["/", "/Applications", "/Library", "/Users", "/Volumes", "/Volumes/Backup", home, home + "/Documents",
+                        home + "/Library/Caches", home + "/.config", "/opt/homebrew", "/System/Volumes/Data/Users/test"] {
+            #expect(policy.verdict(forPick: refused) != .allowed, "\(refused) must not be pickable")
+        }
+        for allowed in [home + "/Downloads", home + "/Projects", home + "/Documents/Old", "/Volumes/Backup/Inbox"] {
+            #expect(policy.verdict(forPick: allowed) == .allowed, "\(allowed) should be pickable")
+        }
+    }
+
+    @Test func unsafePicksUnlockNothing() {
+        // Picking /Applications (or the home folder) as "Downloads" must not make apps or dotfiles candidates.
+        let policy = CleanupSafetyPolicy(homePath: home, pickedFolders: ["/Applications", home])
+        #expect(policy.verdict(for: "/Applications/Xcode.app") != .allowed)
+        #expect(policy.verdict(for: home + "/.ssh") != .allowed)
+        #expect(policy.verdict(for: home + "/.ssh/id_ed25519") != .allowed)
+        #expect(policy.verdict(for: home + "/Downloads/.hidden") != .allowed)
+    }
+
+    @Test func caseAndDataVolumePathsCanNotSlipThrough() {
+        #expect(!allowed(home.uppercased() + "/LIBRARY/Preferences/x.plist"))
+        #expect(!allowed(home + "/library/caches/COM.APPLE.Safari"))
+        #expect(!allowed("/System/Volumes/Data" + home + "/Library/Preferences/x.plist"))
+        #expect(!allowed(home + "/Library/Logs/DiagnosticReports"))
+        #expect(allowed("/System/Volumes/Data" + home + "/Library/Caches/com.example.app"))
+    }
+
     @Test func traversalTricksAreNormalizedFirst() {
         #expect(!allowed(home + "/Library/Caches/../Preferences/x.plist"))
         #expect(!allowed(home + "/Downloads/../../other/x"))

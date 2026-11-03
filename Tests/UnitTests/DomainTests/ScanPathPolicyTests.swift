@@ -45,6 +45,14 @@ struct ScanPathPolicyTests {
         #expect(policy.decision(forFolder: "\(home)/Movies2") == .scan)
     }
 
+    @Test func protectedFoldersMatchRegardlessOfCaseOrDataVolumePath() {
+        let policy = ScanPathPolicy(homePath: home, approvedRoots: [home])
+        #expect(policy.decision(forFolder: "\(home)/documents") == .skip(.protectedByPrivacy))
+        #expect(policy.decision(forFolder: "/System/Volumes/Data\(home)/Documents") == .skip(.protectedByPrivacy))
+        #expect(ScanPathPolicy.normalized("/System/Volumes/Data/Users/x") == "/Users/x")
+        #expect(ScanPathPolicy.normalized("/System/Volumes/Data") == "/System/Volumes/Data")
+    }
+
     @Test func pathContainmentIsComponentWise() {
         #expect(ScanPathPolicy.path("/a/b", isInside: "/a/b"))
         #expect(ScanPathPolicy.path("/a/b/c", isInside: "/a/b"))
