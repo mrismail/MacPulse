@@ -17,6 +17,7 @@ public struct AppDependencies: Sendable {
     public let scanner: any FileSystemScanning
     public let scanHistory: any ScanHistoryRepository
     public let scanSettings: any ScanSettingsStore
+    public let duplicates: any DuplicateScanning
 
     public init(
         systemInfo: any SystemInfoRepository,
@@ -25,7 +26,8 @@ public struct AppDependencies: Sendable {
         volumes: any VolumeRepository,
         scanner: any FileSystemScanning,
         scanHistory: any ScanHistoryRepository = InMemoryScanHistory(),
-        scanSettings: any ScanSettingsStore = InMemoryScanSettingsStore()
+        scanSettings: any ScanSettingsStore = InMemoryScanSettingsStore(),
+        duplicates: any DuplicateScanning
     ) {
         self.systemInfo = systemInfo
         self.battery = battery
@@ -34,6 +36,7 @@ public struct AppDependencies: Sendable {
         self.scanner = scanner
         self.scanHistory = scanHistory
         self.scanSettings = scanSettings
+        self.duplicates = duplicates
     }
 
     /// Real system services. Used by the shipping app.
@@ -46,7 +49,8 @@ public struct AppDependencies: Sendable {
             volumes: LiveVolumeRepository(),
             scanner: FileSystemScanner(),
             scanHistory: makeLiveScanHistory(),
-            scanSettings: UserDefaultsScanSettingsStore()
+            scanSettings: UserDefaultsScanSettingsStore(),
+            duplicates: DuplicateFinder()
         )
     }
 
@@ -112,7 +116,8 @@ public struct AppDependencies: Sendable {
                 battery: PreviewBatteryMonitor(),
                 energy: PreviewEnergyMonitor(),
                 volumes: PreviewVolumeRepository(),
-                scanner: PreviewScanner()
+                scanner: PreviewScanner(),
+                duplicates: PreviewDuplicateFinder()
             )
         }
     }

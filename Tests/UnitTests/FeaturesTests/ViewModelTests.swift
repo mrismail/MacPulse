@@ -67,7 +67,7 @@ struct OverviewViewModelTests {
         let model = OverviewViewModel(systemInfoRepository: StubSystemInfoRepository(result: .success(sampleInfo)), batteryMonitor: PreviewBatteryMonitor())
         let phases = model.upcomingFeatures.map(\.phase)
         #expect(phases == phases.sorted())
-        #expect(phases.count == 2)  // Space Analyzer shipped in Phase 4
+        #expect(phases.count == 1)  // Space Analyzer and Duplicate Finder have shipped
         #expect(!model.upcomingFeatures.contains { $0.title == "Battery" || $0.title == "Energy" })
     }
 }

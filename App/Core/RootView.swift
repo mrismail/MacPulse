@@ -55,7 +55,7 @@ public struct RootView: View {
             }
         case .energy: EnergyView(viewModel: model.energy)
         case .spaceAnalyzer: SpaceAnalyzerView(viewModel: model.spaceAnalyzer)
-        case .duplicateFinder: DuplicateFinderView()
+        case .duplicateFinder: DuplicateFinderView(viewModel: model.duplicateFinder)
         case .cleaner: CleanerView()
         case .settings: SettingsView(viewModel: model.settings)
         }
