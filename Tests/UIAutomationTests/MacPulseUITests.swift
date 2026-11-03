@@ -202,6 +202,32 @@ final class MacPulseUITests: XCTestCase {
     }
 
     @MainActor
+    func testCleanerAsksBeforeMovingAndShowsTheResult() {
+        let app = launchApp()
+        open("cleaner", in: app)
+        let review = element("cleaner.review", in: app)
+        XCTAssertTrue(review.waitForExistence(timeout: 10))
+        review.click()
+        let select = element("cleaner.select.com.example.browser", in: app)
+        XCTAssertTrue(select.waitForExistence(timeout: 10))
+        select.click()
+        element("cleaner.moveToTrash", in: app).click()
+
+        // Cancelling the dialog moves nothing.
+        let cancel = app.buttons["Cancel"].firstMatch
+        XCTAssertTrue(cancel.waitForExistence(timeout: 10), "A confirmation is always asked")
+        cancel.click()
+        XCTAssertFalse(element("cleaner.result", in: app).exists)
+
+        element("cleaner.moveToTrash", in: app).click()
+        let confirm = app.buttons["Move to Trash"].firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 10))
+        confirm.click()
+        XCTAssertTrue(element("cleaner.result", in: app).waitForExistence(timeout: 10))
+        XCTAssertTrue(element("cleaner.history", in: app).waitForExistence(timeout: 10))
+    }
+
+    @MainActor
     func testOverviewLinksToEnergy() {
         let app = launchApp()
         let link = element("overview.openEnergy", in: app)
