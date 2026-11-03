@@ -14,11 +14,15 @@ public struct CleanupSafetyPolicy: Sendable, Equatable {
     public var pickedFolders: [String]
     /// MacPulse's own data (Application Support/MacPulse), never offered.
     public var appDataPath: String?
+    /// Folders the user excluded from scans; the Cleaner never touches anything in them
+    /// either (one set of exclusions for every module).
+    public var excludedFolders: [String]
 
-    public init(homePath: String, pickedFolders: [String] = [], appDataPath: String? = nil) {
+    public init(homePath: String, pickedFolders: [String] = [], appDataPath: String? = nil, excludedFolders: [String] = []) {
         self.homePath = ScanPathPolicy.normalized(homePath)
         self.pickedFolders = pickedFolders.map(ScanPathPolicy.normalized)
         self.appDataPath = appDataPath.map(ScanPathPolicy.normalized)
+        self.excludedFolders = excludedFolders.map(ScanPathPolicy.normalized)
     }
 
     /// Folders in the home folder that are never removed themselves.
@@ -35,6 +39,9 @@ public struct CleanupSafetyPolicy: Sendable, Equatable {
         let home = homePath
         if let appDataPath, ScanPathPolicy.path(path, isInside: appDataPath) {
             return .refused(String(localized: "MacPulse's own data"))
+        }
+        if excludedFolders.contains(where: { ScanPathPolicy.path(path, isInside: $0) }) {
+            return .refused(String(localized: "In a folder you excluded"))
         }
         let inHome = ScanPathPolicy.path(path, isInside: home)
         let inPicked = pickedFolders.contains { ScanPathPolicy.path(path, isInside: $0) && path != $0 }

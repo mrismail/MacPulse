@@ -40,6 +40,13 @@ struct CleanupSafetyPolicyTests {
         #expect(!allowed("/Volumes/Other/file"))
     }
 
+    @Test func excludedFoldersApplyToCleanupToo() {
+        let policy = CleanupSafetyPolicy(homePath: home, excludedFolders: [home + "/Library/Caches/com.example.keep"])
+        #expect(policy.verdict(for: home + "/Library/Caches/com.example.keep") != .allowed)
+        #expect(policy.verdict(for: home + "/Library/Caches/com.example.keep/x") != .allowed)
+        #expect(policy.verdict(for: home + "/Library/Caches/com.example.other") == .allowed)
+    }
+
     @Test func traversalTricksAreNormalizedFirst() {
         #expect(!allowed(home + "/Library/Caches/../Preferences/x.plist"))
         #expect(!allowed(home + "/Downloads/../../other/x"))
