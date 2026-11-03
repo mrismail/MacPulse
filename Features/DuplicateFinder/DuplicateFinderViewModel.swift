@@ -174,6 +174,28 @@ public final class DuplicateFinderViewModel {
         return .measured(bytes)
     }
 
+    /// Marked copies with the copy each one duplicates (kept), for the Cleaner.
+    public var markedCopies: [(path: String, keptCopy: String)] {
+        (result?.groups ?? []).flatMap { group -> [(path: String, keptCopy: String)] in
+            guard let kept = group.files.first(where: { !selection.isMarked($0) }) else { return [] }
+            return group.files.filter(selection.isMarked).map { ($0.path, kept.path) }
+        }
+    }
+
+    /// Drops files that the Cleaner moved to the Trash; groups left with one copy disappear.
+    public func forget(_ paths: Set<String>) {
+        guard let result, !paths.isEmpty else { return }
+        let groups = result.groups.compactMap { group -> DuplicateGroup? in
+            let files = group.files.filter { !paths.contains($0.path) }
+            return files.count >= 2 ? DuplicateGroup(contentHash: group.contentHash, files: files) : nil
+        }
+        state = .finished(DuplicateScanResult(
+            roots: result.roots, startedAt: result.startedAt, finishedAt: result.finishedAt,
+            isComplete: result.isComplete, groups: groups, statistics: result.statistics, skipped: result.skipped
+        ))
+        selection.retain(onlyIn: groups)
+    }
+
     /// Paths of the marked copies, for Reveal in Finder.
     public var markedPaths: [String] {
         (result?.groups ?? []).flatMap(\.files).filter(selection.isMarked).map(\.path)

@@ -18,6 +18,9 @@ public struct AppDependencies: Sendable {
     public let scanHistory: any ScanHistoryRepository
     public let scanSettings: any ScanSettingsStore
     public let duplicates: any DuplicateScanning
+    public let cleanupSource: any CleanupCandidateSource
+    public let trash: any TrashService
+    public let cleanupHistory: any CleanupHistoryRepository
 
     public init(
         systemInfo: any SystemInfoRepository,
@@ -27,7 +30,10 @@ public struct AppDependencies: Sendable {
         scanner: any FileSystemScanning,
         scanHistory: any ScanHistoryRepository = InMemoryScanHistory(),
         scanSettings: any ScanSettingsStore = InMemoryScanSettingsStore(),
-        duplicates: any DuplicateScanning
+        duplicates: any DuplicateScanning,
+        cleanupSource: any CleanupCandidateSource,
+        trash: any TrashService,
+        cleanupHistory: any CleanupHistoryRepository = InMemoryCleanupHistory()
     ) {
         self.systemInfo = systemInfo
         self.battery = battery
@@ -37,6 +43,9 @@ public struct AppDependencies: Sendable {
         self.scanHistory = scanHistory
         self.scanSettings = scanSettings
         self.duplicates = duplicates
+        self.cleanupSource = cleanupSource
+        self.trash = trash
+        self.cleanupHistory = cleanupHistory
     }
 
     /// Real system services. Used by the shipping app.
@@ -50,7 +59,10 @@ public struct AppDependencies: Sendable {
             scanner: FileSystemScanner(),
             scanHistory: makeLiveScanHistory(),
             scanSettings: UserDefaultsScanSettingsStore(),
-            duplicates: DuplicateFinder()
+            duplicates: DuplicateFinder(),
+            cleanupSource: LiveCleanupCandidateSource(),
+            trash: FileManagerTrashService(),
+            cleanupHistory: makeLiveCleanupHistory()
         )
     }
 
@@ -64,6 +76,18 @@ public struct AppDependencies: Sendable {
             }
         #endif
         return .live()
+    }
+
+    private static func makeLiveCleanupHistory() -> any CleanupHistoryRepository {
+        do {
+            return JSONLinesCleanupHistoryStore(directory: try JSONLinesCleanupHistoryStore.defaultDirectory())
+        } catch {
+            Log.logger(.persistence).log(
+                AppError.wrapping(error, userMessage: "Cleanup history can't be saved."),
+                context: "Cleanup history store"
+            )
+            return InMemoryCleanupHistory()
+        }
     }
 
     private static func makeLiveScanHistory() -> any ScanHistoryRepository {
@@ -117,7 +141,9 @@ public struct AppDependencies: Sendable {
                 energy: PreviewEnergyMonitor(),
                 volumes: PreviewVolumeRepository(),
                 scanner: PreviewScanner(),
-                duplicates: PreviewDuplicateFinder()
+                duplicates: PreviewDuplicateFinder(),
+                cleanupSource: PreviewCleanupSource(),
+                trash: PreviewTrashService()
             )
         }
     }

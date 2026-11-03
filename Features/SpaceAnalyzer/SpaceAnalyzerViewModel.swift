@@ -272,6 +272,13 @@ public final class SpaceAnalyzerViewModel {
 
     // MARK: Largest files and categories
 
+    /// Files of 500 MB or more from the last scan, for the Cleaner's Large Files category.
+    public var largeFilesForCleanup: [(path: String, allocatedBytes: Int64)] {
+        (result?.largestFiles ?? [])
+            .filter { $0.allocatedBytes >= 500_000_000 && $0.kind == .file }
+            .map { ($0.id, $0.allocatedBytes) }
+    }
+
     public var largestFiles: [ScanNode] {
         (result?.largestFiles ?? [])
             .filter { categoryFilter == nil || $0.category == categoryFilter }

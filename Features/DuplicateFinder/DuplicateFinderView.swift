@@ -12,9 +12,11 @@ public struct DuplicateFinderView: View {
     @Bindable private var viewModel: DuplicateFinderViewModel
     @State private var isPickingFolders = false
     @State private var previewURL: URL?
+    private let reviewInCleaner: () -> Void
 
-    public init(viewModel: DuplicateFinderViewModel) {
+    public init(viewModel: DuplicateFinderViewModel, reviewInCleaner: @escaping () -> Void = {}) {
         self.viewModel = viewModel
+        self.reviewInCleaner = reviewInCleaner
     }
 
     public var body: some View {
@@ -22,7 +24,7 @@ public struct DuplicateFinderView: View {
             VStack(alignment: .leading, spacing: Spacing.large) {
                 SearchSetupCard(viewModel: viewModel, pickFolders: { isPickingFolders = true })
                 if let result = viewModel.result {
-                    DuplicateSummaryCard(result: result, viewModel: viewModel)
+                    DuplicateSummaryCard(result: result, viewModel: viewModel, reviewInCleaner: reviewInCleaner)
                     DuplicateGroupsCard(viewModel: viewModel, preview: { previewURL = URL(fileURLWithPath: $0) })
                 }
             }
@@ -123,6 +125,7 @@ private struct SearchSetupCard: View {
 private struct DuplicateSummaryCard: View {
     let result: DuplicateScanResult
     @Bindable var viewModel: DuplicateFinderViewModel
+    let reviewInCleaner: () -> Void
 
     var body: some View {
         Card(result.isComplete ? String(localized: "Results") : String(localized: "Partial Results (stopped)"), systemImage: "checkmark.seal") {
@@ -148,13 +151,16 @@ private struct DuplicateSummaryCard: View {
                 Button("Reveal Marked in Finder") { DuplicatePresentation.reveal(viewModel.markedPaths) }
                     .disabled(viewModel.markedCount == 0)
                     .accessibilityIdentifier("duplicates.revealMarked")
+                Button("Review Marked in Cleaner…", action: reviewInCleaner)
+                    .disabled(viewModel.markedCount == 0)
+                    .accessibilityIdentifier("duplicates.reviewInCleaner")
                 Spacer()
                 Text("\(viewModel.markedCount) marked")
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
                     .accessibilityIdentifier("duplicates.markedCount")
             }
-            Text("Marking is a plan: nothing is removed here. Moving marked copies to the Trash, with a final check of each file, comes with the Cleaner.")
+            Text("Marking is a plan: nothing is removed here. The Cleaner shows the marked copies, asks you to confirm, checks each file again and moves it to the Trash.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
