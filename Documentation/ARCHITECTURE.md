@@ -184,3 +184,20 @@ DuplicateFinder (detached task, ADR-014)
 - Files are opened read-only with `O_NOFOLLOW` and only if unchanged since listing.
 - Hard links are one stored file; APFS clones make savings an estimate.
 - Review only: marks are a plan; removal comes with the Cleaner (Phase 6).
+
+## Cleaner (Phase 6)
+
+```
+LiveCleanupCandidateSource ──CleanupCandidateList──▶ CleanerViewModel ──requestCleanup()──▶ confirmation dialog
+ (safe scanner, lstat identity,                           │                                   │ confirmCleanup()
+  CleanupSafetyPolicy)                                    │                                   ▼
+Space Analyzer (large files) ─┐                           │            FileManagerTrashService (only trashItem caller)
+Duplicate Finder (marked)  ───┴─▶ CleanupScanOptions      │             policy + identity re-check per item
+                                                          ▼                                   │
+                               CleanupReport ◀────────────────────────────────────────────────┘
+                                 ├─▶ JSONLinesCleanupHistoryStore (30 days)
+                                 └─▶ refresh: volumes, Overview, duplicate results
+```
+
+- Trash only, never permanent deletion (ADR-015).
+- Each item is checked again immediately before it moves; results are per item.

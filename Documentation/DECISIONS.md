@@ -351,3 +351,61 @@ one group of 100.
 largest group 100; 6.3 s, 1.9 GB read; longest main-thread stall 41 ms; peak footprint
 **41 MB** (415 MB before reads were drained per file). Budget: correct result, stall
 ≤ 250 ms, peak ≤ 100 MB, search ≤ 180 s.
+
+## ADR-015 — Cleaner: Trash only, explicit confirmation, re-validation (Phase 6)
+
+**Date:** 2026-11-03 · **Status:** Accepted
+
+**Context.** Spec Phase 6 acceptance: "no file is deleted without explicit user
+confirmation". Every cleanup must show a preview, the reason, the estimated space,
+ask for confirmation and report what actually happened. Use the Trash where possible,
+validate identity and location immediately before acting, protect app data and system
+files, and never report false success. Without the sandbox (ADR-010) MacPulse could
+reach anything the user can, so the limits are in code and enforced by CI.
+
+**Decision.**
+- **One removal path.** `FileManagerTrashService` is the only code that moves user items,
+  using `FileManager.trashItem`. There is no permanent deletion anywhere in the app; the
+  Trash category is information only and opens the Trash in Finder. CI fails if
+  `trashItem` appears anywhere else, and keeps `removeItem`/`moveItem`/`unlink`/`rmdir`
+  to MacPulse's own data stores and benchmarks.
+- **Two steps in the view model.** `requestCleanup()` only shows the confirmation dialog
+  (count and size); `confirmCleanup()` runs only while that dialog's items are pending and
+  moves exactly those items. Nothing is pre-selected except copies the user already marked
+  in the Duplicate Finder. Nothing runs at launch or on a timer.
+- **Safety policy** (`CleanupSafetyPolicy`), applied when listing and again before each
+  item: inside the home folder or a picked folder only; never the home folder, a picked
+  folder itself or a standard folder (Desktop, Documents, Downloads, Library, Pictures,
+  Movies, Music, Applications, Public, Sites, .Trash); in `~/Library` only items inside
+  Caches and Logs, and not Apple's own (`com.apple.*`, CloudKit, FamilyCircle); never
+  package contents or media libraries; never MacPulse's own data. Paths are normalized
+  first, so `..` can't escape.
+- **Re-validation per item, immediately before moving:** still exists; not a link or
+  special file (`lstat`); same device + inode; for files, same size and modification time.
+  Folders are matched by device + inode only, because apps keep writing into caches.
+  Otherwise the item is skipped and reported.
+- **Truthful results.** Each item is moved (with its Trash location), skipped (missing,
+  changed, not allowed) or failed (macOS's message). Space is reported as "moved to the
+  Trash", freed when the Trash is emptied.
+- **History.** Reports (original and Trash paths) are kept 30 days in owner-only files,
+  never logged, so items can be found and put back.
+- **Categories.** App caches and logs (per app folder); old downloads in a Downloads
+  folder the user picks (30/90/365 days); large files (≥ 500 MB) from the last Space
+  Analyzer scan; empty folders in a picked folder; copies marked in the Duplicate Finder
+  (one copy per group is always kept); the Trash (read-only). Running apps' caches are
+  flagged.
+
+**Evidence.** Integration tests move real files to the real Trash and restore them:
+- the item lands in the Trash and the reported path exists;
+- grown, replaced, swapped-for-a-link and missing items are skipped;
+- a standard folder and `~/Library/Preferences` are refused;
+- a read-only parent produces a reported failure while its sibling moves;
+- stopping before the start moves nothing;
+- candidate sources list caches without Apple's, old downloads by age, empty folders
+  (skipping links), and duplicates with the kept copy named.
+
+View-model tests prove that nothing is moved without confirmation, that cancelling moves
+nothing, and that exactly the confirmed items are passed. A UI test cancels the dialog
+(nothing happens), then confirms and sees the result and history.
+
+**Not done.** Permanent deletion and emptying the Trash (not offered; Finder does it).

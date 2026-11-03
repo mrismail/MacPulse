@@ -14,13 +14,16 @@ appear. Each has a target phase and a reason. Update this file whenever scope mo
 | Ending an app from MacPulse | Spec non-goal | Not planned | Spec forbids automatic termination; a manual "Quit" button may be considered with the owner later. |
 | Configurable data retention | §3 Settings | Phase 7 | Fixed at 30 days (`BatteryMonitor.Configuration.defaultHistoryRetentionDays`). |
 | Monitoring while the app is closed | §2 Module A history | Phase 7 | Requires a login item / menu-bar companion (`SMAppService`). History is recorded only while MacPulse runs. |
-| Overview "recent scans and cleanup activity" | §3 Overview | Phase 6 | Phase 4: the Overview shows free space, the last scan and its recoverable estimate. Cleanup activity arrives with the Cleaner. |
+| Overview "recent scans and cleanup activity" | §3 Overview | Delivered (Phase 6) | The Overview shows free space, the last scan, its recoverable estimate and the last cleanup. |
 | Storage chart as a treemap or sunburst | §3 Space Analyzer screen | Phase 7 | Phase 4 ships a stacked volume bar, a category bar chart and a size bar per folder row. |
 | Live updates while files change (FSEvents) | §2 Module C | Phase 7 | Results reflect the moment of the scan; rescan to refresh. |
-| "Large application data" for other apps | §2 Module C | Phase 6 | Other apps' containers are behind a per-app macOS prompt; the Cleaner will ask per category. Readable app data (e.g. ~/Library/Application Support, Caches) is already in scans. |
-| Acting on recoverable space from the Space Analyzer | §2 Module C "estimated recoverable storage" | Phase 6 | Phase 4 is read-only and shows the estimate; the Cleaner removes with confirmation. |
+| "Large application data" for other apps | §2 Module C | Phase 7 | Other apps' containers are behind a per-app macOS prompt. Caches and logs are Cleaner categories; Application Support is app data and is never offered for removal (ADR-015). |
+| Acting on recoverable space from the Space Analyzer | §2 Module C "estimated recoverable storage" | Delivered (Phase 6) | Large files link to the Cleaner; caches and logs are Cleaner categories. |
+| Emptying the Trash / permanent deletion | §2 Module E "supported permanent-delete action" | Not planned for now | MacPulse moves items to the Trash only; macOS hides the Trash from apps without Full Disk Access, and Finder empties it. Revisit with an ADR if the owner wants it. |
+| Putting items back from the Trash inside MacPulse | §10 "Recovery of files from Trash" | Phase 7 | History keeps each item's Trash location; Phase 6 offers "Open Trash in Finder" (Finder's Put Back works). |
+| Cleanup preferences in Settings | §3 Settings "Cleanup preferences" | Phase 7 | Age limit and folders are chosen on the Cleaner screen. |
 | Clearing scan history from Settings | §3 Settings | Phase 7 | Settings gets one Privacy section for all histories. |
-| Removing marked duplicates (move to Trash) | §2 Module D "manual selection of files to keep or remove" | Phase 6 | Phase 5 marks copies and shows savings; removal uses the Cleaner's shared confirmation and re-validation (one ADR for all file removal). |
+| Removing marked duplicates (move to Trash) | §2 Module D "manual selection of files to keep or remove" | Delivered (Phase 6) | "Review Marked in Cleaner" → confirmation → Trash (ADR-015). |
 | Similar (not identical) images | — | Not planned | The spec asks for identical files only. |
 | String Catalog extraction and Arabic translation | (owner requirement) | Phase 7 | Groundwork done in Phase 2 (ADR-008). |
 | Snapshot tests (light/dark/RTL) | Review finding | Phase 7 | Needs a third-party snapshot library; decide with the UI polish pass. |
