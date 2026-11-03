@@ -169,3 +169,18 @@ FileSystemScanner ──ScanResult──▶ SpaceAnalyzerViewModel ─▶ volume
   (filesystem-reported) — all measured; recoverable — an estimate.
 - Exclusions are saved in user defaults; scan history keeps totals, the five biggest
   folders and category totals for 180 days.
+
+## Duplicate Finder (Phase 5)
+
+```
+DuplicateFinder (detached task, ADR-014)
+  collect (ADR-013 walk rules, regular files, no packages) ─▶ DuplicateGrouping.collapseHardLinks
+  ─▶ sameSize ─▶ quick SHA-256 (first + last 64 KB) ─▶ full SHA-256 ─▶ byte-by-byte verify
+  ─▶ DuplicateScanResult ─▶ DuplicateFinderViewModel ─▶ groups, thumbnails, Quick Look,
+                                                      marks (DuplicateSelection), savings
+```
+
+- Content only: names and dates are never compared.
+- Files are opened read-only with `O_NOFOLLOW` and only if unchanged since listing.
+- Hard links are one stored file; APFS clones make savings an estimate.
+- Review only: marks are a plan; removal comes with the Cleaner (Phase 6).

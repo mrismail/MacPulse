@@ -309,3 +309,45 @@ autorelease pool.
 
 **Open.** Owner's Mac: 1,000,000-file run (`MACPULSE_SCAN_FILES=1000000`), and a home
 scan to confirm no unexpected privacy prompt.
+
+## ADR-014 — Duplicate Finder: content-only comparison, verified groups (Phase 5)
+
+**Date:** 2026-11-03 · **Status:** Accepted
+
+**Context.** Spec Phase 5 acceptance: "files with identical names but different content are
+never classified as identical". The spec also asks for staged hashing, verification before
+presenting groups, no symlink following, no hard links counted as savings, and never
+deleting automatically.
+
+**Decision.**
+- Candidates come from the same safe walk as the Space Analyzer (ADR-013): regular files
+  only, no links, folders once by device + inode, same volume, `ScanPathPolicy`
+  (protected folders only when the user picked them). Package contents (apps, libraries)
+  are never offered. Empty files are ignored.
+- Stages: same logical size → hard links merged (same device + inode is one stored file,
+  never a copy) → SHA-256 of the first and last 64 KB (whole file when ≤ 128 KB) →
+  streaming SHA-256 of the whole file → byte-by-byte comparison with the group's first
+  copy. Only byte-verified groups are shown. Names and dates are never compared.
+- Files are opened read-only with `O_NOFOLLOW`, and only if device, inode, size and
+  modification time still match what was listed; a file that changes is left out and
+  counted.
+- Savings keep one copy: size on disk of every other copy. When APFS reports
+  `EF_MAY_SHARE_BLOCKS` (clones) for a copy, the group's savings are an estimate.
+  A copy with other hard links frees nothing on its own and counts as zero when marked.
+- Phase 5 is review only: users mark copies (at least one per group is always kept),
+  see the savings and reveal them in Finder. Moving marked copies to the Trash will use
+  the Cleaner's confirmation and re-validation flow (Phase 6).
+
+**Evidence.** Integration tests on real files: same name with different content; same
+size with different content; same first and last 64 KB with one different byte in the
+middle; identical files in different folders; hard links with and without a real copy;
+symbolic links; empty and unreadable files; package contents; type and size filters;
+overlapping folders; a group of 50; stopping. CI benchmark
+(`--macpulse-duplicate-benchmark`): 12,504 files (1.0 GB) — 10,000 unique files, 500
+groups of 4, one group of 4 × 64 MB, 200 look-alike pairs differing in one middle byte,
+one group of 100.
+
+**First results (CI, macOS 15.8 arm64 VM):** 502 of 502 groups, 0 look-alike pairs grouped,
+largest group 100; 6.3 s, 1.9 GB read; longest main-thread stall 41 ms; peak footprint
+**41 MB** (415 MB before reads were drained per file). Budget: correct result, stall
+≤ 250 ms, peak ≤ 100 MB, search ≤ 180 s.
