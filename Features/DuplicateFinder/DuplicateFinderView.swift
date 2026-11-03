@@ -331,20 +331,26 @@ enum DuplicatePresentation {
     /// A Quick Look thumbnail. Quick Look reads the file in its own process.
     @MainActor
     static func thumbnail(for path: String) async -> NSImage? {
+        let box = await thumbnailImage(for: path)
+        return box.image.map { NSImage(cgImage: $0, size: .zero) }
+    }
+
+    /// Quick Look calls back on its own queue, so the callback must not be main-actor
+    /// isolated (Swift 6 checks this at run time).
+    static func thumbnailImage(for path: String) async -> ImageBox {
         let request = QLThumbnailGenerator.Request(
             fileAt: URL(fileURLWithPath: path), size: CGSize(width: 72, height: 72), scale: 2, representationTypes: .thumbnail
         )
-        let box = await withCheckedContinuation { (continuation: CheckedContinuation<ImageBox, Never>) in
-            QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { representation, _ in
+        return await withCheckedContinuation { (continuation: CheckedContinuation<ImageBox, Never>) in
+            QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { @Sendable representation, _ in
                 continuation.resume(returning: ImageBox(representation?.cgImage))
             }
         }
-        return box.image.map { NSImage(cgImage: $0, size: .zero) }
     }
 }
 
 /// Carries a thumbnail out of Quick Look's callback.
-private final class ImageBox: @unchecked Sendable {
+final class ImageBox: @unchecked Sendable {
     let image: CGImage?
     init(_ image: CGImage?) { self.image = image }
 }
