@@ -409,3 +409,51 @@ nothing, and that exactly the confirmed items are passed. A UI test cancels the 
 (nothing happens), then confirms and sees the result and history.
 
 **Not done.** Permanent deletion and emptying the Trash (not offered; Finder does it).
+
+## ADR-016 — Menu bar companion, open at login, preferences, one safety policy (Phase 7)
+
+**Date:** 2026-11-03 · **Status:** Accepted
+
+**Context.** Spec Phase 7: unified dashboard, shared scan and cleanup workflows, menu bar
+companion, notifications, Settings, performance. Acceptance: all modules operate
+consistently and share the same safety policies. History is recorded only while MacPulse
+runs (DEFERRED), so monitoring "in the background" needs the app to keep running.
+
+**Decision.**
+- **Menu bar companion** = a `MenuBarExtra` scene in the main app (no helper, no daemon,
+  no admin rights, no new entitlements). It shows charge (with its provenance), state,
+  the runtime estimate, the most active apps, free space and links into the app. On by
+  default; Settings can hide it.
+- **Background monitoring** stays in the main process. While the menu bar companion is
+  shown, closing the window keeps MacPulse running (`applicationShouldTerminateAfterLastWindowClosed`),
+  so battery and activity keep being recorded.
+- **Open at login** uses `SMAppService.mainApp` (public API). Off by default; turned on in
+  Settings; macOS lists it under System Settings → General → Login Items. Approval needed
+  by macOS is reported in Settings.
+- **Preferences** (`AppPreferences`, user defaults): battery sampling 30 s / 1 min / 5 min,
+  background app activity 1 / 5 min, battery retention 7/30/90 days, usage retention
+  7/14/30 days, menu bar on/off, default old-downloads age. Intervals and retention are
+  read at launch; Settings says when a restart is needed. Unknown values fall back to
+  defaults.
+- **One safety policy for every module.** The user's excluded folders now also apply to the
+  Cleaner (`CleanupSafetyPolicy.excludedFolders`): items inside are never offered or
+  moved. Space Analyzer, Duplicate Finder and Cleaner all use `ScanPathPolicy` rules
+  (ADR-013) for walking and the Cleaner adds `CleanupSafetyPolicy` (ADR-015) for acting.
+- **Put Back.** Cleanup history can move an item back from a Trash folder, only when its
+  original place is empty, its folder still exists and the safety policy allows it. Done by
+  the Trash service, the only code that moves user items (CI guardrail updated to allow
+  exactly this `moveItem`).
+- **Settings** covers the spec's list: startup, monitoring frequency, notifications (the
+  same drain-alert controls as the Energy screen), scan locations and exclusions, cleanup
+  preferences, data retention, privacy and clearing every history (battery, app usage,
+  scans, cleanups), version and diagnostics.
+
+**Evidence.** Unit tests: preferences decoding and validation, restart notice, login item
+success and failure, clearing scan and cleanup history, Cleaner exclusions, Put Back
+recorded in history, menu bar label never inventing a charge. Integration tests: Put Back
+restores into a free place only, refuses an occupied place, a second Put Back, and paths
+outside a Trash folder; preferences round-trip and fall back on corrupt data. UI test:
+Settings shows startup, menu bar and monitoring controls and the history buttons.
+
+**Not done.** The menu bar extra itself isn't driven by UI tests (XCUITest can't open
+status items reliably); it reuses the tested Overview view model.
