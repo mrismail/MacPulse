@@ -91,7 +91,7 @@ struct DuplicateSearch {
                 if checkCancellation() { break }
                 report(.quickHash, done: statistics.quickHashed, total: quickTotal)
                 statistics.quickHashed += 1
-                if let hash = hash(file, quick: true) { quickHashes.append((file, hash)) }
+                if let hash = autoreleasepool(invoking: { hash(file, quick: true) }) { quickHashes.append((file, hash)) }
             }
             for quickGroup in DuplicateGrouping.buckets(quickHashes, by: { $0.hash }) {
                 if cancelled { break }
@@ -106,7 +106,7 @@ struct DuplicateSearch {
                         if checkCancellation() { break }
                         report(.fullHash, done: statistics.fullyHashed, total: nil)
                         statistics.fullyHashed += 1
-                        if let hash = hash(entry.file, quick: false) { fullHashes.append((entry.file, hash)) }
+                        if let hash = autoreleasepool(invoking: { hash(entry.file, quick: false) }) { fullHashes.append((entry.file, hash)) }
                     }
                     fullGroups = DuplicateGrouping.buckets(fullHashes, by: { $0.hash })
                 }
@@ -209,19 +209,7 @@ struct DuplicateSearch {
         let size = file.candidate.logicalBytes
         do {
             if quick {
-                let head = try handle.read(upToCount: Self.edgeBytes) ?? Data()
-                hasher.update(data: head)
-                statistics.bytesRead += Int64(head.count)
-                if size > Int64(2 * Self.edgeBytes) {
-                    try handle.seek(toOffset: UInt64(size) - UInt64(Self.edgeBytes))
-                    let tail = try handle.read(upToCount: Self.edgeBytes) ?? Data()
-                    hasher.update(data: tail)
-                    statistics.bytesRead += Int64(tail.count)
-                } else if size > Int64(Self.edgeBytes) {
-                    let rest = try handle.read(upToCount: Self.edgeBytes) ?? Data()
-                    hasher.update(data: rest)
-                    statistics.bytesRead += Int64(rest.count)
-                }
+                try autoreleasepool { try quickHash(handle, size: size, into: &hasher) }
             } else {
                 while true {
                     if checkCancellation() { return nil }
@@ -239,6 +227,23 @@ struct DuplicateSearch {
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
+    /// Hashes the first and last 64 KB (or the whole file when it is 128 KB or less).
+    mutating func quickHash(_ handle: FileHandle, size: Int64, into hasher: inout SHA256) throws {
+        let head = try handle.read(upToCount: Self.edgeBytes) ?? Data()
+        hasher.update(data: head)
+        statistics.bytesRead += Int64(head.count)
+        if size > Int64(2 * Self.edgeBytes) {
+            try handle.seek(toOffset: UInt64(size) - UInt64(Self.edgeBytes))
+            let tail = try handle.read(upToCount: Self.edgeBytes) ?? Data()
+            hasher.update(data: tail)
+            statistics.bytesRead += Int64(tail.count)
+        } else if size > Int64(Self.edgeBytes) {
+            let rest = try handle.read(upToCount: Self.edgeBytes) ?? Data()
+            hasher.update(data: rest)
+            statistics.bytesRead += Int64(rest.count)
+        }
+    }
+
     /// Compares every file with the first, byte by byte. Returns groups of files that are
     /// truly identical (normally one group; more if a hash ever collided).
     mutating func verify(_ files: [DuplicateGrouping.StoredFile]) -> [[DuplicateGrouping.StoredFile]] {
@@ -250,7 +255,7 @@ struct DuplicateSearch {
             for other in remaining.dropFirst() {
                 if cancelled { return groups }
                 report(.verifying, done: statistics.verified, total: nil)
-                switch compare(reference.candidate.path, other.candidate.path) {
+                switch autoreleasepool(invoking: { compare(reference.candidate.path, other.candidate.path) }) {
                 case .some(true): same.append(other)
                 case .some(false): different.append(other)
                 case .none: break  // unreadable or changed: left out
