@@ -21,7 +21,7 @@ struct SettingsPreferencesTests {
         SettingsViewModel(
             systemInfoRepository: PreviewSystemInfoRepository(), batteryMonitor: PreviewBatteryMonitor(),
             preferences: store, loginItem: login, scanHistory: scans, cleanupHistory: cleanups,
-            confirmationDuration: .milliseconds(10)
+            confirmationDuration: .seconds(30)
         )
     }
 
