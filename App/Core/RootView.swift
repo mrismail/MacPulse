@@ -65,7 +65,7 @@ public struct RootView: View {
                 Task { await model.cleaner.open(.duplicates) }
             }
         case .cleaner: CleanerView(viewModel: model.cleaner)
-        case .settings: SettingsView(viewModel: model.settings)
+        case .settings: SettingsView(viewModel: model.settings, energy: model.energy, spaceAnalyzer: model.spaceAnalyzer)
         }
     }
 }

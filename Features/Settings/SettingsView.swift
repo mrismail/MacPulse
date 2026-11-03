@@ -1,18 +1,109 @@
 import AppKit
+import MacPulseDomain
 import MacPulseShared
 import SwiftUI
+import UniformTypeIdentifiers
 
 public struct SettingsView: View {
-    private let viewModel: SettingsViewModel
+    @Bindable private var viewModel: SettingsViewModel
+    private let energy: EnergyViewModel?
+    private let spaceAnalyzer: SpaceAnalyzerViewModel?
     @State private var isConfirmingClearHistory = false
     @State private var isConfirmingClearUsage = false
+    @State private var isConfirmingClearScans = false
+    @State private var isConfirmingClearCleanups = false
+    @State private var isPickingExclusion = false
 
-    public init(viewModel: SettingsViewModel) {
+    public init(viewModel: SettingsViewModel, energy: EnergyViewModel? = nil, spaceAnalyzer: SpaceAnalyzerViewModel? = nil) {
         self.viewModel = viewModel
+        self.energy = energy
+        self.spaceAnalyzer = spaceAnalyzer
+    }
+
+    private func preference<Value>(_ keyPath: WritableKeyPath<AppPreferences, Value>) -> Binding<Value> {
+        Binding(
+            get: { viewModel.preferences[keyPath: keyPath] },
+            set: { value in viewModel.update { $0[keyPath: keyPath] = value } }
+        )
     }
 
     public var body: some View {
         Form {
+            Section("Startup") {
+                Toggle("Open MacPulse at login", isOn: Binding(
+                    get: { viewModel.opensAtLogin },
+                    set: { value in Task { await viewModel.setOpensAtLogin(value) } }
+                ))
+                .accessibilityIdentifier("settings.openAtLogin")
+                if let error = viewModel.loginItemError {
+                    Label(error.userMessage, systemImage: "exclamationmark.triangle").foregroundStyle(.secondary)
+                }
+                Toggle("Show MacPulse in the menu bar", isOn: preference(\.showsMenuBarExtra))
+                    .accessibilityIdentifier("settings.menuBar")
+                Text("While MacPulse is in the menu bar, closing its window keeps it running so battery and app activity are still recorded. Opening at login is off unless you turn it on; you can also change it in System Settings → General → Login Items.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Monitoring") {
+                Picker("Battery level", selection: preference(\.batteryInterval)) {
+                    ForEach(AppPreferences.BatteryInterval.allCases) { Text($0.title).tag($0) }
+                }
+                .accessibilityIdentifier("settings.batteryInterval")
+                Picker("App activity in the background", selection: preference(\.activityInterval)) {
+                    ForEach(AppPreferences.ActivityInterval.allCases) { Text($0.title).tag($0) }
+                }
+                Text("While the Energy screen is open, app activity is measured every 10 seconds.")
+                    .font(.caption).foregroundStyle(.secondary)
+                if viewModel.needsRestart {
+                    Label("Takes effect the next time MacPulse starts.", systemImage: "arrow.clockwise")
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("settings.restartNeeded")
+                }
+            }
+
+            if let energy {
+                Section("Notifications") {
+                    DrainAlertControls(viewModel: energy)
+                }
+            }
+
+            if let spaceAnalyzer {
+                Section("Scans and cleanup") {
+                    Text("Excluded folders are skipped by the Space Analyzer and the Duplicate Finder, and the Cleaner never touches anything in them.")
+                        .font(.caption).foregroundStyle(.secondary)
+                    ForEach(spaceAnalyzer.exclusions, id: \.self) { path in
+                        HStack {
+                            Label(path, systemImage: "folder.badge.minus").lineLimit(1).truncationMode(.middle)
+                            Spacer()
+                            Button("Remove") { spaceAnalyzer.removeExclusion(path) }
+                                .buttonStyle(.borderless)
+                        }
+                    }
+                    Button("Exclude a Folder…") { isPickingExclusion = true }
+                        .accessibilityIdentifier("settings.addExclusion")
+                        .fileImporter(isPresented: $isPickingExclusion, allowedContentTypes: [.folder]) { picked in
+                            if case .success(let url) = picked { spaceAnalyzer.addExclusion(url.path) }
+                        }
+                    Picker("Old downloads are files unchanged for", selection: preference(\.cleanupDownloadsAgeDays)) {
+                        Text("30 days").tag(30)
+                        Text("90 days").tag(90)
+                        Text("1 year").tag(365)
+                    }
+                }
+            }
+
+            Section("Data retention") {
+                Picker("Keep battery history for", selection: preference(\.batteryRetentionDays)) {
+                    ForEach(AppPreferences.batteryRetentionChoices, id: \.self) { Text("\($0) days").tag($0) }
+                }
+                Picker("Keep app usage history for", selection: preference(\.usageRetentionDays)) {
+                    ForEach(AppPreferences.usageRetentionChoices, id: \.self) { Text("\($0) days").tag($0) }
+                }
+                Text("Scan history is kept 180 days and cleanup history 30 days. Everything stays on this Mac.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+
             Section("Privacy") {
                 Label("MacPulse works entirely on this Mac.", systemImage: "lock.shield")
                 Text("No account is required. File names, file contents and usage data are never uploaded.")
@@ -93,6 +184,35 @@ public struct SettingsView: View {
                 }
             }
 
+            if viewModel.canClearScanHistory || viewModel.canClearCleanupHistory {
+                Section("Scan and cleanup history") {
+                    if viewModel.canClearScanHistory {
+                        HStack {
+                            Button("Clear Scan History…", role: .destructive) { isConfirmingClearScans = true }
+                                .accessibilityIdentifier("settings.clearScanHistory")
+                                .confirmationDialog("Clear all scan history?", isPresented: $isConfirmingClearScans, titleVisibility: .visible) {
+                                    Button("Clear Scan History", role: .destructive) { Task { await viewModel.clearScanHistory() } }
+                                } message: {
+                                    Text("Size comparisons start again from your next scan. No files are touched.")
+                                }
+                            ClearStateLabel(state: viewModel.clearScanHistoryState)
+                        }
+                    }
+                    if viewModel.canClearCleanupHistory {
+                        HStack {
+                            Button("Clear Cleanup History…", role: .destructive) { isConfirmingClearCleanups = true }
+                                .accessibilityIdentifier("settings.clearCleanupHistory")
+                                .confirmationDialog("Clear all cleanup history?", isPresented: $isConfirmingClearCleanups, titleVisibility: .visible) {
+                                    Button("Clear Cleanup History", role: .destructive) { Task { await viewModel.clearCleanupHistory() } }
+                                } message: {
+                                    Text("Items already in the Trash stay there, but MacPulse can no longer put them back for you. Finder's Put Back still works.")
+                                }
+                            ClearStateLabel(state: viewModel.clearCleanupHistoryState)
+                        }
+                    }
+                }
+            }
+
             Section("About") {
                 switch viewModel.systemInfo {
                 case .idle, .loading:
@@ -117,6 +237,20 @@ public struct SettingsView: View {
         .formStyle(.grouped)
         .navigationTitle("Settings")
         .task { await viewModel.load() }
+        .task { await viewModel.loadLoginItem() }
+    }
+}
+
+private struct ClearStateLabel: View {
+    let state: SettingsViewModel.ClearHistoryState
+
+    var body: some View {
+        switch state {
+        case .idle: EmptyView()
+        case .clearing: ProgressView().controlSize(.small)
+        case .cleared: Label("History cleared", systemImage: "checkmark.circle").foregroundStyle(.secondary)
+        case .failed(let error): Label(error.userMessage, systemImage: "exclamationmark.triangle").foregroundStyle(.secondary)
+        }
     }
 }
 
