@@ -175,7 +175,11 @@ struct DuplicateSearch {
             candidates.append(DuplicateCandidate(
                 path: path, logicalBytes: size, allocatedBytes: Int64(values.totalFileAllocatedSize ?? 0),
                 modified: values.contentModificationDate, category: category,
-                device: snapshot.device, inode: snapshot.inode
+                device: snapshot.device, inode: snapshot.inode,
+                identity: FileIdentity(
+                    device: snapshot.device, inode: snapshot.inode, size: snapshot.size,
+                    modifiedSeconds: snapshot.modifiedSeconds, modifiedNanoseconds: snapshot.modifiedNanoseconds, isFolder: false
+                )
             ))
         }
         return subfolders
@@ -299,7 +303,7 @@ struct DuplicateSearch {
             candidate: DuplicateCandidate(
                 path: candidate.path, logicalBytes: candidate.logicalBytes, allocatedBytes: candidate.allocatedBytes,
                 modified: candidate.modified, category: candidate.category, device: candidate.device,
-                inode: candidate.inode, mayShareBlocks: true
+                inode: candidate.inode, mayShareBlocks: true, identity: candidate.identity
             ),
             otherLinks: file.otherLinks
         )

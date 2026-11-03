@@ -8,13 +8,13 @@ public struct CleanupScanOptions: Sendable, Equatable {
     public var minimumAgeDays: Int
     /// For large files: paths (with their sizes on disk) from the last Space Analyzer scan.
     public var largeFiles: [(path: String, allocatedBytes: Int64)]
-    /// For duplicates: marked copies and the copy each one duplicates.
-    public var duplicates: [(path: String, keptCopy: String)]
+    /// For duplicates: marked copies, with the kept copy each one duplicates.
+    public var duplicates: [MarkedDuplicate]
 
     public init(
         folder: String? = nil, minimumAgeDays: Int = 30,
         largeFiles: [(path: String, allocatedBytes: Int64)] = [],
-        duplicates: [(path: String, keptCopy: String)] = []
+        duplicates: [MarkedDuplicate] = []
     ) {
         self.folder = folder
         self.minimumAgeDays = minimumAgeDays
@@ -45,12 +45,15 @@ public protocol TrashService: Sendable {
         _ candidates: [CleanupCandidate],
         category: CleanupCategory,
         policy: CleanupSafetyPolicy,
-        progress: @escaping @Sendable (Int) -> Void
+        /// Called after each item with its result, so history can be saved as it happens.
+        progress: @escaping @Sendable (CleanupItemResult) -> Void
     ) async -> CleanupReport
 
     /// Moves an item from the Trash back to where it was, only if that place is free and
     /// still allowed by the safety policy.
-    func putBack(trashPath: String, to originalPath: String, policy: CleanupSafetyPolicy) async -> PutBackFailure?
+    /// `expected` is the identity recorded when the item was moved; a different item now at
+    /// the Trash path is never moved.
+    func putBack(trashPath: String, to originalPath: String, expected: FileIdentity?, policy: CleanupSafetyPolicy) async -> PutBackFailure?
 }
 
 /// Why an item couldn't be put back.
@@ -63,6 +66,8 @@ public enum PutBackFailure: Error, Sendable, Equatable {
     case originalFolderMissing
     /// The original place isn't one MacPulse may write to.
     case notAllowed
+    /// The item in the Trash isn't the one MacPulse moved there.
+    case differentItem
     case failed(String)
 }
 

@@ -7,9 +7,12 @@ import MacPulseShared
 /// Trash with `FileManager.trashItem`, so they can be put back. There is no permanent
 /// deletion.
 ///
-/// Immediately before each item, it checks again that the item exists, is not a symbolic
+/// Immediately before each item it checks again that the item exists, is not a symbolic
 /// link, is the same file or folder as in the preview (device, inode, and for files size
-/// and modification time) and is still allowed by the safety policy.
+/// and modification time), is still allowed by the safety policy, and meets its
+/// requirement (a duplicate's kept copy unchanged, an empty folder still empty). After
+/// the move it checks that what reached the Trash is that same item, and moves it back
+/// if not.
 public struct FileManagerTrashService: TrashService {
     public init() {}
 
@@ -17,55 +20,104 @@ public struct FileManagerTrashService: TrashService {
         _ candidates: [CleanupCandidate],
         category: CleanupCategory,
         policy: CleanupSafetyPolicy,
-        progress: @escaping @Sendable (Int) -> Void
+        progress: @escaping @Sendable (CleanupItemResult) -> Void
     ) async -> CleanupReport {
         var results: [CleanupItemResult] = []
         var stopped = false
-        for (index, candidate) in candidates.enumerated() {
+        for candidate in candidates {
             if Task.isCancelled {
                 stopped = true
                 break
             }
-            let outcome = Self.move(candidate, policy: policy)
+            let (outcome, identity) = Self.move(candidate, policy: policy)
             if case .failed = outcome {
                 Log.logger(.cleanup).error("Moving an item to the Trash failed")
             }
-            results.append(CleanupItemResult(path: candidate.path, allocatedBytes: candidate.allocatedBytes, outcome: outcome))
-            progress(index + 1)
+            let result = CleanupItemResult(path: candidate.path, allocatedBytes: candidate.allocatedBytes, outcome: outcome, identity: identity)
+            results.append(result)
+            progress(result)
             await Task.yield()
         }
-        return CleanupReport(category: category, finishedAt: Date(), items: results, isComplete: !stopped)
+        return CleanupReport(
+            category: category, finishedAt: Date(), items: results, isComplete: !stopped,
+            pickedFolders: policy.pickedFolders
+        )
     }
 
-    public func putBack(trashPath: String, to originalPath: String, policy: CleanupSafetyPolicy) async -> PutBackFailure? {
+    public func putBack(trashPath: String, to originalPath: String, expected: FileIdentity?, policy: CleanupSafetyPolicy) async -> PutBackFailure? {
         let trash = ScanPathPolicy.normalized(trashPath)
         let original = ScanPathPolicy.normalized(originalPath)
-        // Only from a Trash folder, only to a place MacPulse could have taken it from.
-        guard trash.contains("/.Trash/") || trash.contains("/.Trashes/") else { return .notInTrash }
+        // Only from this user's Trash or an external drive's Trash folder.
+        guard Self.isInTrashFolder(trash, homePath: policy.homePath) else { return .notInTrash }
         guard policy.verdict(for: original) == .allowed else { return .notAllowed }
-        guard Self.identity(atPath: trash) != nil else { return .notInTrash }
+        guard let current = Self.identity(atPath: trash), current.device >= 0 else { return .notInTrash }
+        // Moving keeps the inode: anything else at that Trash path is a different item.
+        if let expected, expected.device != current.device || expected.inode != current.inode {
+            return .differentItem
+        }
         guard Self.identity(atPath: original) == nil else { return .originalPlaceTaken }
         let folder = (original as NSString).deletingLastPathComponent
         guard Self.identity(atPath: folder)?.isFolder == true else { return .originalFolderMissing }
+        if let message = Self.restore(trash, to: original) { return .failed(message) }
+        return nil
+    }
+
+    static func move(_ candidate: CleanupCandidate, policy: CleanupSafetyPolicy) -> (CleanupItemOutcome, FileIdentity?) {
+        guard policy.verdict(for: candidate.path) == .allowed else { return (.skipped(.notAllowed), nil) }
+        guard let current = identity(atPath: candidate.path) else { return (.skipped(.missing), nil) }
+        guard candidate.identity.matches(current) else { return (.skipped(.changed), nil) }
+        if let unmet = unmetRequirement(candidate) { return (.skipped(unmet), nil) }
+        var resulting: NSURL?
+        do {
+            try FileManager.default.trashItem(at: URL(fileURLWithPath: candidate.path), resultingItemURL: &resulting)
+        } catch {
+            return (.failed(message: (error as NSError).localizedDescription), nil)
+        }
+        guard let trash = resulting?.path, !trash.isEmpty else {
+            return (.failed(message: String(localized: "macOS moved the item but didn't say where; look for it in the Trash.")), nil)
+        }
+        // If the item was swapped between the check and the move (for example a parent
+        // folder replaced by a link), what landed in the Trash isn't the checked item:
+        // move it back and report it as changed.
+        guard let landed = identity(atPath: trash), landed.device == current.device, landed.inode == current.inode else {
+            _ = restore(trash, to: candidate.path)
+            return (.skipped(.changed), nil)
+        }
+        return (.movedToTrash(trashPath: trash), landed)
+    }
+
+    /// `nil` when the candidate's requirement still holds.
+    static func unmetRequirement(_ candidate: CleanupCandidate) -> CleanupSkipReason? {
+        switch candidate.requirement {
+        case nil:
+            return nil
+        case .keptCopyUnchanged(let path, let expected):
+            guard ScanPathPolicy.normalized(path) != ScanPathPolicy.normalized(candidate.path),
+                  let kept = identity(atPath: path), expected.matches(kept) else { return .keptCopyChanged }
+            return nil
+        case .stillEmpty:
+            guard let items = try? FileManager.default.contentsOfDirectory(atPath: candidate.path) else { return .changed }
+            return items.allSatisfy { $0 == ".DS_Store" } ? nil : .notEmpty
+        }
+    }
+
+    /// Moves an item from a Trash folder back to its original place. Returns an error
+    /// message, or `nil` on success.
+    static func restore(_ trash: String, to original: String) -> String? {
         do {
             try FileManager.default.moveItem(atPath: trash, toPath: original)
             return nil
         } catch {
-            return .failed((error as NSError).localizedDescription)
+            return (error as NSError).localizedDescription
         }
     }
 
-    static func move(_ candidate: CleanupCandidate, policy: CleanupSafetyPolicy) -> CleanupItemOutcome {
-        guard policy.verdict(for: candidate.path) == .allowed else { return .skipped(.notAllowed) }
-        guard let current = identity(atPath: candidate.path) else { return .skipped(.missing) }
-        guard candidate.identity.matches(current) else { return .skipped(.changed) }
-        do {
-            var resulting: NSURL?
-            try FileManager.default.trashItem(at: URL(fileURLWithPath: candidate.path), resultingItemURL: &resulting)
-            return .movedToTrash(trashPath: resulting?.path ?? "")
-        } catch {
-            return .failed(message: (error as NSError).localizedDescription)
-        }
+    static func isInTrashFolder(_ path: String, homePath: String) -> Bool {
+        let path = ScanPathPolicy.comparable(path)
+        if ScanPathPolicy.path(path, isInside: ScanPathPolicy.comparable(homePath + "/.Trash")) { return true }
+        // External drives: /Volumes/<name>/.Trashes/<uid>/...
+        let components = path.split(separator: "/")
+        return components.count >= 5 && components[0] == "volumes" && components[2] == ".trashes"
     }
 
     /// The item's identity as `lstat` sees it; `nil` when missing. A symbolic link has its

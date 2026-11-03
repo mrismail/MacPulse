@@ -27,6 +27,8 @@ public struct CleanerView: View {
                 }
             }
             .frame(width: 200)
+            // Changing category during a cleanup would leave its result under the wrong one.
+            .disabled(viewModel.isCleaning)
             .accessibilityIdentifier("cleaner.categories")
             Divider()
             ScrollView {
@@ -54,7 +56,9 @@ public struct CleanerView: View {
         ) {
             Button("Move to Trash", role: .destructive) { viewModel.confirmCleanup() }
                 .accessibilityIdentifier("cleaner.confirm")
+            // Escape cancels; nothing is moved by pressing a key alone.
             Button("Cancel", role: .cancel) { viewModel.cancelCleanup() }
+                .keyboardShortcut(.cancelAction)
                 .accessibilityIdentifier("cleaner.cancelConfirm")
         } message: {
             Text("Each item is checked again just before it is moved. You can put items back from the Trash until it is emptied.")
@@ -89,13 +93,18 @@ private struct CategoryReviewCard: View {
             }
             HStack {
                 Button(viewModel.list == nil ? "Review" : "Refresh") {
-                    Task { await viewModel.review() }
+                    viewModel.startReview()
                 }
-                .disabled(viewModel.needsFolder || viewModel.phase == .loading || CleanerPresentation.isCleaning(viewModel.phase))
+                .disabled(viewModel.needsFolder || viewModel.phase == .loading || viewModel.isCleaning)
                 .accessibilityIdentifier("cleaner.review")
                 if viewModel.phase == .loading {
                     ProgressView().controlSize(.small)
                 }
+            }
+            if let pickError = viewModel.pickError {
+                Label(pickError, systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(.orange)
+                    .accessibilityIdentifier("cleaner.pickError")
             }
             if let list = viewModel.list {
                 if let reason = list.unavailableReason {
@@ -316,17 +325,23 @@ enum CleanerPresentation {
     static func confirmationTitle(_ phase: CleanerViewModel.Phase) -> String {
         guard case .confirming(let items) = phase else { return "" }
         let size = ByteFormatting.string(fromByteCount: items.map(\.allocatedBytes).reduce(0, +))
-        return String(localized: "Move \(items.count) items (\(size)) to the Trash?")
+        return items.count == 1
+            ? String(localized: "Move 1 item (\(size)) to the Trash?")
+            : String(localized: "Move \(items.count) items (\(size)) to the Trash?")
     }
 
+    /// Whole localized phrases joined with the locale's list format (no hand-made
+    /// concatenation, so translations can reorder words).
     static func summary(_ report: CleanupReport) -> String {
         let size = ByteFormatting.string(fromByteCount: report.bytesMovedToTrash)
-        var text = String(localized: "\(report.moved.count) moved to the Trash (\(size))")
+        var parts = [String(localized: "\(report.moved.count) moved to the Trash (\(size))")]
         let skipped = report.items.filter { if case .skipped = $0.outcome { true } else { false } }.count
         let failed = report.items.filter { if case .failed = $0.outcome { true } else { false } }.count
-        if skipped > 0 { text += String(localized: ", \(skipped) skipped") }
-        if failed > 0 { text += String(localized: ", \(failed) failed") }
-        return text + "."
+        let restored = report.items.filter { $0.outcome == .putBack }.count
+        if skipped > 0 { parts.append(String(localized: "\(skipped) skipped")) }
+        if failed > 0 { parts.append(String(localized: "\(failed) failed")) }
+        if restored > 0 { parts.append(String(localized: "\(restored) put back")) }
+        return parts.formatted(.list(type: .and))
     }
 
     static func explanation(_ outcome: CleanupItemOutcome) -> String {
@@ -335,6 +350,8 @@ enum CleanerPresentation {
         case .skipped(.missing): String(localized: "Skipped: it no longer exists.")
         case .skipped(.changed): String(localized: "Skipped: it changed since the preview, so it was left alone.")
         case .skipped(.notAllowed): String(localized: "Skipped: MacPulse never removes this kind of item.")
+        case .skipped(.keptCopyChanged): String(localized: "Skipped: the copy that was to be kept is gone or changed, so this one was kept too.")
+        case .skipped(.notEmpty): String(localized: "Skipped: the folder isn't empty anymore.")
         case .failed(let message): String(localized: "macOS didn't move it: \(message)")
         case .putBack: String(localized: "Put back where it was.")
         }
@@ -346,6 +363,7 @@ enum CleanerPresentation {
         case .originalPlaceTaken: String(localized: "Something else now has its name in the original folder.")
         case .originalFolderMissing: String(localized: "The folder it came from no longer exists.")
         case .notAllowed: String(localized: "MacPulse can't put items back in that place.")
+        case .differentItem: String(localized: "A different item now has that name in the Trash, so it was left alone.")
         case .failed(let message): String(localized: "macOS didn't move it back: \(message)")
         }
     }

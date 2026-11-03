@@ -41,16 +41,16 @@ public struct PreviewTrashService: TrashService {
 
     public func moveToTrash(
         _ candidates: [CleanupCandidate], category: CleanupCategory, policy: CleanupSafetyPolicy,
-        progress: @escaping @Sendable (Int) -> Void
+        progress: @escaping @Sendable (CleanupItemResult) -> Void
     ) async -> CleanupReport {
         let items = candidates.map {
-            CleanupItemResult(path: $0.path, allocatedBytes: $0.allocatedBytes, outcome: .movedToTrash(trashPath: policy.homePath + "/.Trash/" + $0.name))
+            CleanupItemResult(path: $0.path, allocatedBytes: $0.allocatedBytes, outcome: .movedToTrash(trashPath: policy.homePath + "/.Trash/" + $0.name), identity: $0.identity)
         }
-        progress(items.count)
+        items.forEach(progress)
         return CleanupReport(category: category, finishedAt: Date(timeIntervalSince1970: 1_793_448_000), items: items, isComplete: true)
     }
 
-    public func putBack(trashPath: String, to originalPath: String, policy: CleanupSafetyPolicy) async -> PutBackFailure? {
+    public func putBack(trashPath: String, to originalPath: String, expected: FileIdentity?, policy: CleanupSafetyPolicy) async -> PutBackFailure? {
         nil
     }
 }

@@ -135,18 +135,92 @@ struct CleanupTests {
         let service = FileManagerTrashService()
         // Something new took the name: refuse instead of overwriting it.
         try Tree.write(home + "/Downloads/keep-me.txt", bytes: 5)
-        let blocked = await service.putBack(trashPath: trashPath, to: home + "/Downloads/keep-me.txt", policy: Self.policy(home))
+        let expected = report.items.first?.identity
+        #expect(expected != nil, "The moved item's identity is recorded for Put Back")
+        let blocked = await service.putBack(trashPath: trashPath, to: home + "/Downloads/keep-me.txt", expected: expected, policy: Self.policy(home))
         #expect(blocked == .originalPlaceTaken)
         try FileManager.default.removeItem(atPath: home + "/Downloads/keep-me.txt")
 
-        let restored = await service.putBack(trashPath: trashPath, to: home + "/Downloads/keep-me.txt", policy: Self.policy(home))
+        // A different item at the Trash path is never restored.
+        let wrong = FileIdentity(device: expected?.device ?? 0, inode: (expected?.inode ?? 0) + 1, size: 0, modifiedSeconds: 0, modifiedNanoseconds: 0, isFolder: false)
+        let different = await service.putBack(trashPath: trashPath, to: home + "/Downloads/keep-me.txt", expected: wrong, policy: Self.policy(home))
+        #expect(different == .differentItem)
+
+        let restored = await service.putBack(trashPath: trashPath, to: home + "/Downloads/keep-me.txt", expected: expected, policy: Self.policy(home))
         #expect(restored == nil)
         #expect(FileManager.default.fileExists(atPath: home + "/Downloads/keep-me.txt"))
-        let again = await service.putBack(trashPath: trashPath, to: home + "/Downloads/keep-me.txt", policy: Self.policy(home))
+        let again = await service.putBack(trashPath: trashPath, to: home + "/Downloads/keep-me.txt", expected: expected, policy: Self.policy(home))
         #expect(again == .notInTrash)
         // Never into a protected place, and never from outside a Trash folder.
-        let elsewhere = await service.putBack(trashPath: home + "/Downloads/keep-me.txt", to: home + "/Library/Preferences/x", policy: Self.policy(home))
+        let elsewhere = await service.putBack(trashPath: home + "/Downloads/keep-me.txt", to: home + "/Library/Preferences/x", expected: nil, policy: Self.policy(home))
         #expect(elsewhere == .notInTrash)
+    }
+
+    static func marked(_ path: String, kept: String) throws -> MarkedDuplicate {
+        MarkedDuplicate(
+            path: path, identity: try #require(FileManagerTrashService.identity(atPath: path)),
+            keptPath: kept, keptIdentity: try #require(FileManagerTrashService.identity(atPath: kept))
+        )
+    }
+
+    @Test func aDuplicateIsKeptWhenTheKeptCopyChangedOrVanished() async throws {
+        let home = try Tree.makeRoot()
+        defer { Tree.cleanUp(home) }
+        try Tree.write(home + "/a/photo.jpg", bytes: 3_000)
+        try Tree.write(home + "/b/photo.jpg", bytes: 3_000)
+        try Tree.write(home + "/c/photo.jpg", bytes: 3_000)
+        try Tree.write(home + "/d/photo.jpg", bytes: 3_000)
+        let source = LiveCleanupCandidateSource(homePath: home)
+        let list = await source.candidates(
+            for: .duplicates,
+            options: CleanupScanOptions(duplicates: [
+                try Self.marked(home + "/b/photo.jpg", kept: home + "/a/photo.jpg"),
+                try Self.marked(home + "/d/photo.jpg", kept: home + "/c/photo.jpg"),
+            ]),
+            policy: Self.policy(home)
+        )
+        #expect(list.candidates.count == 2)
+        // After the preview, one kept copy is edited and the other is deleted.
+        try Tree.write(home + "/a/photo.jpg", bytes: 3_500)
+        try FileManager.default.removeItem(atPath: home + "/c/photo.jpg")
+
+        let report = await FileManagerTrashService().moveToTrash(list.candidates, category: .duplicates, policy: Self.policy(home)) { _ in }
+        defer { Self.restore(report) }
+        #expect(report.moved.isEmpty, "The last copy is never moved")
+        #expect(report.items.map(\.outcome) == [.skipped(.keptCopyChanged), .skipped(.keptCopyChanged)])
+        #expect(FileManager.default.fileExists(atPath: home + "/d/photo.jpg"))
+    }
+
+    @Test func aDuplicateEditedAfterTheComparisonIsNotOffered() async throws {
+        let home = try Tree.makeRoot()
+        defer { Tree.cleanUp(home) }
+        try Tree.write(home + "/a/photo.jpg", bytes: 3_000)
+        try Tree.write(home + "/b/photo.jpg", bytes: 3_000)
+        let marked = try Self.marked(home + "/b/photo.jpg", kept: home + "/a/photo.jpg")
+        try Tree.write(home + "/b/photo.jpg", bytes: 3_100)  // edited since the comparison
+        let list = await LiveCleanupCandidateSource(homePath: home).candidates(
+            for: .duplicates, options: CleanupScanOptions(duplicates: [marked]), policy: Self.policy(home)
+        )
+        #expect(list.candidates.isEmpty)
+    }
+
+    @Test func aFolderThatGotContentIsNotMovedAsEmpty() async throws {
+        let home = try Tree.makeRoot()
+        defer { Tree.cleanUp(home) }
+        let projects = home + "/Projects"
+        try FileManager.default.createDirectory(atPath: projects + "/empty", withIntermediateDirectories: true)
+        let policy = CleanupSafetyPolicy(homePath: home, pickedFolders: [projects])
+        let list = await LiveCleanupCandidateSource(homePath: home).candidates(
+            for: .emptyFolders, options: CleanupScanOptions(folder: projects), policy: policy
+        )
+        let empty = try #require(list.candidates.first)
+        #expect(empty.requirement == .stillEmpty)
+        try Tree.write(projects + "/empty/new-work.txt", bytes: 10)  // saved after the preview
+
+        let report = await FileManagerTrashService().moveToTrash([empty], category: .emptyFolders, policy: policy) { _ in }
+        defer { Self.restore(report) }
+        #expect(report.items.first?.outcome == .skipped(.notEmpty))
+        #expect(FileManager.default.fileExists(atPath: projects + "/empty/new-work.txt"))
     }
 
     // MARK: Candidates
@@ -202,7 +276,7 @@ struct CleanupTests {
         let source = LiveCleanupCandidateSource(homePath: home)
         let list = await source.candidates(
             for: .duplicates,
-            options: CleanupScanOptions(duplicates: [(path: home + "/b/photo.jpg", keptCopy: home + "/a/photo.jpg")]),
+            options: CleanupScanOptions(duplicates: [try Self.marked(home + "/b/photo.jpg", kept: home + "/a/photo.jpg")]),
             policy: Self.policy(home)
         )
         #expect(list.candidates.count == 1)

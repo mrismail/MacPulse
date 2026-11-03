@@ -78,6 +78,30 @@ public struct FileIdentity: Sendable, Hashable, Codable {
     }
 }
 
+/// A condition that must still hold immediately before an item is moved.
+public enum CleanupRequirement: Sendable, Hashable {
+    /// A duplicate: the copy that is kept must still be exactly what was compared.
+    case keptCopyUnchanged(path: String, identity: FileIdentity)
+    /// An empty folder: it must still hold nothing but a `.DS_Store`.
+    case stillEmpty
+}
+
+/// A copy marked in the Duplicate Finder, with what both it and the kept copy were when
+/// their bytes were compared.
+public struct MarkedDuplicate: Sendable, Hashable {
+    public let path: String
+    public let identity: FileIdentity
+    public let keptPath: String
+    public let keptIdentity: FileIdentity
+
+    public init(path: String, identity: FileIdentity, keptPath: String, keptIdentity: FileIdentity) {
+        self.path = path
+        self.identity = identity
+        self.keptPath = keptPath
+        self.keptIdentity = keptIdentity
+    }
+}
+
 /// One item the Cleaner proposes, with the reason it was proposed.
 public struct CleanupCandidate: Identifiable, Sendable, Hashable {
     public var id: String { path }
@@ -91,11 +115,14 @@ public struct CleanupCandidate: Identifiable, Sendable, Hashable {
     public let identity: FileIdentity
     /// Something to know before removing it (e.g. "Slack is running").
     public let warning: String?
+    /// Checked again immediately before moving, on top of the identity.
+    public let requirement: CleanupRequirement?
 
     public init(
         path: String, category: CleanupCategory, reason: String, allocatedBytes: Int64,
-        modified: Date?, identity: FileIdentity, warning: String? = nil
+        modified: Date?, identity: FileIdentity, warning: String? = nil, requirement: CleanupRequirement? = nil
     ) {
+        self.requirement = requirement
         self.path = path
         self.category = category
         self.reason = reason
@@ -136,6 +163,10 @@ public enum CleanupSkipReason: String, Sendable, Hashable, Codable {
     case changed
     /// The safety policy doesn't allow it (anymore).
     case notAllowed
+    /// A duplicate whose kept copy is gone or changed since the comparison.
+    case keptCopyChanged
+    /// A folder that is no longer empty.
+    case notEmpty
 }
 
 /// What happened to one item.
@@ -159,11 +190,14 @@ public struct CleanupItemResult: Identifiable, Sendable, Hashable, Codable {
     public let path: String
     public let allocatedBytes: Int64
     public let outcome: CleanupItemOutcome
+    /// The item's identity when it was moved, so Put Back only restores that exact item.
+    public let identity: FileIdentity?
 
-    public init(path: String, allocatedBytes: Int64, outcome: CleanupItemOutcome) {
+    public init(path: String, allocatedBytes: Int64, outcome: CleanupItemOutcome, identity: FileIdentity? = nil) {
         self.path = path
         self.allocatedBytes = allocatedBytes
         self.outcome = outcome
+        self.identity = identity
     }
 }
 
@@ -173,14 +207,17 @@ public struct CleanupReport: Identifiable, Sendable, Equatable, Codable {
     public let category: CleanupCategory
     public let finishedAt: Date
     public let items: [CleanupItemResult]
-    /// `false` when the user stopped it; items not reached are not listed.
+    /// `false` when the user stopped it (or MacPulse quit); items not reached are not listed.
     public let isComplete: Bool
+    /// Folders the user had picked, so Put Back uses the same rules later.
+    public let pickedFolders: [String]?
 
-    public init(category: CleanupCategory, finishedAt: Date, items: [CleanupItemResult], isComplete: Bool) {
+    public init(category: CleanupCategory, finishedAt: Date, items: [CleanupItemResult], isComplete: Bool, pickedFolders: [String]? = nil) {
         self.category = category
         self.finishedAt = finishedAt
         self.items = items
         self.isComplete = isComplete
+        self.pickedFolders = pickedFolders
     }
 
     public var moved: [CleanupItemResult] { items.filter(\.outcome.isMoved) }

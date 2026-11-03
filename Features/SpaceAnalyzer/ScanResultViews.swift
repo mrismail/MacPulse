@@ -15,14 +15,18 @@ struct ScanControlsCard: View {
     var body: some View {
         Card("Scan", systemImage: "magnifyingglass") {
             HStack(spacing: Spacing.small) {
-                Button("Scan Home Folder") { viewModel.scanHomeFolder() }
-                    .accessibilityIdentifier("space.scanHome")
-                if let volume = viewModel.selectedVolume {
-                    Button("Scan \(volume.name)") { viewModel.scanSelectedVolume() }
-                        .accessibilityIdentifier("space.scanVolume")
+                Group {
+                    Button("Scan Home Folder") { viewModel.scanHomeFolder() }
+                        .accessibilityIdentifier("space.scanHome")
+                    if let volume = viewModel.selectedVolume {
+                        Button("Scan \(volume.name)") { viewModel.scanSelectedVolume() }
+                            .accessibilityIdentifier("space.scanVolume")
+                    }
+                    Button("Choose Folder…", action: pickFolder)
+                        .accessibilityIdentifier("space.chooseFolder")
                 }
-                Button("Choose Folder…", action: pickFolder)
-                    .accessibilityIdentifier("space.chooseFolder")
+                // One scan at a time: stop the current one first.
+                .disabled(viewModel.isScanning)
                 Spacer()
                 Button("Excluded Folders (\(viewModel.exclusions.count))…", action: editExclusions)
                     .accessibilityIdentifier("space.editExclusions")
@@ -66,6 +70,12 @@ struct ScanSummaryCard: View {
 
     var body: some View {
         Card(result.isComplete ? String(localized: "Scan Results") : String(localized: "Partial Results (stopped)"), systemImage: "chart.bar.doc.horizontal") {
+            if viewModel.movedSinceScan > 0 {
+                Label("\(viewModel.movedSinceScan) items were moved to the Trash since this scan. Totals are from before; scan again to update them.", systemImage: "arrow.clockwise")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("space.outdated")
+            }
             Text(result.rootPath)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -111,19 +121,21 @@ struct FolderTreeCard: View {
 
     var body: some View {
         Card("Folders", systemImage: "folder") {
+            let breadcrumb = viewModel.breadcrumb
             HStack(spacing: Spacing.xSmall) {
                 Button {
                     viewModel.goUp()
                 } label: {
                     Label("Up", systemImage: "chevron.up")
                 }
-                .disabled(viewModel.breadcrumb.count < 2)
+                .disabled(breadcrumb.count < 2)
                 .accessibilityIdentifier("space.up")
-                ForEach(viewModel.breadcrumb) { node in
+                ForEach(breadcrumb) { node in
                     Button(node.name) { viewModel.open(node.id) }
                         .buttonStyle(.link)
-                    if node.id != viewModel.breadcrumb.last?.id {
-                        Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary)
+                    if node.id != breadcrumb.last?.id {
+                        // "forward" mirrors in right-to-left languages (ADR-008).
+                        Image(systemName: "chevron.forward").font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -253,15 +265,22 @@ struct CategoriesCard: View {
                 )
                 .foregroundStyle(total.category.isTypicallyRecoverable ? Color.orange : Color.accentColor)
                 .annotation(position: .trailing) {
-                    Text(ByteFormatting.string(fromByteCount: total.allocatedBytes))
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                    // Shape and words as well as color: "♻︎ cleanable" marks recoverable categories.
+                    HStack(spacing: 2) {
+                        if total.category.isTypicallyRecoverable {
+                            Image(systemName: "arrow.3.trianglepath")
+                            Text("cleanable")
+                        }
+                        Text(ByteFormatting.string(fromByteCount: total.allocatedBytes))
+                    }
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
                 }
             }
             .chartXAxis(.hidden)
             .frame(height: CGFloat(max(1, result.categories.count)) * 28 + 20)
             .accessibilityIdentifier("space.categories")
-            Text("Orange categories are usually safe to clean up. Categories come from file names and locations; contents are never read.")
+            Text("Categories marked cleanable are usually safe to clean up. Categories come from file names and locations; contents are never read.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

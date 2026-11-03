@@ -63,14 +63,20 @@ public final class AppModel {
         let spaceAnalyzer = self.spaceAnalyzer
         let duplicateFinder = self.duplicateFinder
         let overview = self.overview
+        let settings = self.settings
         cleaner.connect(
             largeFiles: { spaceAnalyzer.largeFilesForCleanup },
             duplicates: { duplicateFinder.markedCopies },
             exclusions: { scanSettings.loadExclusions() },
-            initialAgeDays: settings.preferences.cleanupDownloadsAgeDays,
+            ageDays: (
+                get: { settings.preferences.cleanupDownloadsAgeDays },
+                set: { days in settings.update { $0.cleanupDownloadsAgeDays = days } }
+            ),
             didClean: { report in
                 // Storage refresh: free space, history and the other screens' results.
-                duplicateFinder.forget(Set(report.moved.map(\.path)))
+                let moved = Set(report.moved.map(\.path))
+                duplicateFinder.forget(moved)
+                spaceAnalyzer.forget(moved)
                 await spaceAnalyzer.loadVolumes()
                 await overview.loadStorage()
             }

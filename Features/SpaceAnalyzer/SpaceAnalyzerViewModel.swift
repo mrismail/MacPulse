@@ -191,7 +191,10 @@ public final class SpaceAnalyzerViewModel {
     }
 
     public func scan(_ rootPath: String) {
+        guard !isScanning else { return }  // one scan at a time; Stop first
         scanTask?.cancel()
+        scanGeneration += 1
+        let generation = scanGeneration
         let root = ScanPathPolicy.normalized(rootPath)
         let policy = ScanPathPolicy(
             homePath: homePath,
@@ -204,13 +207,36 @@ public final class SpaceAnalyzerViewModel {
         let scanner = scanner
         // The view model lives as long as the app; holding it during a scan is fine.
         let report: @Sendable (ScanProgress) -> Void = { progress in
-            Task { @MainActor in self.update(progress) }
+            Task { @MainActor in self.update(progress, generation: generation) }
         }
         scanTask = Task {
             let result = await scanner.scan(request, progress: report)
+            // Only the newest scan may show or record its result.
+            guard generation == self.scanGeneration else { return }
             self.finish(result)
             await self.record(result)
         }
+    }
+
+    @ObservationIgnored private var scanGeneration = 0
+
+    /// Items the Cleaner moved to the Trash since this scan.
+    public private(set) var movedSinceScan = 0
+
+    /// Drops items the Cleaner moved to the Trash from the results and notes that the
+    /// totals are from before the cleanup.
+    public func forget(_ paths: Set<String>) {
+        guard let result, !paths.isEmpty else { return }
+        let largest = result.largestFiles.filter { !paths.contains($0.id) }
+        let removed = result.largestFiles.count - largest.count
+        let inside = paths.filter { ScanPathPolicy.path($0, isInside: result.rootPath) }.count
+        guard removed > 0 || inside > 0 else { return }
+        movedSinceScan += max(removed, inside)
+        state = .finished(ScanResult(
+            rootPath: result.rootPath, startedAt: result.startedAt, finishedAt: result.finishedAt,
+            isComplete: result.isComplete, root: result.root, largestFiles: largest,
+            categories: result.categories, skipped: result.skipped, itemsScanned: result.itemsScanned
+        ))
     }
 
     public func cancelScan() {
@@ -222,12 +248,13 @@ public final class SpaceAnalyzerViewModel {
         await scanTask?.value
     }
 
-    private func update(_ progress: ScanProgress) {
-        guard isScanning else { return }
+    private func update(_ progress: ScanProgress, generation: Int) {
+        guard isScanning, generation == scanGeneration else { return }
         state = .scanning(progress)
     }
 
     private func finish(_ result: ScanResult) {
+        movedSinceScan = 0
         state = .finished(result)
         scanTask = nil
     }

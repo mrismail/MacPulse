@@ -30,11 +30,16 @@ public final class CleanerViewModel {
     // Options
     public private(set) var downloadsFolder: String?
     public private(set) var emptyFoldersRoot: String?
-    public private(set) var minimumAgeDays = 30
+    /// Why the last folder choice was refused, if it was.
+    public private(set) var pickError: String?
+    private var storedAgeDays = 30
+
+    /// One setting shared with Settings (ADR-016): read and saved through the connection.
+    public var minimumAgeDays: Int { ageDays() }
 
     public func setMinimumAgeDays(_ days: Int) {
         guard days != minimumAgeDays else { return }
-        minimumAgeDays = days
+        saveAgeDays(days)
         if selectedCategory == .oldDownloads { reloadIfReviewing() }
     }
 
@@ -44,10 +49,15 @@ public final class CleanerViewModel {
     @ObservationIgnored private let homePath: String
     @ObservationIgnored private let appDataPath: String?
     @ObservationIgnored private var largeFiles: @MainActor () -> [(path: String, allocatedBytes: Int64)] = { [] }
-    @ObservationIgnored private var duplicates: @MainActor () -> [(path: String, keptCopy: String)] = { [] }
+    @ObservationIgnored private var duplicates: @MainActor () -> [MarkedDuplicate] = { [] }
     @ObservationIgnored private var didClean: @MainActor (CleanupReport) async -> Void = { _ in }
     @ObservationIgnored private var exclusions: @MainActor () -> [String] = { [] }
-    @ObservationIgnored private var task: Task<Void, Never>?
+    @ObservationIgnored private var ageDays: @MainActor () -> Int = { 30 }
+    @ObservationIgnored private var saveAgeDays: @MainActor (Int) -> Void = { _ in }
+    @ObservationIgnored private var reviewTask: Task<Void, Never>?
+    @ObservationIgnored private var cleanupTask: Task<Void, Never>?
+    /// Only the newest review may show its result.
+    @ObservationIgnored private var reviewGeneration = 0
 
     public init(
         source: any CleanupCandidateSource,
@@ -61,21 +71,26 @@ public final class CleanerViewModel {
         historyRepository = history
         self.homePath = homePath
         self.appDataPath = appDataPath
+        ageDays = { [unowned self] in self.storedAgeDays }
+        saveAgeDays = { [unowned self] in self.storedAgeDays = $0 }
     }
 
     /// Connects the other screens: where large files and marked duplicates come from, and
     /// what to refresh after a cleanup.
     public func connect(
         largeFiles: @escaping @MainActor () -> [(path: String, allocatedBytes: Int64)],
-        duplicates: @escaping @MainActor () -> [(path: String, keptCopy: String)],
+        duplicates: @escaping @MainActor () -> [MarkedDuplicate],
         exclusions: @escaping @MainActor () -> [String] = { [] },
-        initialAgeDays: Int = 30,
+        ageDays: (get: @MainActor () -> Int, set: @MainActor (Int) -> Void)? = nil,
         didClean: @escaping @MainActor (CleanupReport) async -> Void
     ) {
         self.largeFiles = largeFiles
         self.duplicates = duplicates
         self.exclusions = exclusions
-        minimumAgeDays = initialAgeDays
+        if let ageDays {
+            self.ageDays = ageDays.get
+            saveAgeDays = ageDays.set
+        }
         self.didClean = didClean
     }
 
@@ -88,9 +103,16 @@ public final class CleanerViewModel {
 
     // MARK: Categories
 
+    /// `true` while items are being moved; categories can't change until it finishes.
+    public var isCleaning: Bool {
+        if case .cleaning = phase { return true }
+        return false
+    }
+
     public func select(_ category: CleanupCategory) {
-        guard category != selectedCategory || list == nil else { return }
-        task?.cancel()
+        guard !isCleaning, category != selectedCategory || list == nil else { return }
+        reviewTask?.cancel()
+        reviewGeneration += 1
         selectedCategory = category
         list = nil
         selectedPaths = []
@@ -103,14 +125,27 @@ public final class CleanerViewModel {
         await review()
     }
 
+    /// Picking a folder allows the items inside it, so system locations, the home folder,
+    /// standard folders and drive roots are refused.
     public func chooseDownloadsFolder(_ path: String) {
+        guard accept(path) else { return }
         downloadsFolder = ScanPathPolicy.normalized(path)
         reloadIfReviewing()
     }
 
     public func chooseEmptyFoldersRoot(_ path: String) {
+        guard accept(path) else { return }
         emptyFoldersRoot = ScanPathPolicy.normalized(path)
         reloadIfReviewing()
+    }
+
+    private func accept(_ path: String) -> Bool {
+        if case .refused(let reason) = CleanupSafetyPolicy(homePath: homePath).verdict(forPick: path) {
+            pickError = reason
+            return false
+        }
+        pickError = nil
+        return true
     }
 
     /// `true` when the category needs a folder chosen first.
@@ -125,18 +160,27 @@ public final class CleanerViewModel {
     /// The Trash category is information only: MacPulse never deletes permanently.
     public var isReadOnlyCategory: Bool { selectedCategory == .trash }
 
-    var policy: CleanupSafetyPolicy {
-        CleanupSafetyPolicy(
-            homePath: homePath,
-            pickedFolders: [downloadsFolder, emptyFoldersRoot].compactMap { $0 },
-            appDataPath: appDataPath,
-            excludedFolders: exclusions()
-        )
+    /// The policy for the open category: a picked folder unlocks items only for the
+    /// category it was picked for.
+    var policy: CleanupSafetyPolicy { policy(for: selectedCategory) }
+
+    func policy(for category: CleanupCategory, pickedFolders: [String]? = nil) -> CleanupSafetyPolicy {
+        let picked = pickedFolders ?? {
+            switch category {
+            case .oldDownloads: [downloadsFolder].compactMap { $0 }
+            case .emptyFolders: [emptyFoldersRoot].compactMap { $0 }
+            default: []
+            }
+        }()
+        return CleanupSafetyPolicy(homePath: homePath, pickedFolders: picked, appDataPath: appDataPath, excludedFolders: exclusions())
     }
 
     // MARK: Review
 
     public func review() async {
+        guard !isCleaning else { return }
+        reviewGeneration += 1
+        let generation = reviewGeneration
         phase = .loading
         let category = selectedCategory
         let options = CleanupScanOptions(
@@ -146,7 +190,8 @@ public final class CleanerViewModel {
             duplicates: category == .duplicates ? duplicates() : []
         )
         let found = await source.candidates(for: category, options: options, policy: policy)
-        guard category == selectedCategory else { return }
+        // A newer review (or a category change) wins; an older result never overwrites it.
+        guard generation == reviewGeneration, category == selectedCategory, !isCleaning else { return }
         list = found
         // Copies marked in the Duplicate Finder were already chosen there; everything else
         // starts unselected.
@@ -155,8 +200,15 @@ public final class CleanerViewModel {
     }
 
     private func reloadIfReviewing() {
-        guard list != nil else { return }
-        task = Task { await review() }
+        guard list != nil, !isCleaning else { return }
+        reviewTask?.cancel()
+        reviewTask = Task { await review() }
+    }
+
+    /// Starts a review the view doesn't wait for (the Review button).
+    public func startReview() {
+        reviewTask?.cancel()
+        reviewTask = Task { await review() }
     }
 
     public var candidates: [CleanupCandidate] { list?.candidates ?? [] }
@@ -164,7 +216,7 @@ public final class CleanerViewModel {
     public func isSelected(_ candidate: CleanupCandidate) -> Bool { selectedPaths.contains(candidate.path) }
 
     public func toggle(_ candidate: CleanupCandidate) {
-        guard !isReadOnlyCategory else { return }
+        guard !isReadOnlyCategory, !isCleaning else { return }
         if selectedPaths.contains(candidate.path) {
             selectedPaths.remove(candidate.path)
         } else {
@@ -207,34 +259,77 @@ public final class CleanerViewModel {
     /// Step 2: the user confirmed. Moves exactly the confirmed items to the Trash.
     public func confirmCleanup() {
         guard case .confirming(let items) = phase else { return }
+        reviewTask?.cancel()
         let category = selectedCategory
         let policy = self.policy
         let trash = self.trash
         phase = .cleaning(done: 0, total: items.count)
-        let report: @Sendable (Int) -> Void = { done in
-            Task { @MainActor in self.updateProgress(done, total: items.count) }
+        // History is written before the first item moves and after each one, so a cleanup
+        // interrupted by quitting still records what went to the Trash (and can be put back).
+        let running = CleanupReport(category: category, finishedAt: Date(), items: [], isComplete: false, pickedFolders: policy.pickedFolders)
+        runningReport = running
+        runningIsStored = false
+        let report: @Sendable (CleanupItemResult) -> Void = { result in
+            Task { @MainActor in await self.record(result, total: items.count) }
         }
-        task = Task {
+        cleanupTask = Task {
+            await self.saveRunning()
             let result = await trash.moveToTrash(items, category: category, policy: policy, progress: report)
             await self.finish(result)
         }
     }
 
     public func stopCleanup() {
-        task?.cancel()
+        cleanupTask?.cancel()
     }
 
-    /// Waits for the running review or cleanup (tests).
+    /// Waits for the running review and cleanup (tests).
     public func waitForTask() async {
-        await task?.value
+        await reviewTask?.value
+        await cleanupTask?.value
     }
 
-    private func updateProgress(_ done: Int, total: Int) {
-        guard case .cleaning = phase else { return }
-        phase = .cleaning(done: done, total: total)
+    @ObservationIgnored private var runningReport: CleanupReport?
+    @ObservationIgnored private var runningIsStored = false
+
+    private func record(_ result: CleanupItemResult, total: Int) async {
+        guard isCleaning, let running = runningReport else { return }
+        let items = running.items.filter { $0.path != result.path } + [result]
+        runningReport = CleanupReport(
+            category: running.category, finishedAt: running.finishedAt, items: items,
+            isComplete: false, pickedFolders: running.pickedFolders
+        )
+        phase = .cleaning(done: items.count, total: total)
+        await saveRunning()
     }
 
-    private func finish(_ report: CleanupReport) async {
+    private func saveRunning() async {
+        guard let running = runningReport else { return }
+        do {
+            if runningIsStored {
+                try await historyRepository.replace(running)
+            } else {
+                try await historyRepository.append(running)
+                runningIsStored = true
+            }
+        } catch {
+            let appError = AppError.wrapping(error, userMessage: String(localized: "Couldn't save this cleanup to history."))
+            Log.logger(.cleanup).log(appError, context: "Cleanup history")
+            historyError = appError
+        }
+    }
+
+    private func finish(_ result: CleanupReport) async {
+        // Keep the running report's identity so the final version replaces it in history.
+        let started = runningReport?.finishedAt ?? result.finishedAt
+        let report = CleanupReport(
+            category: result.category, finishedAt: started, items: result.items,
+            isComplete: result.isComplete, pickedFolders: result.pickedFolders
+        )
+        runningReport = report
+        await saveRunning()
+        runningReport = nil
+        cleanupTask = nil
         phase = .finished(report)
         let moved = Set(report.moved.map(\.path))
         if let list {
@@ -245,13 +340,6 @@ public final class CleanerViewModel {
             )
         }
         selectedPaths.subtract(moved)
-        do {
-            try await historyRepository.append(report)
-        } catch {
-            let appError = AppError.wrapping(error, userMessage: String(localized: "Couldn't save this cleanup to history."))
-            Log.logger(.cleanup).log(appError, context: "Cleanup history")
-            historyError = appError
-        }
         await loadHistory()
         await didClean(report)
     }
@@ -282,12 +370,19 @@ public final class CleanerViewModel {
     /// Moves one item from the Trash back to where it was and records that in history.
     public func putBack(_ item: CleanupItemResult, in report: CleanupReport) async {
         guard case .movedToTrash(let trashPath) = item.outcome, !trashPath.isEmpty else { return }
-        if let failure = await trash.putBack(trashPath: trashPath, to: item.path, policy: policy) {
+        // The rules in force when the item was moved, so a folder picked then still counts.
+        let policy = policy(for: report.category, pickedFolders: report.pickedFolders ?? [])
+        if let failure = await trash.putBack(trashPath: trashPath, to: item.path, expected: item.identity, policy: policy) {
             putBackError = CleanerPresentation.putBackMessage(failure)
         } else {
             putBackError = nil
-            let items = report.items.map { $0.path == item.path ? CleanupItemResult(path: $0.path, allocatedBytes: $0.allocatedBytes, outcome: .putBack) : $0 }
-            let updated = CleanupReport(category: report.category, finishedAt: report.finishedAt, items: items, isComplete: report.isComplete)
+            let items = report.items.map {
+                $0.path == item.path ? CleanupItemResult(path: $0.path, allocatedBytes: $0.allocatedBytes, outcome: .putBack, identity: $0.identity) : $0
+            }
+            let updated = CleanupReport(
+                category: report.category, finishedAt: report.finishedAt, items: items,
+                isComplete: report.isComplete, pickedFolders: report.pickedFolders
+            )
             do {
                 try await historyRepository.replace(updated)
             } catch {
