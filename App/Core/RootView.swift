@@ -54,9 +54,17 @@ public struct RootView: View {
                 model.coordinator.select(.energy)
             }
         case .energy: EnergyView(viewModel: model.energy)
-        case .spaceAnalyzer: SpaceAnalyzerView(viewModel: model.spaceAnalyzer)
-        case .duplicateFinder: DuplicateFinderView(viewModel: model.duplicateFinder)
-        case .cleaner: CleanerView()
+        case .spaceAnalyzer:
+            SpaceAnalyzerView(viewModel: model.spaceAnalyzer) {
+                model.coordinator.select(.cleaner)
+                Task { await model.cleaner.open(.largeFiles) }
+            }
+        case .duplicateFinder:
+            DuplicateFinderView(viewModel: model.duplicateFinder) {
+                model.coordinator.select(.cleaner)
+                Task { await model.cleaner.open(.duplicates) }
+            }
+        case .cleaner: CleanerView(viewModel: model.cleaner)
         case .settings: SettingsView(viewModel: model.settings)
         }
     }

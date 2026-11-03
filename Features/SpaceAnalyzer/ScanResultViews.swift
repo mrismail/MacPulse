@@ -179,6 +179,7 @@ struct FolderTreeCard: View {
 
 struct LargestFilesCard: View {
     @Bindable var viewModel: SpaceAnalyzerViewModel
+    var reviewInCleaner: () -> Void = {}
     @State private var selection: ScanNode.ID?
 
     var body: some View {
@@ -199,6 +200,10 @@ struct LargestFilesCard: View {
                 }
                 .frame(maxWidth: 200)
                 .accessibilityIdentifier("space.sizeFilter")
+                Spacer()
+                Button("Review Large Files in Cleaner…", action: reviewInCleaner)
+                    .disabled(viewModel.largeFilesForCleanup.isEmpty)
+                    .accessibilityIdentifier("space.reviewInCleaner")
             }
             Table(viewModel.largestFiles, selection: $selection, sortOrder: $viewModel.fileSortOrder) {
                 TableColumn("Name", value: \.name) { node in

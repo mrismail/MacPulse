@@ -18,6 +18,7 @@ public final class AppModel {
     public let settings: SettingsViewModel
     public let spaceAnalyzer: SpaceAnalyzerViewModel
     public let duplicateFinder: DuplicateFinderViewModel
+    public let cleaner: CleanerViewModel
 
     public init(dependencies: AppDependencies, coordinator: AppCoordinator = AppCoordinator()) {
         self.dependencies = dependencies
@@ -27,7 +28,8 @@ public final class AppModel {
             batteryMonitor: dependencies.battery,
             energyMonitor: dependencies.energy,
             volumes: dependencies.volumes,
-            scanHistory: dependencies.scanHistory
+            scanHistory: dependencies.scanHistory,
+            cleanupHistory: dependencies.cleanupHistory
         )
         battery = BatteryViewModel(monitor: dependencies.battery)
         energy = EnergyViewModel(monitor: dependencies.energy)
@@ -42,10 +44,28 @@ public final class AppModel {
             finder: dependencies.duplicates,
             exclusions: { scanSettings.loadExclusions() }
         )
+        cleaner = CleanerViewModel(
+            source: dependencies.cleanupSource,
+            trash: dependencies.trash,
+            history: dependencies.cleanupHistory
+        )
         settings = SettingsViewModel(
             systemInfoRepository: dependencies.systemInfo,
             batteryMonitor: dependencies.battery,
             energyMonitor: dependencies.energy
+        )
+        let spaceAnalyzer = self.spaceAnalyzer
+        let duplicateFinder = self.duplicateFinder
+        let overview = self.overview
+        cleaner.connect(
+            largeFiles: { spaceAnalyzer.largeFilesForCleanup },
+            duplicates: { duplicateFinder.markedCopies },
+            didClean: { report in
+                // Storage refresh: free space, history and the other screens' results.
+                duplicateFinder.forget(Set(report.moved.map(\.path)))
+                await spaceAnalyzer.loadVolumes()
+                await overview.loadStorage()
+            }
         )
     }
 

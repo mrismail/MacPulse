@@ -30,6 +30,8 @@ public final class OverviewViewModel {
     public private(set) var reclaimableBytes: Metric<Int64> = .unavailable(.notYetSampled)
     /// The most recent scan, if any.
     public private(set) var lastScan: ScanSummary?
+    /// The most recent cleanup, if any.
+    public private(set) var lastCleanup: CleanupReport?
 
     public let upcomingFeatures: [PlannedFeature] = PlannedFeature.all
 
@@ -38,19 +40,22 @@ public final class OverviewViewModel {
     @ObservationIgnored private let energyMonitor: (any EnergyMonitoring)?
     @ObservationIgnored private let volumes: (any VolumeRepository)?
     @ObservationIgnored private let scanHistory: (any ScanHistoryRepository)?
+    @ObservationIgnored private let cleanupHistory: (any CleanupHistoryRepository)?
 
     public init(
         systemInfoRepository: any SystemInfoRepository,
         batteryMonitor: any BatteryMonitoring,
         energyMonitor: (any EnergyMonitoring)? = nil,
         volumes: (any VolumeRepository)? = nil,
-        scanHistory: (any ScanHistoryRepository)? = nil
+        scanHistory: (any ScanHistoryRepository)? = nil,
+        cleanupHistory: (any CleanupHistoryRepository)? = nil
     ) {
         self.systemInfoRepository = systemInfoRepository
         self.batteryMonitor = batteryMonitor
         self.energyMonitor = energyMonitor
         self.volumes = volumes
         self.scanHistory = scanHistory
+        self.cleanupHistory = cleanupHistory
     }
 
     /// Reads free space on the startup disk and the last scan. Called when the Overview
@@ -59,6 +64,9 @@ public final class OverviewViewModel {
         if let volumes {
             let startup = (try? await volumes.volumes())?.first { $0.kind == .startup }
             storageAvailableBytes = startup?.availableBytes ?? .unavailable(.notSupportedOnThisMac)
+        }
+        if let cleanupHistory {
+            lastCleanup = ((try? await cleanupHistory.reports()) ?? []).max { $0.finishedAt < $1.finishedAt }
         }
         guard let scanHistory else { return }
         let summaries = (try? await scanHistory.summaries()) ?? []

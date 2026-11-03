@@ -36,6 +36,7 @@ public struct OverviewView: View {
                     thisMacCard
                 }
 
+                if !viewModel.upcomingFeatures.isEmpty {
                 Card("More tools coming soon", systemImage: "sparkles") {
                     ForEach(viewModel.upcomingFeatures, id: \.title) { feature in
                         Label {
@@ -47,6 +48,7 @@ public struct OverviewView: View {
                             Image(systemName: feature.systemImage)
                         }
                     }
+                }
                 }
             }
             .padding(Spacing.large)
@@ -143,6 +145,12 @@ public struct OverviewView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .accessibilityIdentifier("overview.lastScan")
+            }
+            if let cleanup = viewModel.lastCleanup {
+                Text("Last cleanup: \(cleanup.moved.count) items moved to the Trash (\(ByteFormatting.string(fromByteCount: cleanup.bytesMovedToTrash))), \(cleanup.finishedAt.formatted(date: .abbreviated, time: .shortened))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("overview.lastCleanup")
             }
             Button("Open Space Analyzer", action: openSpaceAnalyzer)
                 .buttonStyle(.link)

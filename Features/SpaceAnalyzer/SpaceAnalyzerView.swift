@@ -10,9 +10,11 @@ public struct SpaceAnalyzerView: View {
     @Bindable private var viewModel: SpaceAnalyzerViewModel
     @State private var isPickingFolder = false
     @State private var isEditingExclusions = false
+    private let reviewLargeFiles: () -> Void
 
-    public init(viewModel: SpaceAnalyzerViewModel) {
+    public init(viewModel: SpaceAnalyzerViewModel, reviewLargeFiles: @escaping () -> Void = {}) {
         self.viewModel = viewModel
+        self.reviewLargeFiles = reviewLargeFiles
     }
 
     public var body: some View {
@@ -28,7 +30,7 @@ public struct SpaceAnalyzerView: View {
                     ScanSummaryCard(result: result, viewModel: viewModel, pickFolder: { isPickingFolder = true })
                     FolderTreeCard(viewModel: viewModel)
                     HStack(alignment: .top, spacing: Spacing.large) {
-                        LargestFilesCard(viewModel: viewModel)
+                        LargestFilesCard(viewModel: viewModel, reviewInCleaner: reviewLargeFiles)
                         CategoriesCard(result: result)
                             .frame(maxWidth: 340)
                     }
