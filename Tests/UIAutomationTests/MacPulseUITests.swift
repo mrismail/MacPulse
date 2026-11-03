@@ -29,6 +29,18 @@ final class MacPulseUITests: XCTestCase {
         app.descendants(matching: .any)[identifier].firstMatch
     }
 
+    /// Finds an element in a long, lazily built form by scrolling down until it appears.
+    @MainActor
+    private func scrolledTo(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
+        let target = element(identifier, in: app)
+        var attempts = 0
+        while !target.waitForExistence(timeout: 2), attempts < 12 {
+            app.scrollViews.firstMatch.scroll(byDeltaX: 0, deltaY: -400)
+            attempts += 1
+        }
+        return target
+    }
+
     @MainActor
     private func open(_ section: String, in app: XCUIApplication) {
         let item = element("sidebar.\(section)", in: app)
@@ -241,12 +253,22 @@ final class MacPulseUITests: XCTestCase {
     func testClearUsageHistoryAsksForConfirmation() {
         let app = launchApp()
         open("settings", in: app)
-        let clear = element("settings.clearUsageHistory", in: app)
-        XCTAssertTrue(clear.waitForExistence(timeout: 10))
+        let clear = scrolledTo("settings.clearUsageHistory", in: app)
+        XCTAssertTrue(clear.exists)
         clear.click()
         let confirm = app.sheets.buttons["Clear Usage History"].firstMatch
         XCTAssertTrue(confirm.waitForExistence(timeout: 5), "Clearing must ask for confirmation first")
         confirm.click()
+    }
+
+    @MainActor
+    func testSettingsOfferStartupMonitoringAndRestartNotice() {
+        let app = launchApp()
+        open("settings", in: app)
+        XCTAssertTrue(element("settings.openAtLogin", in: app).waitForExistence(timeout: 10))
+        XCTAssertTrue(element("settings.menuBar", in: app).exists)
+        XCTAssertTrue(element("settings.batteryInterval", in: app).exists)
+        XCTAssertTrue(scrolledTo("settings.clearCleanupHistory", in: app).exists)
     }
 
     @MainActor
@@ -263,8 +285,8 @@ final class MacPulseUITests: XCTestCase {
     func testClearHistoryAsksForConfirmation() {
         let app = launchApp()
         open("settings", in: app)
-        let clear = element("settings.clearBatteryHistory", in: app)
-        XCTAssertTrue(clear.waitForExistence(timeout: 10))
+        let clear = scrolledTo("settings.clearBatteryHistory", in: app)
+        XCTAssertTrue(clear.exists)
         clear.click()
         // Query the confirmation sheet: `app.buttons` also matches the Touch Bar copy.
         let confirm = app.sheets.buttons["Clear History"].firstMatch
