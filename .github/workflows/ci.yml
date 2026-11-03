@@ -198,8 +198,9 @@ jobs:
               errors.append("found %d groups (expected %d), largest %d (expected 100)" % (r["groupsFound"], r["groupsExpected"], r["largestGroup"]))
           if r["maxMainThreadStallMilliseconds"] > 250:
               errors.append("main thread stalled %.0f ms (budget 250 ms)" % r["maxMainThreadStallMilliseconds"])
-          if r["peakFootprintBytes"] > 200 * 1000 * 1000:
-              errors.append("peak memory %.0f MB (budget 200 MB)" % (r["peakFootprintBytes"] / 1e6))
+          # Measured 41 MB while reading 1.9 GB; reads are drained per file.
+          if r["peakFootprintBytes"] > 100 * 1000 * 1000:
+              errors.append("peak memory %.0f MB (budget 100 MB)" % (r["peakFootprintBytes"] / 1e6))
           if r["secondsToSearch"] > 180:
               errors.append("search took %.0f s (budget 180 s)" % r["secondsToSearch"])
           for e in errors:
