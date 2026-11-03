@@ -47,12 +47,32 @@ public protocol TrashService: Sendable {
         policy: CleanupSafetyPolicy,
         progress: @escaping @Sendable (Int) -> Void
     ) async -> CleanupReport
+
+    /// Moves an item from the Trash back to where it was, only if that place is free and
+    /// still allowed by the safety policy.
+    func putBack(trashPath: String, to originalPath: String, policy: CleanupSafetyPolicy) async -> PutBackFailure?
+}
+
+/// Why an item couldn't be put back.
+public enum PutBackFailure: Error, Sendable, Equatable {
+    /// It is no longer in the Trash (emptied or moved).
+    case notInTrash
+    /// Something else is at the original place now.
+    case originalPlaceTaken
+    /// The folder it came from is gone.
+    case originalFolderMissing
+    /// The original place isn't one MacPulse may write to.
+    case notAllowed
+    case failed(String)
 }
 
 /// Past cleanups (kept 30 days).
 public protocol CleanupHistoryRepository: Sendable {
     func append(_ report: CleanupReport) async throws
     func reports() async throws -> [CleanupReport]
+    /// Replaces a stored report (e.g. after an item was put back).
+    func replace(_ report: CleanupReport) async throws
+    func deleteAll() async throws
 }
 
 public actor InMemoryCleanupHistory: CleanupHistoryRepository {
@@ -60,4 +80,8 @@ public actor InMemoryCleanupHistory: CleanupHistoryRepository {
     public init(_ reports: [CleanupReport] = []) { stored = reports }
     public func append(_ report: CleanupReport) { stored.append(report) }
     public func reports() -> [CleanupReport] { stored }
+    public func replace(_ report: CleanupReport) {
+        if let index = stored.firstIndex(where: { $0.id == report.id }) { stored[index] = report }
+    }
+    public func deleteAll() { stored.removeAll() }
 }

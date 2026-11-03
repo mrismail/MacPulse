@@ -19,6 +19,9 @@ actor CleanerRecordingTrash: TrashService {
         }
         return CleanupReport(category: category, finishedAt: Date(), items: items, isComplete: true)
     }
+    nonisolated func putBack(trashPath: String, to originalPath: String, policy: CleanupSafetyPolicy) async -> PutBackFailure? {
+        nil
+    }
     private func record(_ paths: [String]) { calls.append(paths) }
 }
 

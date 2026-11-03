@@ -37,6 +37,24 @@ public struct FileManagerTrashService: TrashService {
         return CleanupReport(category: category, finishedAt: Date(), items: results, isComplete: !stopped)
     }
 
+    public func putBack(trashPath: String, to originalPath: String, policy: CleanupSafetyPolicy) async -> PutBackFailure? {
+        let trash = ScanPathPolicy.normalized(trashPath)
+        let original = ScanPathPolicy.normalized(originalPath)
+        // Only from a Trash folder, only to a place MacPulse could have taken it from.
+        guard trash.contains("/.Trash/") || trash.contains("/.Trashes/") else { return .notInTrash }
+        guard policy.verdict(for: original) == .allowed else { return .notAllowed }
+        guard Self.identity(atPath: trash) != nil else { return .notInTrash }
+        guard Self.identity(atPath: original) == nil else { return .originalPlaceTaken }
+        let folder = (original as NSString).deletingLastPathComponent
+        guard Self.identity(atPath: folder)?.isFolder == true else { return .originalFolderMissing }
+        do {
+            try FileManager.default.moveItem(atPath: trash, toPath: original)
+            return nil
+        } catch {
+            return .failed((error as NSError).localizedDescription)
+        }
+    }
+
     static func move(_ candidate: CleanupCandidate, policy: CleanupSafetyPolicy) -> CleanupItemOutcome {
         guard policy.verdict(for: candidate.path) == .allowed else { return .skipped(.notAllowed) }
         guard let current = identity(atPath: candidate.path) else { return .skipped(.missing) }
