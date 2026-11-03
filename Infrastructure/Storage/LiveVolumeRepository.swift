@@ -78,7 +78,7 @@ public struct LiveVolumeRepository: VolumeRepository {
                 NSWorkspace.didRenameVolumeNotification,
             ]
             for name in names {
-                observers.add(center.addObserver(forName: name, object: nil, queue: nil) { _ in
+                observers.add(center.addObserver(forName: name, object: nil, queue: nil) { @Sendable _ in
                     continuation.yield(())
                 })
             }
