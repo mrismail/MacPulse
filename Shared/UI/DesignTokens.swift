@@ -22,9 +22,9 @@ public enum Palette {
     public static let cardBackground = Color(nsColor: .controlBackgroundColor)
     public static let cardBorder = Color(nsColor: .separatorColor)
     /// Supporting text on cards. The system's secondary label color measures below
-    /// 4.5:1 on a card background in the accessibility audit; 72 % of the primary label
-    /// color keeps text visibly secondary while meeting WCAG AA in light and dark mode.
-    public static let secondaryText = Color.primary.opacity(0.72)
+    /// 4.5:1 on a card background in the accessibility audit, and CI's audit rated 72 % of
+    /// the primary color "nearly passed"; 85 % keeps text visibly secondary.
+    public static let secondaryText = Color.primary.opacity(0.85)
 
     public static func provenance(_ kind: ProvenanceKind) -> Color {
         switch kind {
