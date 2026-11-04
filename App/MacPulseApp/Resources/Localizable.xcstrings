@@ -2,7 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "" : {
-
+      "localizations" : {}
     },
     "%@ CPU" : {
       "localizations" : {
@@ -671,10 +671,24 @@
       }
     },
     "App usage history can't be saved." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يمكن حفظ سجل استخدام التطبيقات."
+          }
+        }
+      }
     },
     "Apple silicon" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Apple silicon"
+          }
+        }
+      }
     },
     "Applications" : {
       "localizations" : {
@@ -777,7 +791,14 @@
       }
     },
     "Based on your discharge rate over the last %lld minutes." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "بناءً على معدل التفريغ خلال آخر %lld دقيقة."
+          }
+        }
+      }
     },
     "Battery" : {
       "localizations" : {
@@ -790,7 +811,14 @@
       }
     },
     "Battery capacity has dropped" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "انخفضت سعة البطارية"
+          }
+        }
+      }
     },
     "Battery charge history" : {
       "localizations" : {
@@ -813,13 +841,34 @@
       }
     },
     "Battery history can't be saved on this Mac, so it will be lost when MacPulse quits." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يمكن حفظ سجل البطارية على هذا الـ Mac، لذلك سيضيع عند إنهاء MacPulse."
+          }
+        }
+      }
     },
     "Battery history can't be saved." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يمكن حفظ سجل البطارية."
+          }
+        }
+      }
     },
     "Battery history isn't being saved" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يتم حفظ سجل البطارية"
+          }
+        }
+      }
     },
     "Battery impact" : {
       "localizations" : {
@@ -842,10 +891,24 @@
       }
     },
     "Battery is low" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "البطارية منخفضة"
+          }
+        }
+      }
     },
     "Battery is warm" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "البطارية دافئة"
+          }
+        }
+      }
     },
     "Battery level" : {
       "localizations" : {
@@ -858,7 +921,14 @@
       }
     },
     "Battery voltage × charging current, as reported by the battery." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "جهد البطارية × تيار الشحن، كما تبلغ عنهما البطارية."
+          }
+        }
+      }
     },
     "Bottom" : {
       "localizations" : {
@@ -871,7 +941,14 @@
       }
     },
     "Build %@" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الإصدار %@"
+          }
+        }
+      }
     },
     "Bytes" : {
       "localizations" : {
@@ -1160,7 +1237,14 @@
       }
     },
     "Cleanup history can't be saved." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يمكن حفظ سجل التنظيف."
+          }
+        }
+      }
     },
     "Clear App Usage History…" : {
       "localizations" : {
@@ -1293,7 +1377,14 @@
       }
     },
     "Coming in a later version of MacPulse." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ستتوفر في إصدار لاحق من MacPulse."
+          }
+        }
+      }
     },
     "Coming soon" : {
       "localizations" : {
@@ -1326,7 +1417,14 @@
       }
     },
     "Connect to power soon." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "صِل الجهاز بالطاقة قريبًا."
+          }
+        }
+      }
     },
     "Connected to power." : {
       "localizations" : {
@@ -1369,7 +1467,14 @@
       }
     },
     "Couldn't ask for notification permission." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذر طلب إذن الإشعارات."
+          }
+        }
+      }
     },
     "Couldn't change opening at login." : {
       "localizations" : {
@@ -1452,7 +1557,14 @@
       }
     },
     "Couldn't read battery history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذرت قراءة سجل البطارية."
+          }
+        }
+      }
     },
     "Couldn't read cleanup history." : {
       "localizations" : {
@@ -1515,7 +1627,14 @@
       }
     },
     "Couldn't remove old battery history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذرت إزالة سجل البطارية القديم."
+          }
+        }
+      }
     },
     "Couldn't remove old cleanup history." : {
       "localizations" : {
@@ -1538,7 +1657,14 @@
       }
     },
     "Couldn't save battery history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذر حفظ سجل البطارية."
+          }
+        }
+      }
     },
     "Couldn't save this cleanup to history." : {
       "localizations" : {
@@ -1561,7 +1687,14 @@
       }
     },
     "Couldn't show a notification." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذر عرض إشعار."
+          }
+        }
+      }
     },
     "Couldn't update cleanup history." : {
       "localizations" : {
@@ -1724,7 +1857,14 @@
       }
     },
     "Estimate" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تقدير"
+          }
+        }
+      }
     },
     "Estimated from CPU use only. This Mac hasn't reported per-app energy, so this shows activity, not measured battery use." : {
       "localizations" : {
@@ -1747,7 +1887,14 @@
       }
     },
     "Estimated health is %lld%% of the original capacity, so a full charge lasts less than it used to." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الصحة المقدّرة %lld%% من السعة الأصلية، لذلك يدوم الشحن الكامل مدة أقل من السابق."
+          }
+        }
+      }
     },
     "Estimated impact: %@" : {
       "localizations" : {
@@ -1760,7 +1907,14 @@
       }
     },
     "Estimated. %@" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تقدير. %@"
+          }
+        }
+      }
     },
     "Every 30 seconds" : {
       "localizations" : {
@@ -1992,6 +2146,16 @@
         }
       }
     },
+    "Full-charge capacity (%lld mAh) divided by design capacity (%lld mAh). The Maximum Capacity shown in System Settings may differ slightly." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "سعة الشحن الكامل (%1$lld مللي أمبير ساعة) مقسومة على سعة التصميم (%2$lld مللي أمبير ساعة). قد تختلف السعة القصوى المعروضة في إعدادات النظام قليلًا."
+          }
+        }
+      }
+    },
     "Fully charged" : {
       "localizations" : {
         "ar" : {
@@ -2023,7 +2187,14 @@
       }
     },
     "Heat ages batteries faster. Avoid heavy work on soft surfaces or in direct sun." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الحرارة تُسرّع تقادم البطاريات. تجنب العمل الثقيل على الأسطح اللينة أو تحت أشعة الشمس المباشرة."
+          }
+        }
+      }
     },
     "Hidden folders can't be chosen." : {
       "localizations" : {
@@ -2132,7 +2303,14 @@
       }
     },
     "Intel" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Intel"
+          }
+        }
+      }
     },
     "It is no longer in the Trash." : {
       "localizations" : {
@@ -2393,7 +2571,14 @@
       }
     },
     "MacPulse needs your permission to read this value." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يحتاج MacPulse إلى إذنك لقراءة هذه القيمة."
+          }
+        }
+      }
     },
     "MacPulse records the battery level %@ while it is running and keeps %lld days of history on this Mac. Old history is removed automatically." : {
       "localizations" : {
@@ -2482,7 +2667,14 @@
       }
     },
     "Measured" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مقيس"
+          }
+        }
+      }
     },
     "Measuring app activity…" : {
       "localizations" : {
@@ -2811,7 +3003,14 @@
       }
     },
     "No power adapter connected." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يوجد محوّل طاقة متصل."
+          }
+        }
+      }
     },
     "Normal" : {
       "localizations" : {
@@ -2844,10 +3043,24 @@
       }
     },
     "Not charging." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يشحن."
+          }
+        }
+      }
     },
     "Not enough data collected yet." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لم تُجمع بيانات كافية بعد."
+          }
+        }
+      }
     },
     "Not moved" : {
       "localizations" : {
@@ -3270,7 +3483,14 @@
       }
     },
     "Read directly from macOS." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مقروء مباشرة من macOS."
+          }
+        }
+      }
     },
     "Read the battery now (⌘R)" : {
       "localizations" : {
@@ -3499,7 +3719,14 @@
       }
     },
     "Scan history can't be saved." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يمكن حفظ سجل الفحص."
+          }
+        }
+      }
     },
     "Scan history is kept 180 days and cleanup history 30 days. Everything stays on this Mac." : {
       "localizations" : {
@@ -3842,7 +4069,14 @@
       }
     },
     "Storage" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "التخزين"
+          }
+        }
+      }
     },
     "System locations" : {
       "localizations" : {
@@ -3895,10 +4129,24 @@
       }
     },
     "The battery is draining too slowly to estimate a runtime." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تنفد البطارية ببطء شديد لا يسمح بتقدير مدة التشغيل."
+          }
+        }
+      }
     },
     "The battery reports no charging current right now." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا تبلغ البطارية عن تيار شحن الآن."
+          }
+        }
+      }
     },
     "The biggest files from your last Space Analyzer scan." : {
       "localizations" : {
@@ -3941,10 +4189,24 @@
       }
     },
     "This Mac has no battery, so it always runs on external power." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يحتوي هذا الـ Mac على بطارية، لذلك يعمل دائمًا على الطاقة الخارجية."
+          }
+        }
+      }
     },
     "This Mac or macOS version doesn't report this value." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يبلغ هذا الـ Mac أو إصدار macOS عن هذه القيمة."
+          }
+        }
+      }
     },
     "This Mac runs on external power only, so there is no battery to monitor." : {
       "localizations" : {
@@ -4047,7 +4309,14 @@
       }
     },
     "Unavailable" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "غير متاح"
+          }
+        }
+      }
     },
     "Unchanged for" : {
       "localizations" : {
@@ -4170,7 +4439,14 @@
       }
     },
     "Your battery may need service" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "قد تحتاج البطارية إلى صيانة"
+          }
+        }
+      }
     },
     "cleanable" : {
       "localizations" : {
@@ -4283,10 +4559,17 @@
       }
     },
     "macOS returned an unexpected value (%@)." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "أعاد macOS قيمة غير متوقعة (%@)."
+          }
+        }
+      }
     },
     "—" : {
-
+      "localizations" : {}
     },
     "“%@” is a standard folder of your account. Choose a folder inside it instead." : {
       "localizations" : {
