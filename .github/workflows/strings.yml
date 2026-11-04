@@ -1,0 +1,54 @@
+name: Strings
+
+# The String Catalog is generated from the compiler's extracted strings, never edited by
+# hand for English. On a pull request from this repository, an out-of-date catalog is
+# synced and committed back to the branch; on main, it must already be in sync.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: strings-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: String Catalog in sync
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Sync the String Catalog
+        run: scripts/sync-strings.sh | tee strings.txt
+
+      - name: Commit or check
+        run: |
+          CATALOG=App/MacPulseApp/Resources/Localizable.xcstrings
+          echo "::notice title=String Catalog::$(tail -1 strings.txt)"
+          if git diff --quiet -- "$CATALOG"; then
+            echo "Catalog is in sync"; exit 0
+          fi
+          if [ "${{ github.event_name }}" = pull_request ] && [ "${{ github.event.pull_request.head.repo.full_name }}" = "${{ github.repository }}" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add "$CATALOG"
+            git commit -m "Sync the String Catalog with the source strings"
+            git push
+            echo "::notice::String Catalog updated and committed to the branch"
+          else
+            echo "::error::Localizable.xcstrings is out of date; run scripts/sync-strings.sh on a Mac"
+            git diff --stat
+            exit 1
+          fi

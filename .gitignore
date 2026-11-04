@@ -21,3 +21,6 @@ App/MacPulseApp/MacPulse.entitlements
 battery.plist
 *.ioreg.plist
 *.log
+
+# String Catalog sync build
+build-strings/
