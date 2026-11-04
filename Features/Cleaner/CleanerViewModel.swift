@@ -51,6 +51,7 @@ public final class CleanerViewModel {
     @ObservationIgnored private var largeFiles: @MainActor () -> [(path: String, allocatedBytes: Int64)] = { [] }
     @ObservationIgnored private var duplicates: @MainActor () -> [MarkedDuplicate] = { [] }
     @ObservationIgnored private var didClean: @MainActor (CleanupReport) async -> Void = { _ in }
+    @ObservationIgnored private var didPutBack: @MainActor (Set<String>) async -> Void = { _ in }
     @ObservationIgnored private var exclusions: @MainActor () -> [String] = { [] }
     @ObservationIgnored private var ageDays: @MainActor () -> Int = { 30 }
     @ObservationIgnored private var saveAgeDays: @MainActor (Int) -> Void = { _ in }
@@ -82,7 +83,8 @@ public final class CleanerViewModel {
         duplicates: @escaping @MainActor () -> [MarkedDuplicate],
         exclusions: @escaping @MainActor () -> [String] = { [] },
         ageDays: (get: @MainActor () -> Int, set: @MainActor (Int) -> Void)? = nil,
-        didClean: @escaping @MainActor (CleanupReport) async -> Void
+        didClean: @escaping @MainActor (CleanupReport) async -> Void,
+        didPutBack: @escaping @MainActor (Set<String>) async -> Void = { _ in }
     ) {
         self.largeFiles = largeFiles
         self.duplicates = duplicates
@@ -92,6 +94,7 @@ public final class CleanerViewModel {
             saveAgeDays = ageDays.set
         }
         self.didClean = didClean
+        self.didPutBack = didPutBack
     }
 
     public static func defaultAppDataPath() -> String? {
@@ -390,7 +393,8 @@ public final class CleanerViewModel {
             }
             if case .finished(let current) = phase, current.id == report.id { phase = .finished(updated) }
             await loadHistory()
-            await didClean(updated)
+            // Not `didClean`: nothing new was moved, so the other screens only refresh totals.
+            await didPutBack([item.path])
         }
     }
 }

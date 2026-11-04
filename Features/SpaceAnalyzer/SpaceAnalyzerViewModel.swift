@@ -220,23 +220,36 @@ public final class SpaceAnalyzerViewModel {
 
     @ObservationIgnored private var scanGeneration = 0
 
+    /// Paths the Cleaner moved to the Trash since this scan (and that weren't put back).
+    @ObservationIgnored private var movedPaths: Set<String> = []
+
     /// Items the Cleaner moved to the Trash since this scan.
     public private(set) var movedSinceScan = 0
 
     /// Drops items the Cleaner moved to the Trash from the results and notes that the
-    /// totals are from before the cleanup.
+    /// totals are from before the cleanup. Paths already counted aren't counted again.
     public func forget(_ paths: Set<String>) {
         guard let result, !paths.isEmpty else { return }
+        let relevant = paths.filter { path in
+            ScanPathPolicy.path(path, isInside: result.rootPath) || result.largestFiles.contains { $0.id == path }
+        }
         let largest = result.largestFiles.filter { !paths.contains($0.id) }
-        let removed = result.largestFiles.count - largest.count
-        let inside = paths.filter { ScanPathPolicy.path($0, isInside: result.rootPath) }.count
-        guard removed > 0 || inside > 0 else { return }
-        movedSinceScan += max(removed, inside)
+        guard !relevant.isEmpty else { return }
+        movedPaths.formUnion(relevant)
+        movedSinceScan = movedPaths.count
         state = .finished(ScanResult(
             rootPath: result.rootPath, startedAt: result.startedAt, finishedAt: result.finishedAt,
             isComplete: result.isComplete, root: result.root, largestFiles: largest,
             categories: result.categories, skipped: result.skipped, itemsScanned: result.itemsScanned
         ))
+    }
+
+    /// Items put back from the Trash no longer count as moved since the scan. They don't
+    /// reappear in the largest-files list until the next scan.
+    public func restored(_ paths: Set<String>) {
+        guard !paths.isEmpty, !movedPaths.isDisjoint(with: paths) else { return }
+        movedPaths.subtract(paths)
+        movedSinceScan = movedPaths.count
     }
 
     public func cancelScan() {
@@ -254,6 +267,7 @@ public final class SpaceAnalyzerViewModel {
     }
 
     private func finish(_ result: ScanResult) {
+        movedPaths = []
         movedSinceScan = 0
         state = .finished(result)
         scanTask = nil

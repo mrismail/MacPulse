@@ -132,6 +132,12 @@ private struct EndlessScanner: FileSystemScanning {
     }
 }
 
+@MainActor
+private final class CallLog {
+    var cleaned = 0
+    var putBack: Set<String> = []
+}
+
 @Suite("Races found in the review")
 @MainActor
 struct ReviewRaceTests {
@@ -182,5 +188,30 @@ struct ReviewRaceTests {
         model.forget([biggest])
         #expect(!(model.result?.largestFiles.contains { $0.id == biggest } ?? true))
         #expect(model.movedSinceScan == 1)
+        model.forget([biggest])
+        #expect(model.movedSinceScan == 1, "The same item isn't counted twice")
+        model.restored([biggest])
+        #expect(model.movedSinceScan == 0, "An item put back no longer counts as moved")
+        model.forget([biggest])
+        model.scanHomeFolder()
+        await model.waitForScan()
+        #expect(model.movedSinceScan == 0, "A new scan starts the count again")
+    }
+
+    @Test func putBackRefreshesWithoutCountingAsANewCleanup() async throws {
+        let model = CleanerViewModel(source: PreviewCleanupSource(), trash: PreviewTrashService(), homePath: "/Users/preview", appDataPath: nil)
+        let calls = CallLog()
+        model.connect(largeFiles: { [] }, duplicates: { [] }, didClean: { _ in calls.cleaned += 1 }, didPutBack: { calls.putBack.formUnion($0) })
+        await model.open(.appCaches)
+        model.selectAll()
+        model.requestCleanup()
+        model.confirmCleanup()
+        await model.waitForTask()
+        #expect(calls.cleaned == 1)
+        let report = try #require(model.history.first)
+        let item = try #require(report.moved.first)
+        await model.putBack(item, in: report)
+        #expect(calls.cleaned == 1, "Put Back doesn't run the after-cleanup refresh again")
+        #expect(calls.putBack == [item.path])
     }
 }
