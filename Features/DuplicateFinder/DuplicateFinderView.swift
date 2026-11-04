@@ -334,15 +334,21 @@ enum DuplicatePresentation {
     static func funnel(_ statistics: DuplicateScanStatistics) -> String {
         var text = String(localized: "\(statistics.filesConsidered) files considered · \(statistics.sameSizeFiles) shared a size · \(statistics.fullyHashed) fully hashed · \(statistics.verified) verified identical byte by byte.")
         if statistics.hardLinks > 0 {
-            text += " " + String(localized: "\(statistics.hardLinks) hard links were counted once.")
+            text += " " + (statistics.hardLinks == 1
+                ? String(localized: "1 hard link was counted once.")
+                : String(localized: "\(statistics.hardLinks) hard links were counted once."))
         }
         let notDownloaded = statistics.excluded[.notDownloaded] ?? 0
         if notDownloaded > 0 {
-            text += " " + String(localized: "\(notDownloaded) files in iCloud that aren't downloaded were skipped, so nothing was downloaded.")
+            text += " " + (notDownloaded == 1
+                ? String(localized: "1 file in iCloud that isn't downloaded was skipped, so nothing was downloaded.")
+                : String(localized: "\(notDownloaded) files in iCloud that aren't downloaded were skipped, so nothing was downloaded."))
         }
         let excluded = statistics.excluded.values.reduce(0, +) - notDownloaded
         if excluded > 0 {
-            text += " " + String(localized: "\(excluded) files were left out because they couldn't be read or changed during the search.")
+            text += " " + (excluded == 1
+                ? String(localized: "1 file was left out because it couldn't be read or changed during the search.")
+                : String(localized: "\(excluded) files were left out because they couldn't be read or changed during the search."))
         }
         return text
     }

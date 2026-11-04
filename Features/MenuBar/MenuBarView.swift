@@ -41,7 +41,11 @@ public struct MenuBarView: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
             if overview.topApps.isEmpty {
-                Text("No app is using much right now.").font(.callout).foregroundStyle(.secondary)
+                // Before the first two samples there is nothing to compare yet.
+                Text(overview.energyStatus == nil
+                     ? String(localized: "Measuring app activity…")
+                     : String(localized: "No app is using noticeable CPU right now."))
+                    .font(.callout).foregroundStyle(.secondary)
             }
             ForEach(overview.topApps) { app in
                 HStack {
