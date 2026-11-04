@@ -45,5 +45,5 @@ Xcode 16, Release build unless noted). Checks that CI can't run are listed under
 - Developer ID signing and notarization (waiting for enrolment).
 - macOS 14, a clean Mac without Xcode, real battery hardware, and Apple silicon versus Intel energy reporting.
 - Privacy prompts, the Trash and Put Back without Full Disk Access, open at login and notifications on a signed build.
-- The Battery-screen contrast audit. CI can't show which elements it reports, so it stays non-blocking until it is checked with Accessibility Inspector.
+- The Battery-screen contrast audit. CI reports `battery.health`, `battery.cycleCount` and four unnamed elements, unchanged by the secondary-text color change; the provenance badge border was made neutral next. It stays non-blocking until it is checked with Accessibility Inspector.
 - A native-speaker review of the Arabic strings.
