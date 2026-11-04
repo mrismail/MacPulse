@@ -85,6 +85,8 @@ jobs:
             | while IFS= read -r line; do echo "::notice::${line}"; done || true
 
       - name: Smoke test — app launches and stays running (English and Arabic)
+        # Also after failed UI tests, so a launch problem is diagnosed in the same run.
+        if: ${{ !cancelled() && hashFiles('build/Build/Products/Debug/MacPulse.app/Contents/Info.plist') != '' }}
         run: |
           APP=build/Build/Products/Debug/MacPulse.app/Contents/MacOS/MacPulse
           for LANG_ARGS in "" "-AppleLanguages (ar) -AppleLocale ar_EG"; do
