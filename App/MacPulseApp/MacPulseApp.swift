@@ -47,6 +47,7 @@ struct MacPulseApp: App {
             MenuBarContent(model: model)
         } label: {
             MenuBarLabel(overview: model.overview)
+                .modifier(OpenMainWindowAtLaunch())
         }
         .menuBarExtraStyle(.window)
     }
@@ -62,6 +63,26 @@ private struct MenuBarContent: View {
             model.open(destination)
             openWindow(id: AppModel.mainWindowID)
             NSApplication.shared.activate()
+        }
+    }
+}
+
+/// Makes sure the main window is shown at launch. CI showed that in a right-to-left
+/// layout (Arabic) macOS 15 starts MacPulse with no window at all, only the menu bar item;
+/// the menu bar label is drawn at launch, so it opens the window if none is visible.
+private struct OpenMainWindowAtLaunch: ViewModifier {
+    @Environment(\.openWindow) private var openWindow
+    @MainActor private static var checked = false
+
+    func body(content: Content) -> some View {
+        content.task {
+            guard !Self.checked else { return }
+            Self.checked = true
+            try? await Task.sleep(for: .milliseconds(500))
+            let hasWindow = NSApplication.shared.windows.contains { $0.isVisible && $0.styleMask.contains(.titled) }
+            if !hasWindow {
+                openWindow(id: AppModel.mainWindowID)
+            }
         }
     }
 }
