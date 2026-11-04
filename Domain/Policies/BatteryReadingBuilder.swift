@@ -89,7 +89,7 @@ public enum BatteryReadingBuilder {
 
     static func timeToEmpty(_ raw: RawBatteryData, powerSource: PowerSource?) -> Metric<Int> {
         guard powerSource == .battery else {
-            return .unavailable(.notApplicable("Connected to power."))
+            return .unavailable(.notApplicable(String(localized: "Connected to power.")))
         }
         guard let minutes = raw.timeToEmptyMinutes else {
             return .unavailable(.notSupportedOnThisMac)
@@ -102,7 +102,7 @@ public enum BatteryReadingBuilder {
 
     static func timeToFull(_ raw: RawBatteryData, chargingState: ChargingState?) -> Metric<Int> {
         guard chargingState == .charging else {
-            return .unavailable(.notApplicable("Not charging."))
+            return .unavailable(.notApplicable(String(localized: "Not charging.")))
         }
         guard let minutes = raw.timeToFullMinutes else {
             return .unavailable(.notSupportedOnThisMac)
@@ -152,7 +152,7 @@ public enum BatteryReadingBuilder {
         }
         return .estimated(
             ratio * 100,
-            basis: "Full-charge capacity (\(fullCharge) mAh) divided by design capacity (\(design) mAh). "
+            basis: String(localized: "Full-charge capacity (\(fullCharge) mAh) divided by design capacity (\(design) mAh). ")
                 + "The Maximum Capacity shown in System Settings may differ slightly."
         )
     }
@@ -213,21 +213,21 @@ public enum BatteryReadingBuilder {
         chargingState: ChargingState?
     ) -> Metric<Double> {
         guard chargingState == .charging else {
-            return .unavailable(.notApplicable("Not charging."))
+            return .unavailable(.notApplicable(String(localized: "Not charging.")))
         }
         guard let voltage, let amperage = registry?.amperageMilliamps else {
             return .unavailable(.notSupportedOnThisMac)
         }
         guard amperage > 0 else {
-            return .unavailable(.notApplicable("The battery reports no charging current right now."))
+            return .unavailable(.notApplicable(String(localized: "The battery reports no charging current right now.")))
         }
         let watts = voltage * Double(amperage) / 1_000
-        return .estimated(watts, basis: "Battery voltage × charging current, as reported by the battery.")
+        return .estimated(watts, basis: String(localized: "Battery voltage × charging current, as reported by the battery."))
     }
 
     static func adapterMetric(_ raw: RawBatteryData, powerSource: PowerSource?) -> Metric<Int> {
         guard powerSource == .externalPower else {
-            return .unavailable(.notApplicable("No power adapter connected."))
+            return .unavailable(.notApplicable(String(localized: "No power adapter connected.")))
         }
         guard let watts = raw.adapterWatts, watts > 0 else {
             return .unavailable(.notSupportedOnThisMac)

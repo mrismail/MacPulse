@@ -28,9 +28,9 @@ extension MetricProvenance {
     /// Short label for the badge next to a value.
     public var badgeTitle: String {
         switch self {
-        case .measured: "Measured"
-        case .estimated: "Estimate"
-        case .unavailable: "Unavailable"
+        case .measured: String(localized: "Measured")
+        case .estimated: String(localized: "Estimate")
+        case .unavailable: String(localized: "Unavailable")
         }
     }
 
@@ -38,9 +38,9 @@ extension MetricProvenance {
     public var explanation: String {
         switch self {
         case .measured:
-            "Read directly from macOS."
+            String(localized: "Read directly from macOS.")
         case .estimated(let basis):
-            "Estimated. \(basis)"
+            String(localized: "Estimated. \(basis)")
         case .unavailable(let reason):
             reason.explanation
         }
@@ -51,15 +51,15 @@ extension UnavailabilityReason {
     public var explanation: String {
         switch self {
         case .notSupportedOnThisMac:
-            "This Mac or macOS version doesn't report this value."
+            String(localized: "This Mac or macOS version doesn't report this value.")
         case .permissionRequired:
-            "MacPulse needs your permission to read this value."
+            String(localized: "MacPulse needs your permission to read this value.")
         case .notYetSampled:
-            "Not enough data collected yet."
+            String(localized: "Not enough data collected yet.")
         case .notYetImplemented:
-            "Coming in a later version of MacPulse."
+            String(localized: "Coming in a later version of MacPulse.")
         case .sourceError(let detail):
-            "macOS returned an unexpected value (\(detail))."
+            String(localized: "macOS returned an unexpected value (\(detail)).")
         case .notApplicable(let detail):
             detail
         }

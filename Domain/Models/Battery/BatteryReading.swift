@@ -94,7 +94,7 @@ public struct BatteryReading: Sendable, Equatable {
             charge: .unavailable(reason),
             powerSource: .estimated(
                 .externalPower,
-                basis: "This Mac has no battery, so it always runs on external power."
+                basis: String(localized: "This Mac has no battery, so it always runs on external power.")
             ),
             chargingState: .unavailable(reason),
             systemTimeToEmptyMinutes: .unavailable(reason),

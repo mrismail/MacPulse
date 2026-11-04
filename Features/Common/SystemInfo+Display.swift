@@ -5,9 +5,9 @@ import MacPulseShared
 extension SystemInfo {
     public var architectureDescription: String {
         switch architecture {
-        case .appleSilicon: "Apple silicon"
-        case .intel: "Intel"
-        case .unknown: "Unknown"
+        case .appleSilicon: String(localized: "Apple silicon")
+        case .intel: String(localized: "Intel")
+        case .unknown: String(localized: "Unknown")
         }
     }
 
@@ -21,8 +21,8 @@ extension SystemInfo {
         switch (appVersion, appBuild) {
         case let (version?, build?): "\(version) (\(build))"
         case let (version?, nil): version
-        case let (nil, build?): "Build \(build)"
-        case (nil, nil): "Unknown"
+        case let (nil, build?): String(localized: "Build \(build)")
+        case (nil, nil): String(localized: "Unknown")
         }
     }
 }

@@ -62,12 +62,12 @@ public enum RuntimeEstimator {
         let ratePerMinute = -slope
         let minutes = Int((currentCharge / ratePerMinute).rounded())
         let spanMinutes = Int((latest.timestamp.timeIntervalSince(first.timestamp) / 60).rounded())
-        let basis = "Based on your discharge rate over the last \(spanMinutes) minutes."
+        let basis = String(localized: "Based on your discharge rate over the last \(spanMinutes) minutes.")
         let rate = Metric<Double>.estimated(ratePerMinute * 60, basis: basis)
 
         guard minutes <= parameters.maximumMinutes else {
             return Estimate(
-                runtime: .unavailable(.notApplicable("The battery is draining too slowly to estimate a runtime.")),
+                runtime: .unavailable(.notApplicable(String(localized: "The battery is draining too slowly to estimate a runtime."))),
                 ratePercentPerHour: rate
             )
         }
