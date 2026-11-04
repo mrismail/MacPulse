@@ -40,7 +40,16 @@ public final class CleanerViewModel {
     public func setMinimumAgeDays(_ days: Int) {
         guard days != minimumAgeDays else { return }
         saveAgeDays(days)
-        if selectedCategory == .oldDownloads { reloadIfReviewing() }
+        ageDaysChanged()
+    }
+
+    /// The age the shown list was made with.
+    @ObservationIgnored private var reviewedAgeDays: Int?
+
+    /// Lists old downloads again when the age changed here or in Settings.
+    public func ageDaysChanged() {
+        guard selectedCategory == .oldDownloads, let reviewedAgeDays, reviewedAgeDays != minimumAgeDays else { return }
+        reloadIfReviewing()
     }
 
     @ObservationIgnored private let source: any CleanupCandidateSource
@@ -55,6 +64,7 @@ public final class CleanerViewModel {
     @ObservationIgnored private var exclusions: @MainActor () -> [String] = { [] }
     @ObservationIgnored private var ageDays: @MainActor () -> Int = { 30 }
     @ObservationIgnored private var saveAgeDays: @MainActor (Int) -> Void = { _ in }
+    @ObservationIgnored private let resolvePick: @Sendable (String) -> PickResolution
     @ObservationIgnored private var reviewTask: Task<Void, Never>?
     @ObservationIgnored private var cleanupTask: Task<Void, Never>?
     /// Only the newest review may show its result.
@@ -65,8 +75,10 @@ public final class CleanerViewModel {
         trash: any TrashService,
         history: any CleanupHistoryRepository = InMemoryCleanupHistory(),
         homePath: String = NSHomeDirectory(),
-        appDataPath: String? = CleanerViewModel.defaultAppDataPath()
+        appDataPath: String? = CleanerViewModel.defaultAppDataPath(),
+        resolvePick: @escaping @Sendable (String) -> PickResolution = PickResolution.resolve
     ) {
+        self.resolvePick = resolvePick
         self.source = source
         self.trash = trash
         historyRepository = history
@@ -119,6 +131,8 @@ public final class CleanerViewModel {
         selectedCategory = category
         list = nil
         selectedPaths = []
+        pickError = nil
+        reviewedAgeDays = nil
         phase = .idle
     }
 
@@ -131,24 +145,37 @@ public final class CleanerViewModel {
     /// Picking a folder allows the items inside it, so system locations, the home folder,
     /// standard folders and drive roots are refused.
     public func chooseDownloadsFolder(_ path: String) {
-        guard accept(path) else { return }
-        downloadsFolder = ScanPathPolicy.normalized(path)
+        guard let path = accept(path, allowsStandardFolders: false) else { return }
+        downloadsFolder = path
         reloadIfReviewing()
     }
 
     public func chooseEmptyFoldersRoot(_ path: String) {
-        guard accept(path) else { return }
-        emptyFoldersRoot = ScanPathPolicy.normalized(path)
+        guard let path = accept(path, allowsStandardFolders: true) else { return }
+        emptyFoldersRoot = path
         reloadIfReviewing()
     }
 
-    private func accept(_ path: String) -> Bool {
-        if case .refused(let reason) = CleanupSafetyPolicy(homePath: homePath).verdict(forPick: path) {
+    /// Checks a picked folder after resolving symbolic links, so a path through a link
+    /// (such as `/Volumes/Macintosh HD`, which points at the startup disk) is judged by
+    /// where it really is.
+    private func accept(_ path: String, allowsStandardFolders: Bool) -> String? {
+        let resolved = resolvePick(path)
+        let verdict: CleanupSafetyPolicy.Verdict = switch resolved {
+        case .resolved(let real):
+            CleanupSafetyPolicy(homePath: homePath).verdict(forPick: real, allowsStandardFolders: allowsStandardFolders)
+        case .startupDisk:
+            .refused(String(localized: "That folder is on your startup disk. Choose it from your home folder instead."))
+        case .unreadable:
+            .refused(String(localized: "MacPulse couldn't read that folder."))
+        }
+        if case .refused(let reason) = verdict {
             pickError = reason
-            return false
+            return nil
         }
         pickError = nil
-        return true
+        if case .resolved(let real) = resolved { return ScanPathPolicy.normalized(real) }
+        return nil
     }
 
     /// `true` when the category needs a folder chosen first.
@@ -192,9 +219,11 @@ public final class CleanerViewModel {
             largeFiles: category == .largeFiles ? largeFiles() : [],
             duplicates: category == .duplicates ? duplicates() : []
         )
+        reviewedAgeDays = minimumAgeDays
         let found = await source.candidates(for: category, options: options, policy: policy)
-        // A newer review (or a category change) wins; an older result never overwrites it.
-        guard generation == reviewGeneration, category == selectedCategory, !isCleaning else { return }
+        // A newer review (or a category change, or a cleanup) wins; an older result never
+        // overwrites it, and never replaces a confirmation that is open.
+        guard generation == reviewGeneration, category == selectedCategory, phase == .loading else { return }
         list = found
         // Copies marked in the Duplicate Finder were already chosen there; everything else
         // starts unselected.
@@ -251,8 +280,17 @@ public final class CleanerViewModel {
     /// Step 1: asks for confirmation. Nothing is moved yet.
     public func requestCleanup() {
         let items = selectedCandidates
-        guard !items.isEmpty, !isReadOnlyCategory else { return }
+        guard canRequestCleanup else { return }
         phase = .confirming(items)
+    }
+
+    /// Moving is offered only for a list that has finished loading.
+    public var canRequestCleanup: Bool {
+        guard !selectedCandidates.isEmpty, !isReadOnlyCategory else { return false }
+        switch phase {
+        case .reviewing, .finished: return true
+        default: return false
+        }
     }
 
     public func cancelCleanup() {
@@ -263,6 +301,8 @@ public final class CleanerViewModel {
     public func confirmCleanup() {
         guard case .confirming(let items) = phase else { return }
         reviewTask?.cancel()
+        // A review that is still running must not show its result over the cleanup.
+        reviewGeneration += 1
         let category = selectedCategory
         let policy = self.policy
         let trash = self.trash

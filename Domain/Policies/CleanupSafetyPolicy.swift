@@ -36,7 +36,10 @@ public struct CleanupSafetyPolicy: Sendable, Equatable {
 
     /// Where a picked folder may be. Picking a folder allows the items inside it, so a pick
     /// must never be a system location, the home folder, a standard folder or a volume root.
-    public func verdict(forPick folder: String) -> Verdict {
+    /// - Parameter allowsStandardFolders: `true` for searches that never move the folder's
+    ///   direct contents as a whole (Empty Folders): the standard folders themselves stay
+    ///   refused by `verdict(for:)`, so only empty folders inside them can be listed.
+    public func verdict(forPick folder: String, allowsStandardFolders: Bool = false) -> Verdict {
         let path = ScanPathPolicy.comparable(folder)
         let home = ScanPathPolicy.comparable(homePath)
         let refusedExactly = ["/", "/applications", "/library", "/system", "/users", "/volumes", "/private", "/usr",
@@ -44,14 +47,17 @@ public struct CleanupSafetyPolicy: Sendable, Equatable {
         if refusedExactly.contains(path) {
             return .refused(String(localized: "Choose a folder inside your home folder or on an external drive, not a system location or your whole home folder."))
         }
-        if Self.standardHomeFolders.contains(where: { path == home + "/" + $0.lowercased() })
-            && path != home + "/downloads" {
-            return .refused(String(localized: "Choose a folder inside it instead."))
+        if let standard = Self.standardHomeFolders.first(where: { path == home + "/" + $0.lowercased() }),
+           path != home + "/downloads", !allowsStandardFolders {
+            return .refused(String(localized: "“\(standard)” is a standard folder of your account. Choose a folder inside it instead."))
         }
         let components = path.split(separator: "/")
         if path.hasPrefix("/volumes/") {
             // An external drive: any folder on it except the drive itself.
-            return components.count >= 3 ? .allowed : .refused(String(localized: "Choose a folder on the drive, not the whole drive."))
+            guard components.count >= 3 else { return .refused(String(localized: "Choose a folder on the drive, not the whole drive.")) }
+            return components.dropFirst(2).contains(where: { $0.hasPrefix(".") })
+                ? .refused(String(localized: "Hidden folders can't be chosen."))
+                : .allowed
         }
         guard ScanPathPolicy.path(path, isInside: home) else {
             return .refused(String(localized: "Choose a folder inside your home folder or on an external drive."))

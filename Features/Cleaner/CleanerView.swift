@@ -46,6 +46,8 @@ public struct CleanerView: View {
         }
         .navigationTitle("Cleaner")
         .task { await viewModel.loadHistory() }
+        // The age is shared with Settings; a change there lists old downloads again.
+        .onChange(of: viewModel.minimumAgeDays) { viewModel.ageDaysChanged() }
         .confirmationDialog(
             CleanerPresentation.confirmationTitle(viewModel.phase),
             isPresented: Binding(
@@ -174,7 +176,7 @@ private struct CategoryReviewCard: View {
                 Button("Move to Trash…") { viewModel.requestCleanup() }
                     .buttonStyle(.borderedProminent)
                     .tint(.red)
-                    .disabled(viewModel.selectedCandidates.isEmpty || viewModel.isReadOnlyCategory)
+                    .disabled(!viewModel.canRequestCleanup)
                     .accessibilityIdentifier("cleaner.moveToTrash")
             }
         }

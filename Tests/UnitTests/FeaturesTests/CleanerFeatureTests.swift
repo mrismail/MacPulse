@@ -119,7 +119,7 @@ struct CleanerViewModelTests {
 
     @Test func foldersAreNeededAndPassedForDownloadsAndEmptyFolders() async throws {
         let source = CleanerRecordingSource()
-        let model = CleanerViewModel(source: source, trash: CleanerRecordingTrash(), homePath: home, appDataPath: nil)
+        let model = CleanerViewModel(source: source, trash: CleanerRecordingTrash(), homePath: home, appDataPath: nil, resolvePick: { .resolved($0) })
         model.select(.oldDownloads)
         #expect(model.needsFolder)
         model.chooseDownloadsFolder(home + "/Downloads/")
@@ -130,6 +130,41 @@ struct CleanerViewModelTests {
         #expect(options.folder == home + "/Downloads")
         #expect(options.minimumAgeDays == 90)
         #expect(model.policy.pickedFolders == [home + "/Downloads"])
+    }
+
+    @Test func picksAreJudgedWhereTheyReallyAre() async throws {
+        let model = CleanerViewModel(
+            source: PreviewCleanupSource(), trash: CleanerRecordingTrash(), homePath: home, appDataPath: nil,
+            resolvePick: { $0.hasPrefix("/Volumes/Macintosh HD") ? .resolved(String($0.dropFirst("/Volumes/Macintosh HD".count))) : .startupDisk }
+        )
+        model.select(.emptyFolders)
+        model.chooseEmptyFoldersRoot("/Volumes/Macintosh HD" + home + "/Library/Application Support")
+        #expect(model.emptyFoldersRoot == nil, "A link to the startup disk can't get around the Library rule")
+        #expect(model.pickError != nil)
+        model.chooseEmptyFoldersRoot("/Volumes/Data/Users")
+        #expect(model.emptyFoldersRoot == nil, "The startup disk's volumes under /Volumes are refused")
+        model.chooseEmptyFoldersRoot("/Volumes/Macintosh HD" + home + "/Documents")
+        #expect(model.emptyFoldersRoot == home + "/Documents", "Empty folders can be searched for in a standard folder")
+        #expect(model.pickError == nil)
+        model.chooseEmptyFoldersRoot("/Volumes/Macintosh HD/Applications")
+        #expect(model.pickError != nil)
+        model.select(.logs)
+        #expect(model.pickError == nil, "A pick error doesn't follow you to another category")
+    }
+
+    @Test func realLinksAreResolved() throws {
+        let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let real = base.appendingPathComponent("real")
+        try FileManager.default.createDirectory(at: real, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: base) }
+        let link = base.appendingPathComponent("link")
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: real)
+        guard case .resolved(let path) = PickResolution.resolve(link.path) else {
+            Issue.record("Expected a resolved path")
+            return
+        }
+        #expect(path.hasSuffix("/real"))
+        #expect(PickResolution.resolve(base.appendingPathComponent("missing").path) == .unreadable)
     }
 
     @Test func otherScreensFeedLargeFilesAndDuplicatesAndAreRefreshed() async throws {
