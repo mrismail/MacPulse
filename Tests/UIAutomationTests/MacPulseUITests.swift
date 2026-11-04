@@ -329,12 +329,9 @@ final class MacPulseUITests: XCTestCase {
             return true  // collect everything, then report below with element names
         }
         XCTAssertTrue(otherProblems.isEmpty, "Accessibility audit: " + otherProblems.joined(separator: " | "))
-        if !contrastProblems.isEmpty {
-            // Known issue, tracked in Documentation/DEFERRED.md: secondary-text contrast on
-            // the CI runner. Reported on every run but not blocking until inspected locally.
-            XCTExpectFailure("Contrast findings under investigation (DEFERRED.md)") {
-                XCTFail("Contrast: " + contrastProblems.joined(separator: " | "))
-            }
+        // Blocking again: supporting text uses Palette.secondaryText (WCAG AA).
+        XCTAssertTrue(contrastProblems.isEmpty, "Contrast: " + contrastProblems.joined(separator: " | "))
+    }
         }
     }
 }
