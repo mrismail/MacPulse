@@ -569,3 +569,33 @@ failed move-back, old-download folders not re-checked, and gaps in the CI guardr
 
 **Consequences.** No new entitlements, network code or private APIs. Behaviour without
 Full Disk Access still needs checking on a signed build (DEFERRED).
+
+## ADR-019: Release packaging, updates and localization
+
+**Status:** Accepted (Phase 8)
+
+**Context.** MacPulse is distributed directly, without the Mac App Store or a sandbox
+(ADR-002, ADR-010). The owner hasn't enrolled in the Apple Developer Program yet. Updates
+and the Arabic translation needed decisions.
+
+**Decision.**
+- **Packaging:**
+  - A DMG (the app plus an Applications link) on GitHub Releases.
+  - `scripts/release/` archives, signs, notarizes and staples, and the Release workflow runs them on version tags.
+  - Without the Developer ID secrets, the same pipeline produces an ad-hoc-signed DMG, documented as a known limitation. No code changes are needed after enrolment.
+- **Version:** `MARKETING_VERSION` in `project.yml` (1.0.0). The build number is the git commit count, so it always increases. A tag must match the version.
+- **Updates:** manual download from GitHub Releases. No auto-updater, because it would add network code and a third-party dependency. Sparkle can be revisited after 1.0 with its own ADR.
+- **Privacy manifest:**
+  - `PrivacyInfo.xcprivacy` declares no tracking and no collected data.
+  - It lists the required-reason APIs: file timestamps (DDA9.1, 3B52.1), disk space (85F4.1), boot time for elapsed-time measurement (35F9.1) and UserDefaults (CA92.1).
+- **Localization:**
+  - One `Localizable.xcstrings` in the app, generated from the compiler's extracted strings (`SWIFT_EMIT_LOC_STRINGS` with `xcstringstool sync`), never hand-edited for English.
+  - The package modules look strings up in the main bundle, so one table serves them all.
+  - The Strings workflow keeps the catalog in sync.
+  - Arabic is a machine-assisted draft, every string marked "Needs Review", and is checked by a right-to-left UI test.
+- **App icon:** an original design (a gauge with a pulse line), drawn by `scripts/design/make_icon.py` so it can be regenerated.
+
+**Consequences.**
+- No new entitlements, network code or dependencies.
+- Gatekeeper warns about ad-hoc builds until the owner adds the secrets.
+- Signed-build behaviour (privacy prompts, the Trash without Full Disk Access, `SMAppService`) is verified with `Documentation/OWNER_CHECKLIST.md`.

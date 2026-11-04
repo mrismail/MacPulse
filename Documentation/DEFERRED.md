@@ -25,13 +25,13 @@ appear. Each has a target phase and a reason. Update this file whenever scope mo
 | Clearing scan history from Settings | §3 Settings | Delivered (Phase 7) | Scan and cleanup history can be cleared in Settings. |
 | Removing marked duplicates (move to Trash) | §2 Module D "manual selection of files to keep or remove" | Delivered (Phase 6) | "Review Marked in Cleaner" → confirmation → Trash (ADR-015). |
 | Similar (not identical) images | — | Not planned | The spec asks for identical files only. |
-| String Catalog extraction and Arabic translation | (owner requirement) | Phase 8 | Needs Xcode's string extraction on a Mac and a native-speaker review; groundwork in ADR-008. |
+| String Catalog extraction and Arabic translation | (owner requirement) | Delivered (Phase 8), Arabic needs review | The catalog is generated from the compiler's strings (ADR-019). Arabic is a draft marked "Needs Review" until a native speaker checks it (owner checklist). |
 | Snapshot tests (light/dark/RTL) | Review finding | After 1.0 | Needs a third-party snapshot library (zero-dependency rule). |
-| macOS 14 launch verification | Phase 1 acceptance | Before Phase 8 | CI runners are macOS 15; verify on a macOS 14 VM before release. |
+| macOS 14 launch verification | Phase 1 acceptance | Owner checklist (release) | CI runners are macOS 15; verified by the owner on macOS 14 before publishing (`Documentation/OWNER_CHECKLIST.md`). |
 | Contrast audit findings on the Battery screen (`battery.health`, `battery.cycleCount` and 4 unnamed elements) | Accessibility (review) | Phase 8, on a real Mac | Raising card text to `Palette.secondaryText` (72 % primary) did not clear them in CI, so the cause is not the caption color. Inspect with Accessibility Inspector, fix, then make the check blocking. Still reported on every run. |
 | Every commit building on its own (Phase 7) | CLAUDE.md | Not rewritten | "Put items back from the Trash" (commit before "Settings, menu bar companion and Put Back") added an enum case whose exhaustive switch was updated in the next commit, so that one commit doesn't compile alone. History is pushed; kept as is. |
 | One shared safe walker for scanner, duplicate collector and empty folders | Review (team lead) | After 1.0 | The three walks apply the same rules (policy, device + inode, no links), each covered by its own tests; empty folders now also stop on cancellation and accept the Data volume. Merging them is a refactor without a user-visible change. |
-| Package strings in a String Catalog (`bundle: .module`) | Review (front end) | Phase 8 | Needed for the Arabic translation. Concatenated phrases were rewritten as whole localized strings in the review fixes. |
+| Package strings in a String Catalog (`bundle: .module`) | Review (front end) | Delivered differently (Phase 8) | One app catalog serves all modules, which look strings up in the main bundle (ADR-019); no per-package bundles needed. |
 | UI tests for the menu bar panel, Put Back and adding exclusions | Review (front end) | Phase 8 | XCUITest can't open status items reliably; Put Back and exclusions are covered by unit and integration tests. |
 | Adaptive layouts (`ViewThatFits`) for four-metric rows and large text | Review (front end) | Phase 8 | Polish pass with the release screenshots. |
 | Replacing fixed sleeps in two feature tests | Review (team lead) | Phase 8 | The tests are stable on CI; they will move to explicit waits when touched. |
@@ -58,3 +58,13 @@ appear. Each has a target phase and a reason. Update this file whenever scope mo
   (`BatteryFixtures.realIntelMacBookPro16`); add an Apple silicon capture when available.
 - **Phase 8:** Apple Developer Program enrolment, Developer ID signing and notarization.
   Do one trial notarization early (Phase 4) to catch surprises.
+
+## Phase 8 (release)
+
+| Item | Status | Reason |
+|---|---|---|
+| Developer ID signing and notarization | Waiting for the owner's Apple Developer enrolment | Scripts and workflow are ready and switch on when the secrets exist (`Documentation/RELEASE.md`). Until then releases are ad-hoc signed. |
+| Clean-machine install, macOS 14, privacy prompts, Trash without Full Disk Access, open at login, notifications | Owner checklist | Need a signed build on real Macs. |
+| Automatic updates | After 1.0 | Would need network code and a dependency (ADR-019). |
+| Plural rules in the catalog (Arabic has six plural forms) | After 1.0 | Counts use separate singular and plural sentences; Arabic forms for 2 and 3–10 come with the native review. |
+| Removing the unused "planned feature" placeholder code | After 1.0 | No longer shown anywhere; harmless. |
