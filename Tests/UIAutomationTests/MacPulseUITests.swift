@@ -332,6 +332,4 @@ final class MacPulseUITests: XCTestCase {
         // Blocking again: supporting text uses Palette.secondaryText (WCAG AA).
         XCTAssertTrue(contrastProblems.isEmpty, "Contrast: " + contrastProblems.joined(separator: " | "))
     }
-        }
-    }
 }
