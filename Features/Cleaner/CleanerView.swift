@@ -197,7 +197,7 @@ private struct CandidateTable: View {
                 ))
                 .labelsHidden()
                 .toggleStyle(.checkbox)
-                .accessibilityIdentifier("cleaner.select.\(candidate.name)")
+                .accessibilityIdentifier("cleaner.select.\(PathPresentation.relative(candidate.path, to: viewModel.homeFolder))")
             }
             .width(28)
             TableColumn("Item") { candidate in
@@ -293,7 +293,7 @@ private struct CleanupHistoryCard: View {
                             Spacer()
                             if item.outcome.isMoved {
                                 Button("Put Back") { Task { await viewModel.putBack(item, in: report) } }
-                                    .accessibilityIdentifier("cleaner.putBack.\((item.path as NSString).lastPathComponent)")
+                                    .accessibilityIdentifier("cleaner.putBack.\(PathPresentation.relative(item.path, to: viewModel.homeFolder))")
                             } else {
                                 Text(CleanerPresentation.explanation(item.outcome)).font(.caption).foregroundStyle(.secondary)
                             }

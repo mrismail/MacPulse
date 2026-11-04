@@ -220,7 +220,7 @@ final class MacPulseUITests: XCTestCase {
         let review = element("cleaner.review", in: app)
         XCTAssertTrue(review.waitForExistence(timeout: 10))
         review.click()
-        let select = element("cleaner.select.com.example.browser", in: app)
+        let select = element("cleaner.select.Library/Caches/com.example.browser", in: app)
         XCTAssertTrue(select.waitForExistence(timeout: 10))
         select.click()
         element("cleaner.moveToTrash", in: app).click()
