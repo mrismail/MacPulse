@@ -2,13 +2,26 @@
   "sourceLanguage" : "en",
   "strings" : {
     "" : {
-
+      "localizations" : {}
     },
     "%@ CPU" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ من المعالج"
+          }
+        }
+      }
     },
     "%@ has averaged %@ CPU for the last %lld minutes. Sustained CPU use is a common cause of faster battery drain." : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "استخدم %1$@ في المتوسط %2$@ من المعالج خلال آخر %3$lld دقيقة. الاستخدام المستمر للمعالج سبب شائع لنفاد البطارية بسرعة."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -18,10 +31,23 @@
       }
     },
     "%@ is using a lot of CPU" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يستخدم %@ قدرًا كبيرًا من المعالج"
+          }
+        }
+      }
     },
     "%@ items · %@" : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ عنصر · %2$@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -31,10 +57,23 @@
       }
     },
     "%@ per hour" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ في الساعة"
+          }
+        }
+      }
     },
     "%@ to %@" : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "من %1$@ إلى %2$@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -45,6 +84,12 @@
     },
     "%@ · %@ read" : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ · تمت قراءة %2$@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -55,6 +100,12 @@
     },
     "%@, %@" : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@، %2$@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -64,10 +115,23 @@
       }
     },
     "%@, still on power" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@، لا يزال موصولًا بالطاقة"
+          }
+        }
+      }
     },
     "%@: %@ used of %@" : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@: مستخدم %2$@ من %3$@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -78,6 +142,12 @@
     },
     "%@: %lld" : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@: %2$lld"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -88,6 +158,12 @@
     },
     "%lld copies · %@ each" : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$lld نسخ · %2$@ لكل نسخة"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -97,10 +173,23 @@
       }
     },
     "%lld failed" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "فشل %lld"
+          }
+        }
+      }
     },
     "%lld files considered · %lld shared a size · %lld fully hashed · %lld verified identical byte by byte." : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تم فحص %1$lld ملف · %2$lld بنفس الحجم · %3$lld تم حساب بصمتها كاملة · %4$lld تم التحقق من تطابقها بايت ببايت."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -110,25 +199,73 @@
       }
     },
     "%lld files in iCloud that aren't downloaded were skipped, so nothing was downloaded." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تم تخطي %lld ملف في iCloud غير منزّلة، لذلك لم يُنزَّل أي شيء."
+          }
+        }
+      }
     },
     "%lld files were left out because they couldn't be read or changed during the search." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تم استبعاد %lld ملف لأنه تعذرت قراءتها أو تغيّرت أثناء البحث."
+          }
+        }
+      }
     },
     "%lld hard links were counted once." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تم احتساب %lld رابط صلب مرة واحدة."
+          }
+        }
+      }
     },
     "%lld items are in the Trash. Empty it in Finder to free their space; MacPulse never deletes permanently." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يوجد %lld عنصر في سلة المهملات. أفرغها في Finder لتحرير مساحتها؛ لا يحذف MacPulse أي شيء نهائيًا."
+          }
+        }
+      }
     },
     "%lld items were moved to the Trash since this scan. Totals are from before; scan again to update them." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "نُقل %lld عنصر إلى سلة المهملات منذ هذا الفحص. الإجماليات من قبل النقل؛ افحص مرة أخرى لتحديثها."
+          }
+        }
+      }
     },
     "%lld marked" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld محدد"
+          }
+        }
+      }
     },
     "%lld moved to the Trash (%@)" : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "نُقل %1$lld إلى سلة المهملات (%2$@)"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -138,10 +275,23 @@
       }
     },
     "%lld put back" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "أُعيد %lld"
+          }
+        }
+      }
     },
     "%lld selected · %@" : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$lld محدد · %2$@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -151,190 +301,623 @@
       }
     },
     "%lld skipped" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تم تخطي %lld"
+          }
+        }
+      }
     },
     "%lld small files directly in this folder aren't listed." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لم تُدرج %lld ملفات صغيرة موجودة مباشرة في هذا المجلد."
+          }
+        }
+      }
     },
     "%lld smaller files" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld ملفات أصغر"
+          }
+        }
+      }
     },
     "+%@ since last scan" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+%@ منذ آخر فحص"
+          }
+        }
+      }
     },
     "1 file in iCloud that isn't downloaded was skipped, so nothing was downloaded." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تم تخطي ملف واحد في iCloud غير منزّل، لذلك لم يُنزَّل أي شيء."
+          }
+        }
+      }
     },
     "1 file was left out because it couldn't be read or changed during the search." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تم استبعاد ملف واحد لأنه تعذرت قراءته أو تغيّر أثناء البحث."
+          }
+        }
+      }
     },
     "1 hard link was counted once." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تم احتساب رابط صلب واحد مرة واحدة."
+          }
+        }
+      }
     },
     "1 item was moved to the Trash since this scan. Totals are from before; scan again to update them." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "نُقل عنصر واحد إلى سلة المهملات منذ هذا الفحص. الإجماليات من قبل النقل؛ افحص مرة أخرى لتحديثها."
+          }
+        }
+      }
     },
     "1 year" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "سنة واحدة"
+          }
+        }
+      }
     },
     "24 Hours" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "24 ساعة"
+          }
+        }
+      }
     },
     "30 days" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "30 يومًا"
+          }
+        }
+      }
     },
     "7 Days" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "7 أيام"
+          }
+        }
+      }
     },
     "90 days" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "90 يومًا"
+          }
+        }
+      }
     },
     "A different item now has that name in the Trash, so it was left alone." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يحمل عنصر آخر هذا الاسم الآن في سلة المهملات، لذلك تُرك دون تغيير."
+          }
+        }
+      }
     },
     "A folder you chose to clean, not an item in it" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مجلد اخترت تنظيفه، وليس عنصرًا بداخله"
+          }
+        }
+      }
     },
     "A hidden item" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "عنصر مخفي"
+          }
+        }
+      }
     },
     "A media library; manage it in its app" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مكتبة وسائط؛ أدِرها من تطبيقها"
+          }
+        }
+      }
     },
     "A standard folder of your account" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مجلد قياسي في حسابك"
+          }
+        }
+      }
     },
     "About" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "حول"
+          }
+        }
+      }
     },
     "About %@ left (estimate)" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يتبقى نحو %@ (تقدير)"
+          }
+        }
+      }
     },
     "Activity (CPU-based)" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "النشاط (حسب المعالج)"
+          }
+        }
+      }
     },
     "Add Folders…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "إضافة مجلدات…"
+          }
+        }
+      }
     },
     "Add Folder…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "إضافة مجلد…"
+          }
+        }
+      }
     },
     "Add Home Folder" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "إضافة مجلد المنزل"
+          }
+        }
+      }
     },
     "Alert me when an app uses a lot of CPU" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "نبّهني عندما يستخدم تطبيق قدرًا كبيرًا من المعالج"
+          }
+        }
+      }
     },
     "All types" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "كل الأنواع"
+          }
+        }
+      }
     },
     "Also linked at %lld other places; removing this path alone frees nothing." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مرتبط أيضًا في %lld أماكن أخرى؛ إزالة هذا المسار وحده لا تحرر أي مساحة."
+          }
+        }
+      }
     },
     "Also linked at 1 other place; removing this path alone frees nothing." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مرتبط أيضًا في مكان آخر واحد؛ إزالة هذا المسار وحده لا تحرر أي مساحة."
+          }
+        }
+      }
     },
     "Also show a macOS notification" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "اعرض أيضًا إشعارًا من macOS"
+          }
+        }
+      }
     },
     "Any size" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "أي حجم"
+          }
+        }
+      }
     },
     "App" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "التطبيق"
+          }
+        }
+      }
     },
     "App Caches" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ذاكرة التخزين المؤقت للتطبيقات"
+          }
+        }
+      }
     },
     "App activity in the background" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "نشاط التطبيقات في الخلفية"
+          }
+        }
+      }
     },
     "App data in your Library folder" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "بيانات التطبيقات في مجلد المكتبة"
+          }
+        }
+      }
     },
     "App data in your Library folder can't be chosen." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يمكن اختيار بيانات التطبيقات في مجلد المكتبة."
+          }
+        }
+      }
     },
     "App usage history" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "سجل استخدام التطبيقات"
+          }
+        }
+      }
     },
     "App usage history can't be saved on this Mac, so trends will be lost when MacPulse quits." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يمكن حفظ سجل استخدام التطبيقات على هذا الـ Mac، لذلك ستضيع الاتجاهات عند إنهاء MacPulse."
+          }
+        }
+      }
     },
     "Applications" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "التطبيقات"
+          }
+        }
+      }
     },
     "Apps using the most energy" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "التطبيقات الأكثر استهلاكًا للطاقة"
+          }
+        }
+      }
     },
     "Apps using the most energy (estimate)" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "التطبيقات الأكثر استهلاكًا للطاقة (تقدير)"
+          }
+        }
+      }
     },
     "Archives & disk images" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الأرشيفات وصور الأقراص"
+          }
+        }
+      }
     },
     "At least one copy is always kept" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يُحتفظ دائمًا بنسخة واحدة على الأقل"
+          }
+        }
+      }
     },
     "Audio" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "صوت"
+          }
+        }
+      }
     },
     "Available" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "متاح"
+          }
+        }
+      }
     },
     "Average CPU" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "متوسط المعالج"
+          }
+        }
+      }
     },
     "Average memory" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "متوسط الذاكرة"
+          }
+        }
+      }
     },
     "Average over the last %lld minutes" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المتوسط خلال آخر %lld دقيقة"
+          }
+        }
+      }
     },
     "Battery" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "البطارية"
+          }
+        }
+      }
     },
     "Battery charge history" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "سجل شحن البطارية"
+          }
+        }
+      }
     },
     "Battery history" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "سجل البطارية"
+          }
+        }
+      }
     },
     "Battery impact" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "التأثير على البطارية"
+          }
+        }
+      }
     },
     "Battery impact is estimated from the energy macOS reports for each app." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يُقدَّر التأثير على البطارية من الطاقة التي يبلغ عنها macOS لكل تطبيق."
+          }
+        }
+      }
     },
     "Battery level" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مستوى البطارية"
+          }
+        }
+      }
     },
     "Bottom" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الأسفل"
+          }
+        }
+      }
     },
     "Bytes" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "بايت"
+          }
+        }
+      }
     },
     "CPU" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المعالج"
+          }
+        }
+      }
     },
     "CPU above" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المعالج أعلى من"
+          }
+        }
+      }
     },
     "CPU is shown per processor core: 100% means one core fully busy. System CPU is the share of all cores together." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يُعرض المعالج لكل نواة: 100% تعني نواة واحدة مشغولة بالكامل. معالج النظام هو نسبة جميع الأنوية معًا."
+          }
+        }
+      }
     },
     "Cache kept by %@. The app rebuilds it when needed." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ذاكرة مؤقتة يحتفظ بها %@. يعيد التطبيق إنشاءها عند الحاجة."
+          }
+        }
+      }
     },
     "Caches" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الذاكرة المؤقتة"
+          }
+        }
+      }
     },
     "Caches, logs, temporary files and Trash found in this scan. Some may be in use, and files that share storage (APFS clones) can free less than their size." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الذاكرة المؤقتة والسجلات والملفات المؤقتة وسلة المهملات التي وُجدت في هذا الفحص. قد يكون بعضها قيد الاستخدام، والملفات التي تتشارك التخزين (نسخ APFS) قد تحرر أقل من حجمها."
+          }
+        }
+      }
     },
     "Caches, logs, temporary files and Trash found when you scanned %@ on %@." : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الذاكرة المؤقتة والسجلات والملفات المؤقتة وسلة المهملات التي وُجدت عند فحص %1$@ في %2$@."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -344,331 +927,1093 @@
       }
     },
     "Cancel" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "إلغاء"
+          }
+        }
+      }
     },
     "Categories marked cleanable are usually safe to clean up. Categories come from file names and locations; contents are never read." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الفئات المميزة بأنها قابلة للتنظيف آمنة عادةً للتنظيف. تُحدَّد الفئات من أسماء الملفات ومواقعها؛ ولا تُقرأ المحتويات أبدًا."
+          }
+        }
+      }
     },
     "Category" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الفئة"
+          }
+        }
+      }
     },
     "Change Folder…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تغيير المجلد…"
+          }
+        }
+      }
     },
     "Charge" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الشحن"
+          }
+        }
+      }
     },
     "Charging" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يشحن"
+          }
+        }
+      }
     },
     "Charts and charging sessions start again from now. Your battery itself is not affected." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تبدأ الرسوم البيانية وجلسات الشحن من جديد من الآن. لا تتأثر البطارية نفسها."
+          }
+        }
+      }
     },
     "Checking your Mac…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "جارٍ فحص الـ Mac…"
+          }
+        }
+      }
     },
     "Choose Downloads Folder…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "اختيار مجلد التنزيلات…"
+          }
+        }
+      }
     },
     "Choose Folder…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "اختيار مجلد…"
+          }
+        }
+      }
     },
     "Choose a Protected Folder to Scan…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "اختيار مجلد محمي لفحصه…"
+          }
+        }
+      }
     },
     "Choose a folder inside your home folder or on an external drive, not a system location or your whole home folder." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "اختر مجلدًا داخل مجلد المنزل أو على قرص خارجي، وليس موقعًا للنظام أو مجلد المنزل بالكامل."
+          }
+        }
+      }
     },
     "Choose a folder inside your home folder or on an external drive." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "اختر مجلدًا داخل مجلد المنزل أو على قرص خارجي."
+          }
+        }
+      }
     },
     "Choose a folder on the drive, not the whole drive." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "اختر مجلدًا على القرص، وليس القرص بالكامل."
+          }
+        }
+      }
     },
     "Choose a folder to look for empty folders in." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "اختر مجلدًا للبحث فيه عن المجلدات الفارغة."
+          }
+        }
+      }
     },
     "Choose the folders to search. Desktop, Documents and Downloads are searched only when you choose them, so macOS can ask you once." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "اختر المجلدات للبحث فيها. لا يُبحث في سطح المكتب والمستندات والتنزيلات إلا عند اختيارها، حتى يسألك macOS مرة واحدة."
+          }
+        }
+      }
     },
     "Choose your Downloads folder to look for old downloads." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "اختر مجلد التنزيلات للبحث عن التنزيلات القديمة."
+          }
+        }
+      }
     },
     "Cleaner" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المنظّف"
+          }
+        }
+      }
     },
     "Cleanup Finished" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "انتهى التنظيف"
+          }
+        }
+      }
     },
     "Cleanup Stopped" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "توقف التنظيف"
+          }
+        }
+      }
     },
     "Clear App Usage History…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مسح سجل استخدام التطبيقات…"
+          }
+        }
+      }
     },
     "Clear Battery History…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مسح سجل البطارية…"
+          }
+        }
+      }
     },
     "Clear Cleanup History" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مسح سجل التنظيف"
+          }
+        }
+      }
     },
     "Clear Cleanup History…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مسح سجل التنظيف…"
+          }
+        }
+      }
     },
     "Clear History" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مسح السجل"
+          }
+        }
+      }
     },
     "Clear Marks" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مسح التحديدات"
+          }
+        }
+      }
     },
     "Clear Scan History" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مسح سجل الفحص"
+          }
+        }
+      }
     },
     "Clear Scan History…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مسح سجل الفحص…"
+          }
+        }
+      }
     },
     "Clear Usage History" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مسح سجل الاستخدام"
+          }
+        }
+      }
     },
     "Clear all app usage history?" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مسح كل سجل استخدام التطبيقات؟"
+          }
+        }
+      }
     },
     "Clear all battery history?" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مسح كل سجل البطارية؟"
+          }
+        }
+      }
     },
     "Clear all cleanup history?" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مسح كل سجل التنظيف؟"
+          }
+        }
+      }
     },
     "Clear all scan history?" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مسح كل سجل الفحص؟"
+          }
+        }
+      }
     },
     "Coming soon" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "قريبًا"
+          }
+        }
+      }
     },
     "Comparing the start and end of same-size files" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مقارنة بداية ونهاية الملفات المتساوية الحجم"
+          }
+        }
+      }
     },
     "Comparing whole contents" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مقارنة المحتويات كاملة"
+          }
+        }
+      }
     },
     "Connected to power." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "موصول بالطاقة."
+          }
+        }
+      }
     },
     "Contains only a Finder view-settings file (.DS_Store)." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يحتوي فقط على ملف إعدادات عرض Finder ‏(.DS_Store)."
+          }
+        }
+      }
     },
     "Copies you marked in the Duplicate Finder. One copy of each file is always kept." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "النسخ التي حددتها في أداة البحث عن التكرارات. يُحتفظ دائمًا بنسخة واحدة من كل ملف."
+          }
+        }
+      }
     },
     "Copy Diagnostics" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "نسخ معلومات التشخيص"
+          }
+        }
+      }
     },
     "Couldn't change opening at login." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذر تغيير الفتح عند تسجيل الدخول."
+          }
+        }
+      }
     },
     "Couldn't clear app usage history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذر مسح سجل استخدام التطبيقات."
+          }
+        }
+      }
     },
     "Couldn't clear battery history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذر مسح سجل البطارية."
+          }
+        }
+      }
     },
     "Couldn't clear cleanup history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذر مسح سجل التنظيف."
+          }
+        }
+      }
     },
     "Couldn't clear scan history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذر مسح سجل الفحص."
+          }
+        }
+      }
     },
     "Couldn't load app usage history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذر تحميل سجل استخدام التطبيقات."
+          }
+        }
+      }
     },
     "Couldn't load battery history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذر تحميل سجل البطارية."
+          }
+        }
+      }
     },
     "Couldn't read app usage history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذرت قراءة سجل استخدام التطبيقات."
+          }
+        }
+      }
     },
     "Couldn't read cleanup history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذرت قراءة سجل التنظيف."
+          }
+        }
+      }
     },
     "Couldn't read diagnostics." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذرت قراءة معلومات التشخيص."
+          }
+        }
+      }
     },
     "Couldn't read information about this Mac." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذرت قراءة معلومات هذا الـ Mac."
+          }
+        }
+      }
     },
     "Couldn't read scan history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذرت قراءة سجل الفحص."
+          }
+        }
+      }
     },
     "Couldn't read the mounted volumes." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذرت قراءة وحدات التخزين المتصلة."
+          }
+        }
+      }
     },
     "Couldn't remove old app usage history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذرت إزالة سجل استخدام التطبيقات القديم."
+          }
+        }
+      }
     },
     "Couldn't remove old cleanup history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذرت إزالة سجل التنظيف القديم."
+          }
+        }
+      }
     },
     "Couldn't save app usage history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذر حفظ سجل استخدام التطبيقات."
+          }
+        }
+      }
     },
     "Couldn't save this cleanup to history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذر حفظ عملية التنظيف هذه في السجل."
+          }
+        }
+      }
     },
     "Couldn't save this scan to history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذر حفظ هذا الفحص في السجل."
+          }
+        }
+      }
     },
     "Couldn't update cleanup history." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذر تحديث سجل التنظيف."
+          }
+        }
+      }
     },
     "Critical" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "حرج"
+          }
+        }
+      }
     },
     "Data apps keep to work faster. Apps rebuild it when needed, which can make them slower the first time." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "بيانات تحتفظ بها التطبيقات لتعمل بسرعة أكبر. تعيد التطبيقات إنشاءها عند الحاجة، مما قد يجعلها أبطأ في المرة الأولى."
+          }
+        }
+      }
     },
     "Data retention" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الاحتفاظ بالبيانات"
+          }
+        }
+      }
     },
     "Developer" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المطوّر"
+          }
+        }
+      }
     },
     "Diagnostic records written by apps. Rarely needed unless you are troubleshooting." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "سجلات تشخيص تكتبها التطبيقات. نادرًا ما تحتاجها إلا عند حل المشكلات."
+          }
+        }
+      }
     },
     "Documents" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المستندات"
+          }
+        }
+      }
     },
     "Done" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تم"
+          }
+        }
+      }
     },
     "Double-click a folder to open it. Only the largest files of each folder are listed; the rest are summed as smaller files." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "انقر نقرًا مزدوجًا على مجلد لفتحه. تُدرج أكبر الملفات فقط في كل مجلد؛ ويُجمع الباقي كملفات أصغر."
+          }
+        }
+      }
     },
     "Duplicate Finder" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "البحث عن التكرارات"
+          }
+        }
+      }
     },
     "Duplicates" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "التكرارات"
+          }
+        }
+      }
     },
     "Each item is checked again just before it is moved. You can put items back from the Trash until it is emptied." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يُفحص كل عنصر مرة أخرى قبل نقله مباشرة. يمكنك إعادة العناصر من سلة المهملات حتى يتم إفراغها."
+          }
+        }
+      }
     },
     "Elevated" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مرتفع"
+          }
+        }
+      }
     },
     "Empty Folders" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المجلدات الفارغة"
+          }
+        }
+      }
     },
     "Empty folder." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مجلد فارغ."
+          }
+        }
+      }
     },
     "Energy" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الطاقة"
+          }
+        }
+      }
     },
     "Estimated from CPU use only. This Mac hasn't reported per-app energy, so this shows activity, not measured battery use." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مُقدَّر من استخدام المعالج فقط. لم يبلغ هذا الـ Mac عن طاقة كل تطبيق، لذلك يعرض هذا النشاط وليس استهلاك البطارية المقيس."
+          }
+        }
+      }
     },
     "Estimated from the energy macOS attributes to this app's processes." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مُقدَّر من الطاقة التي ينسبها macOS لعمليات هذا التطبيق."
+          }
+        }
+      }
     },
     "Estimated impact: %@" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "التأثير المقدَّر: %@"
+          }
+        }
+      }
     },
     "Every 30 seconds" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "كل 30 ثانية"
+          }
+        }
+      }
     },
     "Every 5 minutes" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "كل 5 دقائق"
+          }
+        }
+      }
     },
     "Every 5 minutes (uses less energy)" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "كل 5 دقائق (يستهلك طاقة أقل)"
+          }
+        }
+      }
     },
     "Every minute" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "كل دقيقة"
+          }
+        }
+      }
     },
     "Exclude a Folder…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "استبعاد مجلد…"
+          }
+        }
+      }
     },
     "Excluded Folders" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المجلدات المستبعدة"
+          }
+        }
+      }
     },
     "Excluded Folders (%lld)…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المجلدات المستبعدة (%lld)…"
+          }
+        }
+      }
     },
     "Excluded by you" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "استبعدتها أنت"
+          }
+        }
+      }
     },
     "Excluded folders are skipped by the Space Analyzer and the Duplicate Finder, and the Cleaner never touches anything in them." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يتخطى محلل المساحة وأداة البحث عن التكرارات المجلدات المستبعدة، ولا يلمس المنظّف أي شيء بداخلها."
+          }
+        }
+      }
     },
     "Figures reported by the file system. Purgeable space (caches and local snapshots) is freed by macOS when space is needed." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "أرقام يبلغ عنها نظام الملفات. يحرر macOS المساحة القابلة للإزالة (الذاكرة المؤقتة واللقطات المحلية) عند الحاجة إلى مساحة."
+          }
+        }
+      }
     },
     "File size" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "حجم الملف"
+          }
+        }
+      }
     },
     "Files" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الملفات"
+          }
+        }
+      }
     },
     "Files are compared by content: same size, then a SHA-256 of the start and end, then of the whole file, then byte by byte. Names and dates are never used. Nothing is changed." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تُقارن الملفات حسب المحتوى: الحجم نفسه، ثم بصمة SHA-256 للبداية والنهاية، ثم للملف كاملًا، ثم بايت ببايت. لا تُستخدم الأسماء والتواريخ أبدًا. ولا يتغير أي شيء."
+          }
+        }
+      }
     },
     "Files in a Downloads folder you choose that haven't changed for a while." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ملفات في مجلد تنزيلات تختاره لم تتغير منذ فترة."
+          }
+        }
+      }
     },
     "Filter by location" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "التصفية حسب الموقع"
+          }
+        }
+      }
     },
     "Find Duplicates" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "البحث عن التكرارات"
+          }
+        }
+      }
     },
     "Finding files" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "جارٍ العثور على الملفات"
+          }
+        }
+      }
     },
     "First scan" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الفحص الأول"
+          }
+        }
+      }
     },
     "Folder" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المجلد"
+          }
+        }
+      }
     },
     "Folders with nothing in them, in a folder you choose." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مجلدات لا تحتوي على شيء، داخل مجلد تختاره."
+          }
+        }
+      }
     },
     "For at least %lld minutes" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لمدة %lld دقيقة على الأقل"
+          }
+        }
+      }
     },
     "Free space" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المساحة الحرة"
+          }
+        }
+      }
     },
     "Fully charged" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مشحونة بالكامل"
+          }
+        }
+      }
     },
     "Gaps mean MacPulse wasn't running or the Mac was asleep." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الفجوات تعني أن MacPulse لم يكن يعمل أو أن الـ Mac كان في وضع السكون."
+          }
+        }
+      }
     },
     "Go" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "انتقال"
+          }
+        }
+      }
     },
     "Hidden folders can't be chosen." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يمكن اختيار المجلدات المخفية."
+          }
+        }
+      }
     },
     "High" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مرتفع"
+          }
+        }
+      }
     },
     "History cleared" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تم مسح السجل"
+          }
+        }
+      }
     },
     "History keeps totals and the five biggest folders of each scan for 180 days, never file names." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يحتفظ السجل بالإجماليات وأكبر خمسة مجلدات في كل فحص لمدة 180 يومًا، ولا يحتفظ بأسماء الملفات أبدًا."
+          }
+        }
+      }
     },
     "Hour" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الساعة"
+          }
+        }
+      }
     },
     "How this is estimated" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "كيف يتم التقدير"
+          }
+        }
+      }
     },
     "Identical to %@ in %@, verified byte by byte. That copy is kept." : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مطابق لـ %1$@ في %2$@، وتم التحقق بايت ببايت. يُحتفظ بتلك النسخة."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -678,49 +2023,153 @@
       }
     },
     "Idle wake-ups/s" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مرات الإيقاظ في الخمول/ث"
+          }
+        }
+      }
     },
     "Images" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الصور"
+          }
+        }
+      }
     },
     "In a folder you excluded" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "في مجلد استبعدته"
+          }
+        }
+      }
     },
     "It is no longer in the Trash." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لم يعد في سلة المهملات."
+          }
+        }
+      }
     },
     "Item" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "العنصر"
+          }
+        }
+      }
     },
     "Items already in the Trash stay there, but MacPulse can no longer put them back for you. Finder's Put Back still works." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تبقى العناصر الموجودة في سلة المهملات هناك، لكن لن يتمكن MacPulse من إعادتها. لا يزال أمر الإعادة في Finder يعمل."
+          }
+        }
+      }
     },
     "Items already in the Trash. Space is freed when the Trash is emptied." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "عناصر موجودة بالفعل في سلة المهملات. تتحرر المساحة عند إفراغ السلة."
+          }
+        }
+      }
     },
     "Keep app usage history for" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الاحتفاظ بسجل استخدام التطبيقات لمدة"
+          }
+        }
+      }
     },
     "Keep battery history for" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الاحتفاظ بسجل البطارية لمدة"
+          }
+        }
+      }
     },
     "Keep the Newest in Each Group" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الاحتفاظ بالأحدث في كل مجموعة"
+          }
+        }
+      }
     },
     "Keep the Oldest in Each Group" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الاحتفاظ بالأقدم في كل مجموعة"
+          }
+        }
+      }
     },
     "Kept for 30 days on this Mac, including where each item went in the Trash." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يُحتفظ به لمدة 30 يومًا على هذا الـ Mac، بما في ذلك مكان كل عنصر في سلة المهملات."
+          }
+        }
+      }
     },
     "Large Files" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الملفات الكبيرة"
+          }
+        }
+      }
     },
     "Last %lld minutes" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "آخر %lld دقيقة"
+          }
+        }
+      }
     },
     "Last cleanup: %lld items moved to the Trash (%@), %@" : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "آخر تنظيف: نُقل %1$lld عنصر إلى سلة المهملات (%2$@)، %3$@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -731,6 +2180,12 @@
     },
     "Last cleanup: 1 item moved to the Trash (%@), %@" : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "آخر تنظيف: نُقل عنصر واحد إلى سلة المهملات (%1$@)، %2$@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -741,6 +2196,12 @@
     },
     "Last scan: %@, %@" : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "آخر فحص: %1$@، %2$@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -750,37 +2211,113 @@
       }
     },
     "Latest sample" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "أحدث عينة"
+          }
+        }
+      }
     },
     "Links and already-counted folders" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الروابط والمجلدات المحتسبة مسبقًا"
+          }
+        }
+      }
     },
     "Logs" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "السجلات"
+          }
+        }
+      }
     },
     "Logs written by %@." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "سجلات كتبها %@."
+          }
+        }
+      }
     },
     "Low" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "منخفض"
+          }
+        }
+      }
     },
     "MacPulse" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "MacPulse"
+          }
+        }
+      }
     },
     "MacPulse can't put items back in that place." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يمكن لـ MacPulse إعادة العناصر إلى ذلك المكان."
+          }
+        }
+      }
     },
     "MacPulse couldn't read that folder." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذر على MacPulse قراءة ذلك المجلد."
+          }
+        }
+      }
     },
     "MacPulse couldn't read this folder." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تعذر على MacPulse قراءة هذا المجلد."
+          }
+        }
+      }
     },
     "MacPulse keeps %lld days of hourly CPU and energy use per app, to show trends. It stores app names and locations only — never documents, window titles or what you do in an app." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يحتفظ MacPulse بـ %lld يومًا من استخدام المعالج والطاقة لكل تطبيق كل ساعة لعرض الاتجاهات. يخزن أسماء التطبيقات ومواقعها فقط — ولا يخزن أبدًا المستندات أو عناوين النوافذ أو ما تفعله داخل التطبيق."
+          }
+        }
+      }
     },
     "MacPulse records the battery level %@ while it is running and keeps %lld days of history on this Mac. Old history is removed automatically." : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يسجل MacPulse مستوى البطارية %1$@ أثناء تشغيله ويحتفظ بسجل %2$lld يومًا على هذا الـ Mac. يُحذف السجل القديم تلقائيًا."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -790,58 +2327,183 @@
       }
     },
     "MacPulse works entirely on this Mac." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يعمل MacPulse بالكامل على هذا الـ Mac."
+          }
+        }
+      }
     },
     "MacPulse's own data" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "بيانات MacPulse الخاصة"
+          }
+        }
+      }
     },
     "Mark Copies" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تحديد النسخ"
+          }
+        }
+      }
     },
     "Mark copies in the Duplicate Finder first." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "حدد النسخ في أداة البحث عن التكرارات أولًا."
+          }
+        }
+      }
     },
     "Mark this copy for removal" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تحديد هذه النسخة للإزالة"
+          }
+        }
+      }
     },
     "Marked for removal" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "محدد للإزالة"
+          }
+        }
+      }
     },
     "Marking is a plan: nothing is removed here. The Cleaner shows the marked copies, asks you to confirm, checks each file again and moves it to the Trash." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "التحديد مجرد خطة: لا يُزال شيء هنا. يعرض المنظّف النسخ المحددة ويطلب تأكيدك ويفحص كل ملف مرة أخرى ثم ينقله إلى سلة المهملات."
+          }
+        }
+      }
     },
     "Measuring app activity…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "جارٍ قياس نشاط التطبيقات…"
+          }
+        }
+      }
     },
     "Memory" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الذاكرة"
+          }
+        }
+      }
     },
     "Minimum size" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الحد الأدنى للحجم"
+          }
+        }
+      }
     },
     "Moderate" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "متوسط"
+          }
+        }
+      }
     },
     "Modified" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تاريخ التعديل"
+          }
+        }
+      }
     },
     "Monitoring" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المراقبة"
+          }
+        }
+      }
     },
     "Most active apps" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "التطبيقات الأكثر نشاطًا"
+          }
+        }
+      }
     },
     "Most active apps (CPU)" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "التطبيقات الأكثر نشاطًا (المعالج)"
+          }
+        }
+      }
     },
     "Mostly on battery" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "غالبًا على البطارية"
+          }
+        }
+      }
     },
     "Mostly on power" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "غالبًا على الطاقة"
+          }
+        }
+      }
     },
     "Move %lld items (%@) to the Trash?" : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "نقل %1$lld عنصر (%2$@) إلى سلة المهملات؟"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -851,223 +2513,733 @@
       }
     },
     "Move 1 item (%@) to the Trash?" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "نقل عنصر واحد (%@) إلى سلة المهملات؟"
+          }
+        }
+      }
     },
     "Move to Trash" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "نقل إلى سلة المهملات"
+          }
+        }
+      }
     },
     "Move to Trash…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "نقل إلى سلة المهملات…"
+          }
+        }
+      }
     },
     "Moved to the Trash." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "نُقل إلى سلة المهملات."
+          }
+        }
+      }
     },
     "Name" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الاسم"
+          }
+        }
+      }
     },
     "No Activity" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يوجد نشاط"
+          }
+        }
+      }
     },
     "No Battery" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا توجد بطارية"
+          }
+        }
+      }
     },
     "No Duplicates" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا توجد تكرارات"
+          }
+        }
+      }
     },
     "No Volumes" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا توجد وحدات تخزين"
+          }
+        }
+      }
     },
     "No account is required. File names, file contents and usage data are never uploaded." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يلزم أي حساب. لا تُرفع أبدًا أسماء الملفات أو محتوياتها أو بيانات الاستخدام."
+          }
+        }
+      }
     },
     "No app has used noticeable CPU in the last %lld minutes." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لم يستخدم أي تطبيق قدرًا ملحوظًا من المعالج خلال آخر %lld دقيقة."
+          }
+        }
+      }
     },
     "No app is using noticeable CPU right now." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يستخدم أي تطبيق قدرًا ملحوظًا من المعالج الآن."
+          }
+        }
+      }
     },
     "No app used measurable CPU in this period." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لم يستخدم أي تطبيق قدرًا قابلًا للقياس من المعالج في هذه الفترة."
+          }
+        }
+      }
     },
     "No battery" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا توجد بطارية"
+          }
+        }
+      }
     },
     "No change" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا تغيير"
+          }
+        }
+      }
     },
     "No charging sessions in this range." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا توجد جلسات شحن في هذا النطاق."
+          }
+        }
+      }
     },
     "No files with identical contents match." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا توجد ملفات متطابقة المحتوى."
+          }
+        }
+      }
     },
     "No folders are excluded." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا توجد مجلدات مستبعدة."
+          }
+        }
+      }
     },
     "No history yet. MacPulse records the charge level regularly while it is running (Settings > Monitoring)." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يوجد سجل بعد. يسجل MacPulse مستوى الشحن بانتظام أثناء تشغيله (الإعدادات > المراقبة)."
+          }
+        }
+      }
     },
     "No hourly history yet for this app. Trends build up while MacPulse is running." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يوجد سجل بالساعة لهذا التطبيق بعد. تتكوّن الاتجاهات أثناء تشغيل MacPulse."
+          }
+        }
+      }
     },
     "No permission to read" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يوجد إذن بالقراءة"
+          }
+        }
+      }
     },
     "Normal" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "عادي"
+          }
+        }
+      }
     },
     "Not available" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "غير متاح"
+          }
+        }
+      }
     },
     "Not changed for more than %lld days." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لم يتغير منذ أكثر من %lld يومًا."
+          }
+        }
+      }
     },
     "Not moved" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لم يُنقل"
+          }
+        }
+      }
     },
     "Not scanned" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لم يُفحص"
+          }
+        }
+      }
     },
     "Nothing needs your attention right now." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يوجد ما يحتاج انتباهك الآن."
+          }
+        }
+      }
     },
     "Nothing to clean here." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يوجد ما يُنظَّف هنا."
+          }
+        }
+      }
     },
     "Notifications" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الإشعارات"
+          }
+        }
+      }
     },
     "Notifications are turned off for MacPulse in System Settings > Notifications." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الإشعارات متوقفة لـ MacPulse في إعدادات النظام > الإشعارات."
+          }
+        }
+      }
     },
     "Old Downloads" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "التنزيلات القديمة"
+          }
+        }
+      }
     },
     "Old downloads are files unchanged for" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "التنزيلات القديمة هي ملفات لم تتغير منذ"
+          }
+        }
+      }
     },
     "On another volume" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "على وحدة تخزين أخرى"
+          }
+        }
+      }
     },
     "On battery" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "على البطارية"
+          }
+        }
+      }
     },
     "On power" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "على الطاقة"
+          }
+        }
+      }
     },
     "One of the largest files in your last Space Analyzer scan." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "أحد أكبر الملفات في آخر فحص لمحلل المساحة."
+          }
+        }
+      }
     },
     "Only while on battery" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "فقط أثناء العمل على البطارية"
+          }
+        }
+      }
     },
     "Open" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "فتح"
+          }
+        }
+      }
     },
     "Open MacPulse" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "فتح MacPulse"
+          }
+        }
+      }
     },
     "Open MacPulse at login" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "فتح MacPulse عند تسجيل الدخول"
+          }
+        }
+      }
     },
     "Open Space Analyzer" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "فتح محلل المساحة"
+          }
+        }
+      }
     },
     "Open Trash in Finder" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "فتح سلة المهملات في Finder"
+          }
+        }
+      }
     },
     "Other" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "أخرى"
+          }
+        }
+      }
     },
     "Outside your home folder" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "خارج مجلد المنزل"
+          }
+        }
+      }
     },
     "Over 1 GB" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "أكثر من 1 غيغابايت"
+          }
+        }
+      }
     },
     "Over 1 MB" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "أكثر من 1 ميغابايت"
+          }
+        }
+      }
     },
     "Over 10 MB" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "أكثر من 10 ميغابايت"
+          }
+        }
+      }
     },
     "Over 100 KB" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "أكثر من 100 كيلوبايت"
+          }
+        }
+      }
     },
     "Over 100 MB" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "أكثر من 100 ميغابايت"
+          }
+        }
+      }
     },
     "Overview" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "نظرة عامة"
+          }
+        }
+      }
     },
     "Part" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الجزء"
+          }
+        }
+      }
     },
     "Part of an app or another package" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "جزء من تطبيق أو حزمة أخرى"
+          }
+        }
+      }
     },
     "Partial Results (stopped)" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "نتائج جزئية (متوقف)"
+          }
+        }
+      }
     },
     "Per-app trends start again from now." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تبدأ اتجاهات كل تطبيق من جديد من الآن."
+          }
+        }
+      }
     },
     "Plugged in" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "موصول"
+          }
+        }
+      }
     },
     "Plugged in, not charging" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "موصول، لا يشحن"
+          }
+        }
+      }
     },
     "Power" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الطاقة الكهربائية"
+          }
+        }
+      }
     },
     "Privacy" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الخصوصية"
+          }
+        }
+      }
     },
     "Processes: %lld" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "العمليات: %lld"
+          }
+        }
+      }
     },
     "Protected by macOS privacy (choose them to scan)" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "محمية بخصوصية macOS (اخترها لفحصها)"
+          }
+        }
+      }
     },
     "Purgeable" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "قابلة للإزالة"
+          }
+        }
+      }
     },
     "Put Back" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "إعادة"
+          }
+        }
+      }
     },
     "Put back where it was." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "أُعيد إلى مكانه."
+          }
+        }
+      }
     },
     "Quick Look" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "النظرة السريعة"
+          }
+        }
+      }
     },
     "Quit" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "إنهاء"
+          }
+        }
+      }
     },
     "Range" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "النطاق"
+          }
+        }
+      }
     },
     "Read the battery now (⌘R)" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "قراءة البطارية الآن (⌘R)"
+          }
+        }
+      }
     },
     "Read-only" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "للقراءة فقط"
+          }
+        }
+      }
     },
     "Reading battery…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "جارٍ قراءة البطارية…"
+          }
+        }
+      }
     },
     "Refresh" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تحديث"
+          }
+        }
+      }
     },
     "Remove" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "إزالة"
+          }
+        }
+      }
     },
     "Remove %@" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "إزالة %@"
+          }
+        }
+      }
     },
     "Remove %@ in %@" : {
       "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "إزالة %1$@ في %2$@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
@@ -1077,286 +3249,937 @@
       }
     },
     "Results" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "النتائج"
+          }
+        }
+      }
     },
     "Reveal Marked in Finder" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "إظهار المحدد في Finder"
+          }
+        }
+      }
     },
     "Reveal in Finder" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "إظهار في Finder"
+          }
+        }
+      }
     },
     "Review" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مراجعة"
+          }
+        }
+      }
     },
     "Review Large Files in Cleaner…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مراجعة الملفات الكبيرة في المنظّف…"
+          }
+        }
+      }
     },
     "Review Marked in Cleaner…" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مراجعة المحدد في المنظّف…"
+          }
+        }
+      }
     },
     "Right now" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الآن"
+          }
+        }
+      }
     },
     "Saves %@" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يوفر %@"
+          }
+        }
+      }
     },
     "Saves about %@ (estimate)" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يوفر نحو %@ (تقدير)"
+          }
+        }
+      }
     },
     "Scan %@" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "فحص %@"
+          }
+        }
+      }
     },
     "Scan Home Folder" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "فحص مجلد المنزل"
+          }
+        }
+      }
     },
     "Scan Results" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "نتائج الفحص"
+          }
+        }
+      }
     },
     "Scan a folder in Space Analyzer to estimate this." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "افحص مجلدًا في محلل المساحة لتقدير هذا."
+          }
+        }
+      }
     },
     "Scan a folder in the Space Analyzer first." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "افحص مجلدًا في محلل المساحة أولًا."
+          }
+        }
+      }
     },
     "Scan and cleanup history" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "سجل الفحص والتنظيف"
+          }
+        }
+      }
     },
     "Scan history is kept 180 days and cleanup history 30 days. Everything stays on this Mac." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يُحتفظ بسجل الفحص 180 يومًا وسجل التنظيف 30 يومًا. يبقى كل شيء على هذا الـ Mac."
+          }
+        }
+      }
     },
     "Scans and cleanup" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الفحص والتنظيف"
+          }
+        }
+      }
     },
     "Scans only read file sizes; nothing is changed. Desktop, Documents, Downloads and other apps' data are skipped unless you choose them, so macOS doesn't ask for permission unexpectedly." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يقرأ الفحص أحجام الملفات فقط؛ ولا يتغير أي شيء. يتم تخطي سطح المكتب والمستندات والتنزيلات وبيانات التطبيقات الأخرى ما لم تخترها، حتى لا يطلب macOS الإذن بشكل غير متوقع."
+          }
+        }
+      }
     },
     "Scans skip these folders and everything inside them." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يتخطى الفحص هذه المجلدات وكل ما بداخلها."
+          }
+        }
+      }
     },
     "Segment" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الجزء"
+          }
+        }
+      }
     },
     "Select %@" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تحديد %@"
+          }
+        }
+      }
     },
     "Select All" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تحديد الكل"
+          }
+        }
+      }
     },
     "Select None" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "إلغاء التحديد"
+          }
+        }
+      }
     },
     "Select an app to see its details and trend." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "اختر تطبيقًا لعرض تفاصيله واتجاهه."
+          }
+        }
+      }
     },
     "Selected" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المحدد"
+          }
+        }
+      }
     },
     "Settings" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الإعدادات"
+          }
+        }
+      }
     },
     "Show" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "عرض"
+          }
+        }
+      }
     },
     "Show All Apps" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "عرض كل التطبيقات"
+          }
+        }
+      }
     },
     "Show Battery Details" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "عرض تفاصيل البطارية"
+          }
+        }
+      }
     },
     "Show Energy Details" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "عرض تفاصيل الطاقة"
+          }
+        }
+      }
     },
     "Show MacPulse in the menu bar" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "عرض MacPulse في شريط القوائم"
+          }
+        }
+      }
     },
     "Size" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الحجم"
+          }
+        }
+      }
     },
     "Size comparisons start again from your next scan. No files are touched." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تبدأ مقارنات الحجم من جديد من الفحص التالي. لا يتم المساس بأي ملف."
+          }
+        }
+      }
     },
     "Size on disk" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الحجم على القرص"
+          }
+        }
+      }
     },
     "Size on disk is the space files occupy; file size is what the files contain. Files that share storage (APFS clones, hard links) are counted once where macOS reports it, so removing a file can free less than its size." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الحجم على القرص هو المساحة التي تشغلها الملفات؛ وحجم الملف هو ما تحتويه. الملفات التي تتشارك التخزين (نسخ APFS والروابط الصلبة) تُحتسب مرة واحدة حيث يبلغ macOS عن ذلك، لذا قد تحرر إزالة ملف أقل من حجمه."
+          }
+        }
+      }
     },
     "Sizes from the preview. The space is freed when the Trash is emptied." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الأحجام من المعاينة. تتحرر المساحة عند إفراغ سلة المهملات."
+          }
+        }
+      }
     },
     "Skipped: MacPulse never removes this kind of item." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تم التخطي: لا يزيل MacPulse هذا النوع من العناصر أبدًا."
+          }
+        }
+      }
     },
     "Skipped: it changed since the preview, so it was left alone." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تم التخطي: تغيّر منذ المعاينة، لذلك تُرك دون تغيير."
+          }
+        }
+      }
     },
     "Skipped: it no longer exists." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تم التخطي: لم يعد موجودًا."
+          }
+        }
+      }
     },
     "Skipped: the copy that was to be kept is gone or changed, so this one was kept too." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تم التخطي: النسخة التي كان سيُحتفظ بها اختفت أو تغيّرت، لذلك احتُفظ بهذه أيضًا."
+          }
+        }
+      }
     },
     "Skipped: the folder isn't empty anymore." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تم التخطي: لم يعد المجلد فارغًا."
+          }
+        }
+      }
     },
     "Some copies share storage with other files (APFS clones), so removing them can free less than their size." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تتشارك بعض النسخ التخزين مع ملفات أخرى (نسخ APFS)، لذا قد تحرر إزالتها أقل من حجمها."
+          }
+        }
+      }
     },
     "Something else now has its name in the original folder." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يحمل عنصر آخر اسمه الآن في المجلد الأصلي."
+          }
+        }
+      }
     },
     "Something else reached the Trash in its place and couldn't be moved back. It's in the Trash as “%@”." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "وصل عنصر آخر إلى سلة المهملات مكانه وتعذرت إعادته. إنه في سلة المهملات باسم «%@»."
+          }
+        }
+      }
     },
     "Space Analyzer" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "محلل المساحة"
+          }
+        }
+      }
     },
     "Startup" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "بدء التشغيل"
+          }
+        }
+      }
     },
     "Status unknown" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الحالة غير معروفة"
+          }
+        }
+      }
     },
     "Stop" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "إيقاف"
+          }
+        }
+      }
     },
     "Stopped" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "متوقف"
+          }
+        }
+      }
     },
     "System locations" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مواقع النظام"
+          }
+        }
+      }
     },
     "System processes not included: %lld" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "عمليات النظام غير المضمنة: %lld"
+          }
+        }
+      }
     },
     "Takes effect the next time MacPulse starts." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يسري في المرة التالية التي يبدأ فيها MacPulse."
+          }
+        }
+      }
     },
     "Temporary files" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الملفات المؤقتة"
+          }
+        }
+      }
     },
     "That folder is on your startup disk. Choose it from your home folder instead." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "هذا المجلد على قرص بدء التشغيل. اختره من مجلد المنزل بدلًا من ذلك."
+          }
+        }
+      }
     },
     "The biggest files from your last Space Analyzer scan." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "أكبر الملفات من آخر فحص لمحلل المساحة."
+          }
+        }
+      }
     },
     "The folder it came from no longer exists." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المجلد الذي جاء منه لم يعد موجودًا."
+          }
+        }
+      }
     },
     "The space is freed when you empty the Trash. Until then you can put items back." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تتحرر المساحة عند إفراغ سلة المهملات. حتى ذلك الحين يمكنك إعادة العناصر."
+          }
+        }
+      }
     },
     "This Mac doesn't report per-app energy, so apps are ranked by CPU activity. That isn't a battery measurement." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يبلغ هذا الـ Mac عن طاقة كل تطبيق، لذلك تُرتب التطبيقات حسب نشاط المعالج. هذا ليس قياسًا للبطارية."
+          }
+        }
+      }
     },
     "This Mac runs on external power only, so there is no battery to monitor." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يعمل هذا الـ Mac على الطاقة الخارجية فقط، لذلك لا توجد بطارية لمراقبتها."
+          }
+        }
+      }
     },
     "This app had no activity in the selected period." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لم يكن لهذا التطبيق نشاط في الفترة المحددة."
+          }
+        }
+      }
     },
     "This app is running. Quit it first so it doesn't recreate files while they are moved." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "هذا التطبيق قيد التشغيل. أنهِه أولًا حتى لا يعيد إنشاء الملفات أثناء نقلها."
+          }
+        }
+      }
     },
     "This cleanup is from an older version of MacPulse, which didn't record exactly which item it moved. Use Put Back in the Trash in Finder." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "عملية التنظيف هذه من إصدار أقدم من MacPulse لم يسجل بالضبط العنصر الذي نقله. استخدم أمر الإعادة في سلة المهملات في Finder."
+          }
+        }
+      }
     },
     "Time" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الوقت"
+          }
+        }
+      }
     },
     "To find apps that drain your battery, MacPulse reads the list of your running apps and how much CPU, memory and energy each uses — the same information Activity Monitor shows. It never reads what's inside your apps or documents, and it can't see other users' or system processes." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "للعثور على التطبيقات التي تستنزف البطارية، يقرأ MacPulse قائمة التطبيقات قيد التشغيل ومقدار ما يستخدمه كل منها من المعالج والذاكرة والطاقة — وهي المعلومات نفسها التي يعرضها مراقب النشاط. لا يقرأ أبدًا ما بداخل تطبيقاتك أو مستنداتك، ولا يمكنه رؤية عمليات المستخدمين الآخرين أو النظام."
+          }
+        }
+      }
     },
     "Top" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الأعلى"
+          }
+        }
+      }
     },
     "Trash" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "سلة المهملات"
+          }
+        }
+      }
     },
     "Trend" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الاتجاه"
+          }
+        }
+      }
     },
     "Type" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "النوع"
+          }
+        }
+      }
     },
     "Unchanged for" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لم يتغير منذ"
+          }
+        }
+      }
     },
     "Unknown" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "غير معروف"
+          }
+        }
+      }
     },
     "Unplugged" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "غير موصول"
+          }
+        }
+      }
     },
     "Up" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "أعلى"
+          }
+        }
+      }
     },
     "Updated %@" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "حُدِّث %@"
+          }
+        }
+      }
     },
     "Used" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المستخدم"
+          }
+        }
+      }
     },
     "Used by macOS" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يستخدمه macOS"
+          }
+        }
+      }
     },
     "Verifying byte by byte" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "جارٍ التحقق بايت ببايت"
+          }
+        }
+      }
     },
     "Video" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "فيديو"
+          }
+        }
+      }
     },
     "Volume" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "وحدة التخزين"
+          }
+        }
+      }
     },
     "While MacPulse is in the menu bar, closing its window keeps it running so battery and app activity are still recorded. Opening at login is off unless you turn it on; you can also change it in System Settings > General > Login Items." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "عندما يكون MacPulse في شريط القوائم، يبقى قيد التشغيل بعد إغلاق نافذته حتى يستمر تسجيل البطارية ونشاط التطبيقات. الفتح عند تسجيل الدخول متوقف ما لم تفعّله؛ ويمكنك أيضًا تغييره في إعدادات النظام > عام > عناصر تسجيل الدخول."
+          }
+        }
+      }
     },
     "While the Energy screen is open, app activity is measured every 10 seconds." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "أثناء فتح شاشة الطاقة، يُقاس نشاط التطبيقات كل 10 ثوانٍ."
+          }
+        }
+      }
     },
     "cleanable" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "قابل للتنظيف"
+          }
+        }
+      }
     },
     "every 30 seconds" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "كل 30 ثانية"
+          }
+        }
+      }
     },
     "every 5 minutes" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "كل 5 دقائق"
+          }
+        }
+      }
     },
     "every minute" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "كل دقيقة"
+          }
+        }
+      }
     },
     "macOS & background" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "macOS والخلفية"
+          }
+        }
+      }
     },
     "macOS didn't move it back: %@" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لم يُعِده macOS: %@"
+          }
+        }
+      }
     },
     "macOS didn't move it: %@" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لم ينقله macOS: %@"
+          }
+        }
+      }
     },
     "macOS doesn't let MacPulse look inside the Trash. Use Put Back in the Trash in Finder, or allow Full Disk Access in System Settings." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يسمح macOS لـ MacPulse برؤية محتويات سلة المهملات. استخدم أمر الإعادة في سلة المهملات في Finder، أو امنح الوصول الكامل إلى القرص في إعدادات النظام."
+          }
+        }
+      }
     },
     "macOS lets only apps with Full Disk Access look inside the Trash. Open it in Finder to see and empty it." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "لا يسمح macOS برؤية محتويات سلة المهملات إلا للتطبيقات التي لديها وصول كامل إلى القرص. افتحها في Finder لعرضها وإفراغها."
+          }
+        }
+      }
     },
     "macOS moved the item but didn't say where; look for it in the Trash." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "نقل macOS العنصر لكنه لم يحدد مكانه؛ ابحث عنه في سلة المهملات."
+          }
+        }
+      }
     },
     "macOS needs your approval: turn MacPulse on in System Settings > General > Login Items." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يحتاج macOS إلى موافقتك: فعّل MacPulse في إعدادات النظام > عام > عناصر تسجيل الدخول."
+          }
+        }
+      }
     },
     "—" : {
-
+      "localizations" : {}
     },
     "“%@” is a standard folder of your account. Choose a folder inside it instead." : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "«%@» مجلد قياسي في حسابك. اختر مجلدًا بداخله بدلًا من ذلك."
+          }
+        }
+      }
     },
     "−%@ since last scan" : {
-
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "−%@ منذ آخر فحص"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
