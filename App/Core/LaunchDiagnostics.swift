@@ -48,7 +48,8 @@ public enum LaunchDiagnostics {
         let box = ResultBox<T>()
         Task.detached { box.set(await work()) }
         while box.value == nil {
-            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            // Short slices, so the main-thread stall the benchmarks measure is the app's, not this loop's.
+            RunLoop.main.run(until: Date().addingTimeInterval(0.005))
         }
         return box.value!
     }
