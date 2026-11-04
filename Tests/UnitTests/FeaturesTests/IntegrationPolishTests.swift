@@ -172,6 +172,25 @@ private struct ManyItemsSource: CleanupCandidateSource {
     }
 }
 
+/// The first review is slow; later ones answer at once with a different list.
+private actor SlowFirstSource: CleanupCandidateSource {
+    private var calls = 0
+    func candidates(for category: CleanupCategory, options: CleanupScanOptions, policy: CleanupSafetyPolicy) async -> CleanupCandidateList {
+        calls += 1
+        let call = calls
+        if call == 1 { try? await Task.sleep(for: .milliseconds(300)) }
+        let full = await PreviewCleanupSource().candidates(for: category, options: options, policy: policy)
+        return CleanupCandidateList(category: category, candidates: call == 1 ? full.candidates : Array(full.candidates.prefix(1)))
+    }
+}
+
+private struct EndlessDuplicateFinder: DuplicateScanning {
+    func findDuplicates(_ request: DuplicateScanRequest, progress: @escaping @Sendable (DuplicateScanProgress) -> Void) async -> DuplicateScanResult {
+        while !Task.isCancelled { try? await Task.sleep(for: .milliseconds(5)) }
+        return DuplicateScanResult(roots: request.roots, startedAt: Date(), finishedAt: Date(), isComplete: false, groups: [], statistics: DuplicateScanStatistics(), skipped: [])
+    }
+}
+
 @MainActor
 private final class CallLog {
     var cleaned = 0
@@ -236,6 +255,51 @@ struct ReviewRaceTests {
         model.scanHomeFolder()
         await model.waitForScan()
         #expect(model.movedSinceScan == 0, "A new scan starts the count again")
+    }
+
+    @Test func theNewestReviewWinsAndNeverReplacesAConfirmation() async throws {
+        let model = CleanerViewModel(source: SlowFirstSource(), trash: PreviewTrashService(), homePath: "/Users/preview", appDataPath: nil)
+        model.select(.appCaches)
+        model.startReview()          // slow, full list
+        try await Task.sleep(for: .milliseconds(20))
+        #expect(!model.canRequestCleanup, "Nothing can be moved while the list loads")
+        await model.review()         // fast, one item
+        #expect(model.candidates.count == 1)
+        model.selectAll()
+        model.requestCleanup()
+        guard case .confirming = model.phase else {
+            Issue.record("Expected the confirmation")
+            return
+        }
+        try await Task.sleep(for: .milliseconds(400))
+        #expect(model.candidates.count == 1, "The older, slower review didn't overwrite the newer one")
+        guard case .confirming = model.phase else {
+            Issue.record("A finishing review replaced the open confirmation")
+            return
+        }
+    }
+
+    @Test func aSecondDuplicateSearchCantStartAndForgetDropsCopies() async throws {
+        let blocked = DuplicateFinderViewModel(finder: EndlessDuplicateFinder(), homePath: "/Users/preview")
+        blocked.addFolder("/Users/preview")
+        blocked.search()
+        #expect(blocked.isSearching)
+        blocked.addFolder("/Users/preview/Movies")
+        blocked.search()
+        blocked.cancelSearch()
+        await blocked.waitForSearch()
+        #expect(blocked.result?.roots == ["/Users/preview"], "The running search wasn't replaced")
+
+        let model = DuplicateFinderViewModel(finder: PreviewDuplicateFinder(), homePath: "/Users/preview")
+        model.addFolder("/Users/preview")
+        model.search()
+        await model.waitForSearch()
+        let groups = try #require(model.result?.groups)
+        let video = try #require(groups.first { $0.files.contains { $0.path.hasSuffix("Movies/Holiday.mov") } })
+        let copy = try #require(video.files.first { $0.path.hasSuffix("Downloads/Holiday (1).mov") })
+        model.forget([copy.path])
+        #expect(!(model.result?.groups.contains { $0.contentHash == video.contentHash } ?? true), "A group left with one copy disappears")
+        #expect(model.result?.groups.count == groups.count - 1)
     }
 
     @Test func historyIsSavedInBatchesAndTheFinalReportWins() async throws {

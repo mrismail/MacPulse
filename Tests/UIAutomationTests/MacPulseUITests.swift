@@ -225,6 +225,13 @@ final class MacPulseUITests: XCTestCase {
         select.click()
         element("cleaner.moveToTrash", in: app).click()
 
+        // Escape closes the dialog and moves nothing.
+        XCTAssertTrue(app.sheets.buttons["Cancel"].firstMatch.waitForExistence(timeout: 10))
+        app.typeKey(.escape, modifierFlags: [])
+        XCTAssertTrue(app.sheets.buttons["Cancel"].firstMatch.waitForNonExistence(timeout: 5), "Escape cancels")
+        XCTAssertFalse(element("cleaner.result", in: app).exists)
+        element("cleaner.moveToTrash", in: app).click()
+
         // Cancelling the dialog moves nothing.
         // The dialog is a sheet; plain app.buttons would also match Touch Bar buttons.
         let cancel = app.sheets.buttons["Cancel"].firstMatch
