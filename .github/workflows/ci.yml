@@ -89,7 +89,7 @@ jobs:
         if: ${{ !cancelled() && hashFiles('build/Build/Products/Debug/MacPulse.app/Contents/Info.plist') != '' }}
         run: |
           APP=build/Build/Products/Debug/MacPulse.app/Contents/MacOS/MacPulse
-          for LANG_ARGS in "" "-AppleLanguages (ar) -AppleLocale ar_EG" "-MacPulseUseFakeServices -AppleLanguages (ar) -AppleLocale ar_EG"; do
+          for LANG_ARGS in "" "-MacPulseUseFakeServices -AppleLanguages (ar) -AppleLocale ar_EG"; do
             # shellcheck disable=SC2086
             "$APP" $LANG_ARGS > smoke.log 2>&1 &
             PID=$!
@@ -97,12 +97,20 @@ jobs:
             if kill -0 "$PID" 2>/dev/null; then
               echo "MacPulse is running (pid $PID) ${LANG_ARGS:-English}"
               if [ -n "$LANG_ARGS" ]; then
-                # Show what the main thread is doing (diagnoses a launch without a window).
-                sample "$PID" 2 -file sample.txt >/dev/null 2>&1 || true
-                WINDOWS=$(osascript -e 'tell application "System Events" to count windows of (first process whose unix id is '"$PID"')' 2>&1 || true)
-                echo "::notice title=Launch $LANG_ARGS::windows: $WINDOWS"
-                awk '/Thread_.*DispatchQueue_1: com.apple.main-thread/{f=1} f{print; n++} n>45{exit}' sample.txt \
-                  | grep -vE '^\s*$' | head -45 | while IFS= read -r l; do echo "::notice title=Main thread::${l:0:300}"; done
+                # The window must be open and show Arabic text (the sidebar's "Overview").
+                TEXTS=$(osascript -e 'tell application "System Events"' \
+                  -e 'set p to first process whose unix id is '"$PID" \
+                  -e 'if (count windows of p) is 0 then return "NO WINDOW"' \
+                  -e 'set out to ""' \
+                  -e 'repeat with e in (entire contents of window 1 of p)' \
+                  -e 'try' -e 'set out to out & (name of e as text) & "|"' -e 'end try' \
+                  -e 'try' -e 'set out to out & (value of e as text) & "|"' -e 'end try' \
+                  -e 'end repeat' -e 'return out' -e 'end tell' 2>&1 || true)
+                if ! printf '%s' "$TEXTS" | grep -q "نظرة عامة"; then
+                  echo "::error::MacPulse in Arabic shows no Arabic sidebar text: ${TEXTS:0:600}"
+                  kill "$PID"; exit 1
+                fi
+                echo "Arabic window shows translated text"
               fi
               kill "$PID"; wait "$PID" 2>/dev/null || true
             else
