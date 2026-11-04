@@ -22,6 +22,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # the build number is the commit count
 
       - name: Toolchain versions
         run: |
@@ -101,8 +103,33 @@ jobs:
           set -o pipefail
           xcodebuild -project MacPulse.xcodeproj -scheme MacPulse -configuration Release \
             -destination 'platform=macOS' -derivedDataPath build-release \
+            CURRENT_PROJECT_VERSION="$(git rev-list --count HEAD)" \
             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES build 2>&1 | tee release.log | tail -5 \
             || { grep -E "error:" release.log | sort -u | head -20 | while IFS= read -r l; do echo "::error::${l:0:900}"; done; exit 1; }
+
+      - name: Verify Release bundle (version, icon, privacy manifest)
+        run: |
+          python3 - <<'PY'
+          import plistlib, re, subprocess, sys, os
+          app = "build-release/Build/Products/Release/MacPulse.app/Contents"
+          info = plistlib.load(open(f"{app}/Info.plist", "rb"))
+          expected = re.search(r'MARKETING_VERSION: "([0-9.]+)"', open("project.yml").read()).group(1)
+          count = subprocess.check_output(["git", "rev-list", "--count", "HEAD"], text=True).strip()
+          version, build = info.get("CFBundleShortVersionString"), info.get("CFBundleVersion")
+          print(f"::notice title=Release version::{version} ({build})")
+          errors = []
+          if version != expected: errors.append(f"version {version}, expected {expected}")
+          if build != count: errors.append(f"build {build}, expected the commit count {count}")
+          if info.get("CFBundleIconName") != "AppIcon": errors.append("CFBundleIconName is not AppIcon")
+          for name in ("Assets.car", "AppIcon.icns", "PrivacyInfo.xcprivacy"):
+              if not os.path.exists(f"{app}/Resources/{name}"): errors.append(f"missing Resources/{name}")
+          if os.path.exists(f"{app}/Resources/PrivacyInfo.xcprivacy"):
+              manifest = plistlib.load(open(f"{app}/Resources/PrivacyInfo.xcprivacy", "rb"))
+              if manifest.get("NSPrivacyTracking") is not False or manifest.get("NSPrivacyCollectedDataTypes") != []:
+                  errors.append("privacy manifest must declare no tracking and no collected data")
+          for e in errors: print(f"::error::{e}")
+          sys.exit(1 if errors else 0)
+          PY
 
       - name: Verify Release signing (no entitlements, Hardened Runtime)
         run: |
