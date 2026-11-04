@@ -207,7 +207,7 @@ final class MacPulseUITests: XCTestCase {
             XCTFail("No results. Identifiers on screen: \(ids)")
         }
         XCTAssertTrue(element("duplicates.groups", in: app).exists)
-        let mark = element("duplicates.mark.Holiday.mov", in: app)
+        let mark = element("duplicates.mark.Movies/Holiday.mov", in: app)
         XCTAssertTrue(mark.waitForExistence(timeout: 10))
         mark.click()
         XCTAssertTrue(element("duplicates.revealMarked", in: app).isEnabled, "One copy is marked")
