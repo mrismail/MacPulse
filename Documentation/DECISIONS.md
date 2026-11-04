@@ -472,7 +472,8 @@ could move the wrong item, and the Duplicate Finder could download iCloud files.
   - The Cleaner offers and moves a copy only while that copy and the kept copy are both
     unchanged (`CleanupRequirement.keptCopyUnchanged`).
 - **iCloud placeholders:** files with `SF_DATALESS` are never opened; they are counted as
-  "not downloaded" (amends ADR-014).
+  "not downloaded" (amends ADR-014). ADR-018 adds a read policy for files evicted after
+  listing.
 - **Empty folders:** listed again immediately before moving
   (`CleanupRequirement.stillEmpty`).
 - **After `trashItem`:** the item in the Trash must have the checked device and inode;

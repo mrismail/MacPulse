@@ -234,6 +234,8 @@ struct DuplicateSearch {
     /// whole file. `nil` when the file can't be read or has changed.
     mutating func hash(_ file: DuplicateGrouping.StoredFile, quick: Bool) -> String? {
         let path = file.candidate.path
+        let previousPolicy = Self.stopDownloadsOnThisThread()
+        defer { Self.restoreDownloads(previousPolicy) }
         guard let handle = openUnchanged(path) else { return nil }
         defer { try? handle.close() }
         var hasher = SHA256()
@@ -252,7 +254,9 @@ struct DuplicateSearch {
                 }
             }
         } catch {
-            exclude(path, .unreadable)
+            var info = stat()
+            let evicted = lstat(path, &info) == 0 && Self.isDataless(flags: UInt32(info.st_flags))
+            exclude(path, evicted ? .notDownloaded : .unreadable)
             return nil
         }
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
@@ -303,6 +307,8 @@ struct DuplicateSearch {
 
     /// `true` when identical, `false` when different, `nil` when either can't be read.
     mutating func compare(_ lhs: String, _ rhs: String) -> Bool? {
+        let previousPolicy = Self.stopDownloadsOnThisThread()
+        defer { Self.restoreDownloads(previousPolicy) }
         guard let left = openUnchanged(lhs), let right = openUnchanged(rhs) else { return nil }
         defer {
             try? left.close()
@@ -337,6 +343,20 @@ struct DuplicateSearch {
     }
 
     // MARK: File access
+
+    /// Makes reads on this thread fail instead of downloading a file that became an iCloud
+    /// placeholder after it was listed. Used only around code that doesn't suspend, so the
+    /// thread can't change before `restoreDownloads` runs. Returns the previous policy.
+    static func stopDownloadsOnThisThread() -> Int32 {
+        let previous = getiopolicy_np(IOPOL_TYPE_VFS_MATERIALIZE_DATALESS_FILES, IOPOL_SCOPE_THREAD)
+        _ = setiopolicy_np(IOPOL_TYPE_VFS_MATERIALIZE_DATALESS_FILES, IOPOL_SCOPE_THREAD, IOPOL_MATERIALIZE_DATALESS_FILES_OFF)
+        return previous
+    }
+
+    static func restoreDownloads(_ previous: Int32) {
+        guard previous >= 0 else { return }
+        _ = setiopolicy_np(IOPOL_TYPE_VFS_MATERIALIZE_DATALESS_FILES, IOPOL_SCOPE_THREAD, previous)
+    }
 
     /// Opens read-only without following a link, and only if the file is still the one
     /// that was listed (same device, inode, size and modification time).
