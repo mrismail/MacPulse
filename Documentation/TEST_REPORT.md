@@ -8,9 +8,9 @@ Xcode 16, Release build unless noted). Checks that CI can't run are listed under
 | Suite | Framework | Count | Result |
 |---|---|---|---|
 | Domain, Shared, Features, AppCore unit tests and Infrastructure integration tests (real files in temporary folders) | Swift Testing | 358 | All pass |
-| UI tests: navigation, Battery, Overview, Energy, Space Analyzer, Duplicate Finder, Cleaner (confirm, Escape, Cancel), Settings, accessibility audit, Arabic right to left | XCTest/XCUITest | 21 | All pass; the Battery-screen contrast audit is non-blocking (below) |
+| UI tests: navigation, Battery, Overview, Energy, Space Analyzer, Duplicate Finder, Cleaner (confirm, Escape, Cancel), Settings, accessibility audit, Arabic (window opens, right-to-left layout, translated text) | XCTest/XCUITest | 21 | All pass; the Battery-screen contrast audit is non-blocking (below) |
 | Build with warnings as errors (Swift 6, strict concurrency) | xcodebuild | Debug and Release | Pass |
-| Launch smoke test (app stays running for 10 s) | CI | — | Pass |
+| Launch smoke test (app stays running for 10 s, in English and in Arabic with a translated window title) | CI | — | Pass |
 
 ## Spec §10 coverage
 | Scenario | Evidence |
@@ -41,9 +41,13 @@ Xcode 16, Release build unless noted). Checks that CI can't run are listed under
 | Guardrails | No networking, process control, dynamic lookup, or file-changing API outside the allowed files; forbidden symbols absent from the binary |
 | String Catalog | In sync with the source on every PR (Strings workflow) |
 
+## Found and fixed by these tests
+- In a right-to-left layout (Arabic), macOS 15 started MacPulse with only its menu bar item and no window (shown by CI's window list). MacPulse now opens its window at launch when none is visible.
+- About 40 user-facing strings weren't localizable (sidebar titles, badges, battery recommendations, error messages), and one sentence was built from two pieces. These were found when the catalog was generated.
+
 ## Not verified by CI
 - Developer ID signing and notarization (waiting for enrolment).
 - macOS 14, a clean Mac without Xcode, real battery hardware, and Apple silicon versus Intel energy reporting.
 - Privacy prompts, the Trash and Put Back without Full Disk Access, open at login and notifications on a signed build.
-- The Battery-screen contrast audit. CI reports `battery.health`, `battery.cycleCount` and four unnamed elements, unchanged by the secondary-text color change; the provenance badge border was made neutral next. It stays non-blocking until it is checked with Accessibility Inspector.
+- The Battery-screen contrast audit. After the neutral badge border and 85 % secondary text, `battery.health` and `battery.cycleCount` passed, and one run passed completely. Later runs flagged two unnamed elements (probably chart labels), so the check stays non-blocking until it is checked with Accessibility Inspector.
 - A native-speaker review of the Arabic strings.
