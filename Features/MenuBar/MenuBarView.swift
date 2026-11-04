@@ -34,7 +34,10 @@ public struct MenuBarView: View {
                     .foregroundStyle(.secondary)
             }
             Divider()
-            Text(EnergyPresentation.topAppsTitle(energyDataAvailable: overview.energyStatus?.energyDataAvailable ?? false))
+            // CPU is activity, not battery use: the title says what is shown.
+            Text(overview.energyStatus?.energyDataAvailable == true
+                 ? String(localized: "Apps using the most energy (estimate)")
+                 : String(localized: "Most active apps (CPU)"))
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
             if overview.topApps.isEmpty {
@@ -44,18 +47,22 @@ public struct MenuBarView: View {
                 HStack {
                     Text(app.displayName).lineLimit(1)
                     Spacer()
+                    ImpactBadge(impact: app.impact)
                     Text(EnergyPresentation.cpuText(app.cpuPercent)).monospacedDigit().foregroundStyle(.secondary)
                 }
                 .font(.callout)
+                .accessibilityElement(children: .combine)
             }
             Divider()
             HStack {
                 Text("Free space")
                 Spacer()
+                ProvenanceBadge(overview.storageAvailableBytes.provenance)
                 Text(overview.storageAvailableBytes.value.map { ByteFormatting.string(fromByteCount: $0) } ?? "—")
                     .monospacedDigit()
             }
             .font(.callout)
+            .accessibilityElement(children: .combine)
             Divider()
             HStack(spacing: Spacing.small) {
                 Button("Open MacPulse") { open(.overview) }
@@ -63,7 +70,7 @@ public struct MenuBarView: View {
                     .accessibilityIdentifier("menubar.open")
                 Button("Battery") { open(.battery) }
                 Button("Energy") { open(.energy) }
-                Button("Storage") { open(.spaceAnalyzer) }
+                Button("Space Analyzer") { open(.spaceAnalyzer) }
                 Spacer()
                 Button("Quit") { NSApplication.shared.terminate(nil) }
                     .accessibilityIdentifier("menubar.quit")
