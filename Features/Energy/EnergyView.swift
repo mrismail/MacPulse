@@ -455,7 +455,7 @@ struct DrainAlertControls: View {
                 Toggle("Only while on battery", isOn: binding(\.onlyOnBattery))
                 Toggle("Also show a macOS notification", isOn: binding(\.sendsNotifications))
                 if viewModel.notificationsDenied {
-                    Label("Notifications are turned off for MacPulse in System Settings → Notifications.", systemImage: "bell.slash")
+                    Label("Notifications are turned off for MacPulse in System Settings > Notifications.", systemImage: "bell.slash")
                         .foregroundStyle(Palette.secondaryText)
                 }
             }
