@@ -224,10 +224,27 @@ public struct CleanupReport: Identifiable, Sendable, Equatable, Codable {
 
     public init(category: CleanupCategory, finishedAt: Date, items: [CleanupItemResult], isComplete: Bool, pickedFolders: [String]? = nil) {
         self.category = category
-        self.finishedAt = finishedAt
+        self.finishedAt = Self.wholeMilliseconds(finishedAt)
         self.items = items
         self.isComplete = isComplete
         self.pickedFolders = pickedFolders
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            category: try container.decode(CleanupCategory.self, forKey: .category),
+            finishedAt: try container.decode(Date.self, forKey: .finishedAt),
+            items: try container.decode([CleanupItemResult].self, forKey: .items),
+            isComplete: try container.decode(Bool.self, forKey: .isComplete),
+            pickedFolders: try container.decodeIfPresent([String].self, forKey: .pickedFolders)
+        )
+    }
+
+    /// The time is kept to whole milliseconds: a sub-millisecond `Date` doesn't survive a
+    /// JSON round trip exactly, and the id (and so replacing a stored report) depends on it.
+    static func wholeMilliseconds(_ date: Date) -> Date {
+        Date(timeIntervalSince1970: (date.timeIntervalSince1970 * 1_000).rounded() / 1_000)
     }
 
     public var moved: [CleanupItemResult] { items.filter(\.outcome.isMoved) }

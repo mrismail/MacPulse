@@ -211,9 +211,9 @@ struct DuplicateChangeTests {
     @Test func readsNeverDownloadICloudPlaceholders() async throws {
         let root = try Tree.makeRoot()
         defer { Tree.cleanUp(root) }
-        let content = Self.bytes(200_000, seed: 9)
-        try Self.write(root + "/a/x.bin", content)
-        try Self.write(root + "/b/x.bin", content)
+        let content = DuplicateFinderTests.bytes(200_000, seed: 9)
+        try DuplicateFinderTests.write(root + "/a/x.bin", content)
+        try DuplicateFinderTests.write(root + "/b/x.bin", content)
         final class Seen: @unchecked Sendable {
             let lock = NSLock()
             var policies: [Int32] = []
