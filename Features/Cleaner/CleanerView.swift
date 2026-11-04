@@ -366,6 +366,8 @@ enum CleanerPresentation {
         case .originalFolderMissing: String(localized: "The folder it came from no longer exists.")
         case .notAllowed: String(localized: "MacPulse can't put items back in that place.")
         case .differentItem: String(localized: "A different item now has that name in the Trash, so it was left alone.")
+        case .notVerifiable: String(localized: "This cleanup is from an older version of MacPulse, which didn't record exactly which item it moved. Use Put Back in the Trash in Finder.")
+        case .trashNotReadable: String(localized: "macOS doesn't let MacPulse look inside the Trash. Use Put Back in the Trash in Finder, or allow Full Disk Access in System Settings.")
         case .failed(let message): String(localized: "macOS didn't move it back: \(message)")
         }
     }

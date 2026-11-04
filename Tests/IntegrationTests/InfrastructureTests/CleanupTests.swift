@@ -156,6 +156,92 @@ struct CleanupTests {
         #expect(elsewhere == .notInTrash)
     }
 
+    @Test func putBackNeedsTheRecordedIdentityAndThisUsersTrash() async throws {
+        let home = try Tree.makeRoot()
+        defer { Tree.cleanUp(home) }
+        try Tree.write(home + "/Downloads/old-history.txt", bytes: 10)
+        let report = await move([try Self.candidate(home + "/Downloads/old-history.txt")], home: home)
+        defer { Self.restore(report) }
+        guard case .movedToTrash(let trashPath) = report.items.first?.outcome else {
+            Issue.record("Not moved")
+            return
+        }
+        let unknown = await FileManagerTrashService().putBack(trashPath: trashPath, to: home + "/Downloads/old-history.txt", expected: nil, policy: Self.policy(home))
+        #expect(unknown == .notVerifiable, "History without an identity can't prove which item it was")
+        #expect(FileManagerTrashService.isInTrashFolder("/Volumes/Drive/.Trashes/\(getuid())/a", homePath: home))
+        #expect(!FileManagerTrashService.isInTrashFolder("/Volumes/Drive/.Trashes/\(getuid() + 1)/a", homePath: home), "Not another user's Trash")
+    }
+
+    @Test func aSwappedItemIsMovedBackOrReportedAsFailed() async throws {
+        let home = try Tree.makeRoot()
+        defer { Tree.cleanUp(home) }
+        try Tree.write(home + "/Downloads/swap.bin", bytes: 100)
+        let candidate = try Self.candidate(home + "/Downloads/swap.bin")
+        let policy = Self.policy(home)
+        let other = FileIdentity(device: candidate.identity.device, inode: candidate.identity.inode + 1, size: 0, modifiedSeconds: 0, modifiedNanoseconds: 0, isFolder: false)
+
+        // What landed isn't the checked item: it goes back where it was.
+        let (back, _) = FileManagerTrashService.move(candidate, policy: policy, inspect: { _ in .item(other) })
+        #expect(back == .skipped(.changed))
+        #expect(FileManager.default.fileExists(atPath: home + "/Downloads/swap.bin"), "Moved back")
+
+        // If its place was taken meanwhile, it can't go back: that is a failure, not a skip.
+        let again = try Self.candidate(home + "/Downloads/swap.bin")
+        var trashed: String?
+        let (failed, _) = FileManagerTrashService.move(
+            again, policy: policy,
+            afterMove: { trash in
+                trashed = trash
+                try? Tree.write(home + "/Downloads/swap.bin", bytes: 1)
+            },
+            inspect: { _ in .item(other) }
+        )
+        if let trashed { try? FileManager.default.removeItem(atPath: trashed) }
+        guard case .failed(let message) = failed else {
+            Issue.record("Expected a failure, got \(failed)")
+            return
+        }
+        #expect(message.contains("swap"), "The message says where it is in the Trash")
+    }
+
+    @Test func withoutTrashAccessAMoveStillCounts() async throws {
+        let home = try Tree.makeRoot()
+        defer { Tree.cleanUp(home) }
+        try Tree.write(home + "/Downloads/private.bin", bytes: 100)
+        let candidate = try Self.candidate(home + "/Downloads/private.bin")
+        let (outcome, identity) = FileManagerTrashService.move(candidate, policy: Self.policy(home), inspect: { _ in .noAccess })
+        guard case .movedToTrash(let trashPath) = outcome else {
+            Issue.record("Expected moved, got \(outcome)")
+            return
+        }
+        defer { try? FileManager.default.moveItem(atPath: trashPath, toPath: home + "/Downloads/private.bin") }
+        #expect(identity == candidate.identity, "The identity checked before the move is recorded")
+        #expect(!FileManager.default.fileExists(atPath: home + "/Downloads/private.bin"))
+    }
+
+    @Test func oldDownloadFoldersAreCheckedAgainBeforeMoving() async throws {
+        let home = try Tree.makeRoot()
+        defer { Tree.cleanUp(home) }
+        let old = Date().addingTimeInterval(-90 * 86_400)
+        try Tree.write(home + "/Downloads/Project/a.txt", bytes: 10)
+        try FileManager.default.setAttributes([.modificationDate: old], ofItemAtPath: home + "/Downloads/Project/a.txt")
+        try FileManager.default.setAttributes([.modificationDate: old], ofItemAtPath: home + "/Downloads/Project")
+        let source = LiveCleanupCandidateSource(homePath: home)
+        let policy = CleanupSafetyPolicy(homePath: home, pickedFolders: [home + "/Downloads"])
+        let list = await source.candidates(
+            for: .oldDownloads, options: CleanupScanOptions(folder: home + "/Downloads", minimumAgeDays: 30), policy: policy
+        )
+        let folder = try #require(list.candidates.first { $0.name == "Project" }, "An old folder is offered")
+        // A file saved into it after the review keeps it out of the Trash.
+        try Tree.write(home + "/Downloads/Project/new.txt", bytes: 10)
+        let (outcome, _) = FileManagerTrashService.move(folder, policy: policy)
+        #expect(outcome == .skipped(.changed))
+        #expect(FileManager.default.fileExists(atPath: home + "/Downloads/Project/new.txt"))
+
+        // Too many items to check is never "old".
+        #expect(FolderAge.of(home + "/Downloads", cutoff: Date(), itemLimit: 1) == .unknown)
+    }
+
     static func marked(_ path: String, kept: String) throws -> MarkedDuplicate {
         MarkedDuplicate(
             path: path, identity: try #require(FileManagerTrashService.identity(atPath: path)),

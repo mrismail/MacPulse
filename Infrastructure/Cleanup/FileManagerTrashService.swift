@@ -50,9 +50,17 @@ public struct FileManagerTrashService: TrashService {
         // Only from this user's Trash or an external drive's Trash folder.
         guard Self.isInTrashFolder(trash, homePath: policy.homePath) else { return .notInTrash }
         guard policy.verdict(for: original) == .allowed else { return .notAllowed }
-        guard let current = Self.identity(atPath: trash), current.device >= 0 else { return .notInTrash }
+        // Without the identity recorded at the time (history from older versions) there is
+        // no way to know the item in the Trash is the one MacPulse moved.
+        guard let expected else { return .notVerifiable }
+        let current: FileIdentity
+        switch Self.inspect(trash) {
+        case .item(let found) where found.device >= 0: current = found
+        case .noAccess: return .trashNotReadable
+        default: return .notInTrash
+        }
         // Moving keeps the inode: anything else at that Trash path is a different item.
-        if let expected, expected.device != current.device || expected.inode != current.inode {
+        if expected.device != current.device || expected.inode != current.inode {
             return .differentItem
         }
         guard Self.identity(atPath: original) == nil else { return .originalPlaceTaken }
@@ -62,7 +70,13 @@ public struct FileManagerTrashService: TrashService {
         return nil
     }
 
-    static func move(_ candidate: CleanupCandidate, policy: CleanupSafetyPolicy) -> (CleanupItemOutcome, FileIdentity?) {
+    /// - Parameters:
+    ///   - afterMove: test hook, run right after `trashItem` returns.
+    ///   - inspect: how the item in the Trash is looked at (replaced in tests).
+    static func move(
+        _ candidate: CleanupCandidate, policy: CleanupSafetyPolicy,
+        afterMove: (String) -> Void = { _ in }, inspect: (String) -> Inspection = FileManagerTrashService.inspect
+    ) -> (CleanupItemOutcome, FileIdentity?) {
         guard policy.verdict(for: candidate.path) == .allowed else { return (.skipped(.notAllowed), nil) }
         guard let current = identity(atPath: candidate.path) else { return (.skipped(.missing), nil) }
         guard candidate.identity.matches(current) else { return (.skipped(.changed), nil) }
@@ -76,14 +90,37 @@ public struct FileManagerTrashService: TrashService {
         guard let trash = resulting?.path, !trash.isEmpty else {
             return (.failed(message: String(localized: "macOS moved the item but didn't say where; look for it in the Trash.")), nil)
         }
+        afterMove(trash)
         // If the item was swapped between the check and the move (for example a parent
         // folder replaced by a link), what landed in the Trash isn't the checked item:
         // move it back and report it as changed.
-        guard let landed = identity(atPath: trash), landed.device == current.device, landed.inode == current.inode else {
-            _ = restore(trash, to: candidate.path)
-            return (.skipped(.changed), nil)
+        switch inspect(trash) {
+        case .item(let landed) where landed.device == current.device && landed.inode == current.inode:
+            return (.movedToTrash(trashPath: trash), landed)
+        case .noAccess:
+            // Without Full Disk Access macOS may not let MacPulse look inside the Trash.
+            // `trashItem` succeeded, so the checked item is there; it just can't be
+            // re-checked. Moving it "back" would fail the same way.
+            return (.movedToTrash(trashPath: trash), current)
+        case .item, .missing:
+            if restore(trash, to: candidate.path) == nil { return (.skipped(.changed), nil) }
+            let name = (trash as NSString).lastPathComponent
+            return (.failed(message: String(localized: "Something else reached the Trash in its place and couldn't be moved back. It's in the Trash as “\(name)”.")), nil)
         }
-        return (.movedToTrash(trashPath: trash), landed)
+    }
+
+    /// What is at a path, as `lstat` sees it.
+    enum Inspection: Equatable {
+        case item(FileIdentity)
+        case missing
+        /// macOS refused to say (no Full Disk Access for the Trash).
+        case noAccess
+    }
+
+    static func inspect(_ path: String) -> Inspection {
+        var info = stat()
+        if lstat(path, &info) == 0 { return identity(atPath: path).map(Inspection.item) ?? .missing }
+        return errno == EPERM || errno == EACCES ? .noAccess : .missing
     }
 
     /// `nil` when the candidate's requirement still holds.
@@ -98,6 +135,10 @@ public struct FileManagerTrashService: TrashService {
         case .stillEmpty:
             guard let items = try? FileManager.default.contentsOfDirectory(atPath: candidate.path) else { return .changed }
             return items.allSatisfy { $0 == ".DS_Store" } ? nil : .notEmpty
+        case .unchangedSince(let cutoff):
+            // Something saved into an old folder after the review keeps the folder out.
+            guard case .newest = FolderAge.of(candidate.path, cutoff: cutoff) else { return .changed }
+            return nil
         }
     }
 
@@ -123,6 +164,7 @@ public struct FileManagerTrashService: TrashService {
         // External drives: /Volumes/<name>/.Trashes/<uid>/...
         let components = path.split(separator: "/")
         return components.count >= 5 && components[0] == "volumes" && components[2] == ".trashes"
+            && components[3] == String(getuid())
     }
 
     /// The item's identity as `lstat` sees it; `nil` when missing. A symbolic link has its

@@ -41,10 +41,15 @@ public struct LiveCleanupCandidateSource: CleanupCandidateSource {
             let list = await children(of: folder, category: category, policy: policy, approved: true) { node in
                 (String(localized: "Not changed for more than \(options.minimumAgeDays) days."), nil)
             }
-            // A folder counts as old only if nothing inside it changed recently either.
-            let old = list.candidates.filter { candidate in
-                let newest = candidate.isFolder ? Self.newestModification(inside: candidate.path, since: cutoff) : candidate.modified
-                return (newest ?? candidate.modified ?? .distantFuture) < cutoff
+            // A folder counts as old only if nothing inside it changed recently either; one
+            // too big to check, or with unreadable items, isn't offered. Folders are checked
+            // again just before they are moved.
+            let old = list.candidates.compactMap { candidate -> CleanupCandidate? in
+                if candidate.isFolder {
+                    guard FolderAge.isOld(candidate.path, modified: candidate.modified, cutoff: cutoff) else { return nil }
+                    return candidate.requiring(.unchangedSince(cutoff))
+                }
+                return (candidate.modified ?? .distantFuture) < cutoff ? candidate : nil
             }
             return CleanupCandidateList(category: category, candidates: old, note: list.note, unavailableReason: list.unavailableReason)
         case .largeFiles:
@@ -186,25 +191,6 @@ public struct LiveCleanupCandidateSource: CleanupCandidateSource {
             modified: values?.contentModificationDate,
             identity: identity, warning: warning, requirement: requirement
         )
-    }
-
-    /// The newest modification date inside a folder, stopping early once something newer
-    /// than `cutoff` is found. Links aren't followed; at most 20,000 items are looked at.
-    static func newestModification(inside folder: String, since cutoff: Date) -> Date? {
-        guard let enumerator = FileManager.default.enumerator(
-            at: URL(fileURLWithPath: folder, isDirectory: true),
-            includingPropertiesForKeys: [.contentModificationDateKey],
-            options: [.skipsPackageDescendants]
-        ) else { return nil }
-        var newest: Date?
-        var seen = 0
-        while let url = enumerator.nextObject() as? URL, seen < 20_000 {
-            seen += 1
-            guard let date = try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate else { continue }
-            if date > (newest ?? .distantPast) { newest = date }
-            if date >= cutoff { break }
-        }
-        return newest
     }
 
     /// "com.tinyspeck.slackmacgap" → "slackmacgap"; plain names stay as they are.

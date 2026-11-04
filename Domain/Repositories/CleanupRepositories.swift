@@ -68,6 +68,10 @@ public enum PutBackFailure: Error, Sendable, Equatable {
     case notAllowed
     /// The item in the Trash isn't the one MacPulse moved there.
     case differentItem
+    /// History has no record of exactly which item was moved (older versions).
+    case notVerifiable
+    /// macOS doesn't let MacPulse look inside the Trash (no Full Disk Access).
+    case trashNotReadable
     case failed(String)
 }
 
