@@ -264,7 +264,7 @@ private struct DuplicateFileRow: View {
             .help(viewModel.canMark(file, in: group)
                 ? String(localized: "Mark this copy for removal")
                 : String(localized: "At least one copy is always kept"))
-            .accessibilityIdentifier(DuplicatePresentation.markIdentifier(file))
+            .accessibilityIdentifier(DuplicatePresentation.markIdentifier(file, home: viewModel.homeFolder))
             FileThumbnail(path: file.path, category: file.category)
             VStack(alignment: .leading, spacing: 0) {
                 // Marked copies are struck through and labelled, not just dimmed.
@@ -354,8 +354,10 @@ enum DuplicatePresentation {
     }
 
     /// "duplicates.mark.<folder>/<name>": unique within a group even when names repeat.
-    static func markIdentifier(_ file: DuplicateFile) -> String {
-        "duplicates.mark.\((file.folder as NSString).lastPathComponent)/\(file.name)"
+    /// Unique per file: the path relative to the home folder (copies in backups with the
+    /// same folder structure differ by their full path).
+    static func markIdentifier(_ file: DuplicateFile, home: String) -> String {
+        "duplicates.mark.\(PathPresentation.relative(file.path, to: home))"
     }
 
     @MainActor private static let thumbnails = NSCache<NSString, NSImage>()
