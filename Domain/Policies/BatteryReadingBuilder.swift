@@ -152,8 +152,7 @@ public enum BatteryReadingBuilder {
         }
         return .estimated(
             ratio * 100,
-            basis: String(localized: "Full-charge capacity (\(fullCharge) mAh) divided by design capacity (\(design) mAh). ")
-                + "The Maximum Capacity shown in System Settings may differ slightly."
+            basis: String(localized: "Full-charge capacity (\(fullCharge) mAh) divided by design capacity (\(design) mAh). The Maximum Capacity shown in System Settings may differ slightly.")
         )
     }
 
