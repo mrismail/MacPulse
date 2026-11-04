@@ -64,7 +64,12 @@ final class MacPulseUITests: XCTestCase {
     @MainActor
     func testArabicRunsRightToLeft() {
         let app = XCUIApplication()
-        app.launchArguments = ["-MacPulseUseFakeServices", "-AppleLanguages", "(ar)", "-AppleLocale", "ar_EG"]
+        // Saved window state from other launches (the CI smoke test kills the app) must not
+        // decide whether the window opens.
+        app.launchArguments = [
+            "-MacPulseUseFakeServices", "-AppleLanguages", "(ar)", "-AppleLocale", "ar_EG",
+            "-ApplePersistenceIgnoreState", "YES",
+        ]
         app.launch()
         let overview = element("sidebar.overview", in: app)
         if !overview.waitForExistence(timeout: 20) {
