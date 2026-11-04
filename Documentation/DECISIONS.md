@@ -457,3 +457,72 @@ Settings shows startup, menu bar and monitoring controls and the history buttons
 
 **Not done.** The menu bar extra itself isn't driven by UI tests (XCUITest can't open
 status items reliably); it reuses the tested Overview view model.
+
+## ADR-017 — Hardening after the review of `main` (before Phase 8)
+
+**Date:** 2026-11-04 · **Status:** Accepted
+
+**Context.** Three reviewers (team lead, front end, platform/security/QA) reviewed `main`
+after Phase 7 (`claude/MacPulse-Main-Review.md`). The safety findings showed ways the Cleaner
+could move the wrong item, and the Duplicate Finder could download iCloud files.
+
+**Decision.**
+- **Duplicates (amends ADR-014/015):**
+  - Each copy carries the identity it had when its bytes were compared.
+  - The Cleaner offers and moves a copy only while that copy and the kept copy are both
+    unchanged (`CleanupRequirement.keptCopyUnchanged`).
+- **iCloud placeholders:** files with `SF_DATALESS` are never opened; they are counted as
+  "not downloaded" (amends ADR-014).
+- **Empty folders:** listed again immediately before moving
+  (`CleanupRequirement.stillEmpty`).
+- **After `trashItem`:** the item in the Trash must have the checked device and inode;
+  otherwise it is moved back and reported as changed.
+- **Put Back:**
+  - restores only the recorded identity;
+  - only from this user's Trash or a drive's `.Trashes`;
+  - uses the folders picked at the time (stored in the report).
+- **History during a cleanup:** written before the first item and after each one, so a
+  cleanup interrupted by quitting can still be put back.
+- **Picked folders:** never `/`, system locations, the home folder, Library, a standard
+  folder (Downloads excepted), a hidden folder or a drive root. A pick unlocks only its
+  own category.
+- **Policy refusals:**
+  - Hidden items and macOS crash reports are refused.
+  - Policies compare case-insensitively and map `/System/Volumes/Data/...` to `/...`.
+- **One task at a time:**
+  - One scan and one duplicate search at a time; an older run never overwrites a newer
+    one.
+  - Cleaner reviews and cleanups use separate tasks.
+  - Categories are locked while cleaning.
+- **CI guardrails:**
+  - Cover `unlink`/`unlinkat`/`removefile`/`rename*`/`truncate`/`copyfile`/`clonefile`,
+    bare `remove(`/`rename(`, dynamic selectors, and running other programs (source and
+    binary).
+  - The single allowed `trashItem` and `moveItem` calls are matched exactly.
+  - Persistence is limited to its two store files.
+- **Overhead budget (amends ADR-012):**
+  - 0.04 ms of CPU per process read, plus a ceiling of 0.1 % of one core at the background
+    rate.
+  - This replaces the flat 15 ms per sample: CI ≈ 0.007 ms per process, the owner's Intel
+    Mac 0.025 ms.
+- **Diagnostics:** the run loop now turns in 5 ms slices, so the measured main-thread stall
+  is the app's.
+- **Contrast:** card text uses `Palette.secondaryText` (72 % primary). The audit reports no
+  contrast issues and is blocking again.
+
+**Evidence.** New tests cover:
+- a kept copy that was edited or deleted after the comparison (the last copy is never
+  moved);
+- a copy edited after the comparison (no longer offered);
+- an empty folder that gained a file (skipped);
+- Put Back refusing a different item;
+- a file rewritten just before it is read (left out of duplicates);
+- the dataless flag;
+- unsafe picks unlocking nothing, and case or Data-volume paths;
+- history saved while a cleanup runs, with categories locked;
+- a second scan refused while one runs;
+- Space Analyzer results dropping trashed items.
+
+CI on the hardening branch: overhead 1.9 ms for 266 processes; scan of 200k files in
+13.2 s, 76 MB peak, 26 ms longest stall; duplicates 502/502 groups found, 0 look-alikes
+grouped, 5.2 s, 42 MB peak, 34 ms longest stall.
