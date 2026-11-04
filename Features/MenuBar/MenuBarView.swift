@@ -21,7 +21,7 @@ public struct MenuBarView: View {
                     .font(.title2.weight(.semibold))
                     .monospacedDigit()
                 if let state = overview.batteryStateDescription {
-                    Text(state).foregroundStyle(.secondary)
+                    Text(state).foregroundStyle(Palette.secondaryText)
                 }
                 Spacer()
                 ProvenanceBadge(overview.batteryCharge.provenance)
@@ -31,7 +31,7 @@ public struct MenuBarView: View {
             if let minutes = overview.estimatedRuntimeMinutes.value {
                 Text("About \(DurationFormatting.string(fromMinutes: minutes)) left (estimate)")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
             }
             Divider()
             // CPU is activity, not battery use: the title says what is shown.
@@ -39,20 +39,20 @@ public struct MenuBarView: View {
                  ? String(localized: "Apps using the most energy (estimate)")
                  : String(localized: "Most active apps (CPU)"))
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Palette.secondaryText)
             if overview.topApps.isEmpty {
                 // Before the first two samples there is nothing to compare yet.
                 Text(overview.energyStatus == nil
                      ? String(localized: "Measuring app activity…")
                      : String(localized: "No app is using noticeable CPU right now."))
-                    .font(.callout).foregroundStyle(.secondary)
+                    .font(.callout).foregroundStyle(Palette.secondaryText)
             }
             ForEach(overview.topApps) { app in
                 HStack {
                     Text(app.displayName).lineLimit(1)
                     Spacer()
                     ImpactBadge(impact: app.impact)
-                    Text(EnergyPresentation.cpuText(app.cpuPercent)).monospacedDigit().foregroundStyle(.secondary)
+                    Text(EnergyPresentation.cpuText(app.cpuPercent)).monospacedDigit().foregroundStyle(Palette.secondaryText)
                 }
                 .font(.callout)
                 .accessibilityElement(children: .combine)

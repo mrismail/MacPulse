@@ -38,7 +38,7 @@ public struct EnergyView: View {
                 AppUsageTable(viewModel: viewModel)
                 Text("CPU is shown per processor core: 100% means one core fully busy. System CPU is the share of all cores together.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                     .accessibilityIdentifier("energy.cpuUnitsNote")
             }
             .padding(Spacing.large)
@@ -50,11 +50,11 @@ public struct EnergyView: View {
                         AppDetail(app: app, viewModel: viewModel)
                     } else if viewModel.selectedAppIsIdle {
                         Text("This app had no activity in the selected period.")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Palette.secondaryText)
                             .frame(maxWidth: .infinity, minHeight: 80)
                     } else {
                         Text("Select an app to see its details and trend.")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Palette.secondaryText)
                             .frame(maxWidth: .infinity, minHeight: 80)
                     }
                     AlertSettingsCard(viewModel: viewModel)
@@ -102,7 +102,7 @@ public struct EnergyView: View {
                     .accessibilityIdentifier("energy.basisNote")
                     if status.unreadableProcessCount > 0 {
                         Text("System processes not included: \(status.unreadableProcessCount)")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Palette.secondaryText)
                     }
                     if let issue = status.historyIssue {
                         Label(issue.userMessage, systemImage: "exclamationmark.triangle")
@@ -139,7 +139,7 @@ private struct AppUsageTable: View {
                         if app.processCount > 1 {
                             Text("Processes: \(app.processCount)")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Palette.secondaryText)
                         }
                     }
                 }
@@ -226,14 +226,14 @@ private struct AppIcon: View {
                 Image(systemName: "gearshape.2")
                     .resizable()
                     .scaledToFit()
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
             } else if let bundlePath {
                 Image(nsImage: AppIconCache.icon(for: bundlePath))
                     .resizable()
             } else {
                 Image(systemName: "gearshape")
                     .resizable()
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
             }
         }
         .frame(width: 18, height: 18)
@@ -276,7 +276,7 @@ private struct AppDetail: View {
                 ? String(localized: "Latest sample")
                 : String(localized: "Average over the last \(viewModel.status?.recentWindowMinutes ?? 10) minutes"))
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Palette.secondaryText)
             HStack(alignment: .top, spacing: Spacing.large) {
                 MetricValueView("CPU (per core)", metric: .measured(app.cpuPercent)) { NumberFormatting.percent($0) }
                 MetricValueView("Memory", metric: app.memoryBytes.map { Metric<UInt64>.measured($0) } ?? .unavailable(.notSupportedOnThisMac)) {
@@ -293,7 +293,7 @@ private struct AppDetail: View {
             if let path = app.appBundlePath {
                 Text(path)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                     .textSelection(.enabled)
             }
 
@@ -315,10 +315,10 @@ private struct AppDetail: View {
             .labelsHidden()
 
             if let error = viewModel.historyError {
-                Label(error.userMessage, systemImage: "exclamationmark.triangle").foregroundStyle(.secondary)
+                Label(error.userMessage, systemImage: "exclamationmark.triangle").foregroundStyle(Palette.secondaryText)
             } else if viewModel.trend.isEmpty {
                 Text("No hourly history yet for this app. Trends build up while MacPulse is running.")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
             } else {
                 TrendChart(points: viewModel.trend, metric: viewModel.trendMetric, domain: viewModel.trendDomain)
             }
@@ -359,6 +359,7 @@ private struct TrendChart: View {
                 AxisValueLabel {
                     if let number = mark.as(Double.self) {
                         Text(label(for: number))
+                            .foregroundStyle(Palette.secondaryText)
                     }
                 }
             }
@@ -394,7 +395,7 @@ struct DrainAlertBanner: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(alert.displayName) is using a lot of CPU").bold()
                     Text(alert.explanation)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Palette.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             } icon: {
@@ -455,7 +456,7 @@ struct DrainAlertControls: View {
                 Toggle("Also show a macOS notification", isOn: binding(\.sendsNotifications))
                 if viewModel.notificationsDenied {
                     Label("Notifications are turned off for MacPulse in System Settings → Notifications.", systemImage: "bell.slash")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Palette.secondaryText)
                 }
             }
             .disabled(!viewModel.settings.isEnabled)

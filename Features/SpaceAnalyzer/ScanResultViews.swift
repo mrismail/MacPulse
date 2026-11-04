@@ -44,7 +44,7 @@ struct ScanControlsCard: View {
                     Text(progress.currentFolder)
                         .lineLimit(1)
                         .truncationMode(.middle)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Palette.secondaryText)
                 }
                 .font(.callout)
                 .accessibilityElement(children: .combine)
@@ -52,7 +52,7 @@ struct ScanControlsCard: View {
             } else {
                 Text("Scans only read file sizes; nothing is changed. Desktop, Documents, Downloads and other apps' data are skipped unless you choose them, so macOS doesn't ask for permission unexpectedly.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -76,12 +76,12 @@ struct ScanSummaryCard: View {
                       : String(localized: "\(viewModel.movedSinceScan) items were moved to the Trash since this scan. Totals are from before; scan again to update them."),
                       systemImage: "arrow.clockwise")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                     .accessibilityIdentifier("space.outdated")
             }
             Text(result.rootPath)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Palette.secondaryText)
                 .lineLimit(1)
                 .truncationMode(.middle)
                 .textSelection(.enabled)
@@ -93,7 +93,7 @@ struct ScanSummaryCard: View {
             }
             Text("Size on disk is the space files occupy; file size is what the files contain. Files that share storage (APFS clones, hard links) are counted once where macOS reports it, so removing a file can free less than its size.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Palette.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
             if !viewModel.skippedSummary.isEmpty {
                 VStack(alignment: .leading, spacing: Spacing.xSmall) {
@@ -138,7 +138,7 @@ struct FolderTreeCard: View {
                         .buttonStyle(.link)
                     if node.id != breadcrumb.last?.id {
                         // "forward" mirrors in right-to-left languages (ADR-008).
-                        Image(systemName: "chevron.forward").font(.caption).foregroundStyle(.secondary)
+                        Image(systemName: "chevron.forward").font(.caption).foregroundStyle(Palette.secondaryText)
                     }
                 }
             }
@@ -185,7 +185,7 @@ struct FolderTreeCard: View {
             .accessibilityIdentifier("space.tree")
             Text("Double-click a folder to open it. Only the largest files of each folder are listed; the rest are summed as smaller files.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Palette.secondaryText)
         }
     }
 }
@@ -238,7 +238,7 @@ struct LargestFilesCard: View {
                     Text((node.id as NSString).deletingLastPathComponent)
                         .lineLimit(1)
                         .truncationMode(.middle)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Palette.secondaryText)
                 }
             }
             .contextMenu(forSelectionType: ScanNode.ID.self) { ids in
@@ -277,7 +277,7 @@ struct CategoriesCard: View {
                         Text(ByteFormatting.string(fromByteCount: total.allocatedBytes))
                     }
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                 }
             }
             .chartXAxis(.hidden)
@@ -285,7 +285,7 @@ struct CategoriesCard: View {
             .accessibilityIdentifier("space.categories")
             Text("Categories marked cleanable are usually safe to clean up. Categories come from file names and locations; contents are never read.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Palette.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -342,7 +342,7 @@ struct ExclusionsSheet: View {
         VStack(alignment: .leading, spacing: Spacing.medium) {
             Text("Excluded Folders").font(.title3.weight(.semibold))
             Text("Scans skip these folders and everything inside them.")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Palette.secondaryText)
             List {
                 ForEach(viewModel.exclusions, id: \.self) { path in
                     HStack {
@@ -363,7 +363,7 @@ struct ExclusionsSheet: View {
             .frame(minHeight: 160)
             .overlay {
                 if viewModel.exclusions.isEmpty {
-                    Text("No folders are excluded.").foregroundStyle(.secondary)
+                    Text("No folders are excluded.").foregroundStyle(Palette.secondaryText)
                 }
             }
             .accessibilityIdentifier("space.exclusionsList")
@@ -402,17 +402,17 @@ struct ScanHistoryCard: View {
                         Text(summary.rootName).font(.body.weight(.medium))
                         Text(summary.finishedAt.formatted(date: .abbreviated, time: .shortened))
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Palette.secondaryText)
                     }
                     Spacer()
                     if !summary.isComplete {
-                        Text("Stopped").font(.caption).foregroundStyle(.secondary)
+                        Text("Stopped").font(.caption).foregroundStyle(Palette.secondaryText)
                     }
                     Text(ByteFormatting.string(fromByteCount: summary.allocatedBytes)).monospacedDigit()
                     Text(SpacePresentation.changeText(viewModel.change(for: summary)))
                         .font(.caption)
                         .monospacedDigit()
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Palette.secondaryText)
                         .frame(minWidth: 110, alignment: .trailing)
                 }
                 .accessibilityElement(children: .combine)
@@ -420,7 +420,7 @@ struct ScanHistoryCard: View {
             }
             Text("History keeps totals and the five biggest folders of each scan for 180 days, never file names.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Palette.secondaryText)
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("space.history")

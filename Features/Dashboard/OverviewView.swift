@@ -42,7 +42,7 @@ public struct OverviewView: View {
                         Label {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(feature.title).bold()
-                                Text(feature.summary).foregroundStyle(.secondary)
+                                Text(feature.summary).foregroundStyle(Palette.secondaryText)
                             }
                         } icon: {
                             Image(systemName: feature.systemImage)
@@ -66,14 +66,14 @@ public struct OverviewView: View {
                 ProgressView("Checking your Mac…").controlSize(.small)
             } else if viewModel.recommendations.isEmpty {
                 Label("Nothing needs your attention right now.", systemImage: "checkmark.circle")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
             } else {
                 ForEach(viewModel.recommendations) { recommendation in
                     Label {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(recommendation.title).bold()
                             Text(recommendation.detail)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Palette.secondaryText)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     } icon: {
@@ -112,11 +112,11 @@ public struct OverviewView: View {
                 ProgressView("Measuring app activity…").controlSize(.small)
             } else if viewModel.topApps.isEmpty {
                 Label("No app is using noticeable CPU right now.", systemImage: "moon.zzz")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
             } else {
                 Text(EnergyPresentation.topAppsTitle(energyDataAvailable: viewModel.energyStatus?.energyDataAvailable ?? false))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                 ForEach(viewModel.topApps) { app in
                     HStack {
                         Text(app.displayName).lineLimit(1)
@@ -143,7 +143,7 @@ public struct OverviewView: View {
             if let scan = viewModel.lastScan {
                 Text("Last scan: \(scan.rootName), \(scan.finishedAt.formatted(date: .abbreviated, time: .shortened))")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                     .accessibilityIdentifier("overview.lastScan")
             }
             if let cleanup = viewModel.lastCleanup {
@@ -151,7 +151,7 @@ public struct OverviewView: View {
                      ? String(localized: "Last cleanup: 1 item moved to the Trash (\(ByteFormatting.string(fromByteCount: cleanup.bytesMovedToTrash))), \(cleanup.finishedAt.formatted(date: .abbreviated, time: .shortened))")
                      : String(localized: "Last cleanup: \(cleanup.moved.count) items moved to the Trash (\(ByteFormatting.string(fromByteCount: cleanup.bytesMovedToTrash))), \(cleanup.finishedAt.formatted(date: .abbreviated, time: .shortened))"))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                     .accessibilityIdentifier("overview.lastCleanup")
             }
             Button("Open Space Analyzer", action: openSpaceAnalyzer)
@@ -175,7 +175,7 @@ public struct OverviewView: View {
                 }
             case .failed(let error):
                 Label(error.userMessage, systemImage: "exclamationmark.triangle")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
             }
         }
     }

@@ -50,7 +50,7 @@ private struct SearchSetupCard: View {
         Card("Search", systemImage: "doc.on.doc") {
             if viewModel.folders.isEmpty {
                 Text("Choose the folders to search. Desktop, Documents and Downloads are searched only when you choose them, so macOS can ask you once.")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
             }
             ForEach(viewModel.folders, id: \.self) { folder in
@@ -105,14 +105,14 @@ private struct SearchSetupCard: View {
                     }
                     Text("\(progress.stage.title) · \(ByteFormatting.string(fromByteCount: progress.bytesRead)) read")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Palette.secondaryText)
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("duplicates.progress")
             }
             Text("Files are compared by content: same size, then a SHA-256 of the start and end, then of the whole file, then byte by byte. Names and dates are never used. Nothing is changed.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Palette.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .contain)
@@ -137,7 +137,7 @@ private struct DuplicateSummaryCard: View {
             }
             Text(DuplicatePresentation.funnel(result.statistics))
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Palette.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: Spacing.small) {
                 Menu("Mark Copies") {
@@ -157,12 +157,12 @@ private struct DuplicateSummaryCard: View {
                 Spacer()
                 Text("\(viewModel.markedCount) marked")
                     .monospacedDigit()
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                     .accessibilityIdentifier("duplicates.markedCount")
             }
             Text("Marking is a plan: nothing is removed here. The Cleaner shows the marked copies, asks you to confirm, checks each file again and moves it to the Trash.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Palette.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .contain)
@@ -223,7 +223,7 @@ private struct DuplicateGroupView: View {
             HStack {
                 Text(group.files.first?.name ?? "—").font(.headline)
                 Text("\(group.files.count) copies · \(ByteFormatting.string(fromByteCount: group.logicalBytesPerFile)) each")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                 Spacer()
                 if let savings = group.potentialSavings.value {
                     let size = ByteFormatting.string(fromByteCount: savings)
@@ -271,12 +271,12 @@ private struct DuplicateFileRow: View {
                 HStack(spacing: Spacing.xSmall) {
                     Text(file.name).strikethrough(viewModel.isMarked(file))
                     if viewModel.isMarked(file) {
-                        Text("Marked for removal").font(.caption).foregroundStyle(.secondary)
+                        Text("Marked for removal").font(.caption).foregroundStyle(Palette.secondaryText)
                     }
                 }
                 Text(file.folder)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 if !file.hardLinkPaths.isEmpty {
@@ -290,7 +290,7 @@ private struct DuplicateFileRow: View {
             Spacer()
             if let modified = file.modified {
                 Text(modified.formatted(date: .abbreviated, time: .omitted))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
             }
             Text(ByteFormatting.string(fromByteCount: file.allocatedBytes)).monospacedDigit()
         }
@@ -313,7 +313,7 @@ private struct FileThumbnail: View {
                 Image(nsImage: image).resizable().scaledToFit()
             } else {
                 Image(systemName: category == .images ? "photo" : category == .video ? "film" : "doc")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
             }
         }
         .frame(width: 36, height: 36)
