@@ -43,6 +43,7 @@ Xcode 16, Release build unless noted). Checks that CI can't run are listed under
 
 ## Found and fixed by these tests
 - In a right-to-left layout (Arabic), macOS 15 started MacPulse with only its menu bar item and no window (shown by CI's window list). MacPulse now opens its window at launch when none is visible.
+- In Arabic the text was translated but the layout stayed left to right. The layout direction now follows the app's language; the Arabic UI test checks that the sidebar is on the right.
 - About 40 user-facing strings weren't localizable (sidebar titles, badges, battery recommendations, error messages), and one sentence was built from two pieces. These were found when the catalog was generated.
 
 ## Not verified by CI

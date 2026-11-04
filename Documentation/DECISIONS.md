@@ -595,6 +595,7 @@ and the Arabic translation needed decisions.
   - Arabic is a machine-assisted draft, every string marked "Needs Review", and is checked by a right-to-left UI test.
 - **App icon:** an original design (a gauge with a pulse line), drawn by `scripts/design/make_icon.py` so it can be regenerated.
 - **Window at launch:** in a right-to-left layout macOS 15 didn't open MacPulse's `Window` scene at launch (CI). The menu bar label, which is drawn at launch, opens the main window when none is visible. The `.defaultLaunchBehavior` scene modifier would do this directly but needs macOS 15.
+- **Layout direction:** in Arabic, CI showed translated text in a left-to-right layout. The window, Settings and the menu bar panel now take their layout direction from the app's language (`Bundle.main.preferredLocalizations`).
 
 **Consequences.**
 - No new entitlements, network code or dependencies.
