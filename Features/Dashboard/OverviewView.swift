@@ -147,7 +147,9 @@ public struct OverviewView: View {
                     .accessibilityIdentifier("overview.lastScan")
             }
             if let cleanup = viewModel.lastCleanup {
-                Text("Last cleanup: \(cleanup.moved.count) items moved to the Trash (\(ByteFormatting.string(fromByteCount: cleanup.bytesMovedToTrash))), \(cleanup.finishedAt.formatted(date: .abbreviated, time: .shortened))")
+                Text(cleanup.moved.count == 1
+                     ? String(localized: "Last cleanup: 1 item moved to the Trash (\(ByteFormatting.string(fromByteCount: cleanup.bytesMovedToTrash))), \(cleanup.finishedAt.formatted(date: .abbreviated, time: .shortened))")
+                     : String(localized: "Last cleanup: \(cleanup.moved.count) items moved to the Trash (\(ByteFormatting.string(fromByteCount: cleanup.bytesMovedToTrash))), \(cleanup.finishedAt.formatted(date: .abbreviated, time: .shortened))"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .accessibilityIdentifier("overview.lastCleanup")

@@ -71,7 +71,10 @@ struct ScanSummaryCard: View {
     var body: some View {
         Card(result.isComplete ? String(localized: "Scan Results") : String(localized: "Partial Results (stopped)"), systemImage: "chart.bar.doc.horizontal") {
             if viewModel.movedSinceScan > 0 {
-                Label("\(viewModel.movedSinceScan) items were moved to the Trash since this scan. Totals are from before; scan again to update them.", systemImage: "arrow.clockwise")
+                Label(viewModel.movedSinceScan == 1
+                      ? String(localized: "1 item was moved to the Trash since this scan. Totals are from before; scan again to update them.")
+                      : String(localized: "\(viewModel.movedSinceScan) items were moved to the Trash since this scan. Totals are from before; scan again to update them."),
+                      systemImage: "arrow.clockwise")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .accessibilityIdentifier("space.outdated")
