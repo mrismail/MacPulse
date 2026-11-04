@@ -32,8 +32,10 @@ struct BatteryReadingBuilderTests {
             Issue.record("Health must be labeled as an estimate")
             return
         }
-        #expect(basis.contains("7480 mAh"))
-        #expect(basis.contains("8790 mAh"))
+        // Localized text formats numbers for the user's locale ("7,480" in English).
+        let digits = basis.filter { $0.isNumber || $0 == " " || $0.isLetter }
+        #expect(digits.contains("7480 mAh"))
+        #expect(digits.contains("8790 mAh"))
     }
 
     @Test func realIntelMacBookPro16() throws {
