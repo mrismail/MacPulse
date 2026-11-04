@@ -21,6 +21,10 @@ public enum Radius {
 public enum Palette {
     public static let cardBackground = Color(nsColor: .controlBackgroundColor)
     public static let cardBorder = Color(nsColor: .separatorColor)
+    /// Supporting text on cards. The system's secondary label color measures below
+    /// 4.5:1 on a card background in the accessibility audit; 72 % of the primary label
+    /// color keeps text visibly secondary while meeting WCAG AA in light and dark mode.
+    public static let secondaryText = Color.primary.opacity(0.72)
 
     public static func provenance(_ kind: ProvenanceKind) -> Color {
         switch kind {
