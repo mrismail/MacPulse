@@ -95,10 +95,10 @@ public struct SettingsView: View {
 
             Section("Data retention") {
                 Picker("Keep battery history for", selection: preference(\.batteryRetentionDays)) {
-                    ForEach(AppPreferences.batteryRetentionChoices, id: \.self) { Text("\($0) days").tag($0) }
+                    ForEach(AppPreferences.batteryRetentionChoices, id: \.self) { Text(SettingsPresentation.days($0)).tag($0) }
                 }
                 Picker("Keep app usage history for", selection: preference(\.usageRetentionDays)) {
-                    ForEach(AppPreferences.usageRetentionChoices, id: \.self) { Text("\($0) days").tag($0) }
+                    ForEach(AppPreferences.usageRetentionChoices, id: \.self) { Text(SettingsPresentation.days($0)).tag($0) }
                 }
                 Text("Scan history is kept 180 days and cleanup history 30 days. Everything stays on this Mac.")
                     .font(.caption).foregroundStyle(.secondary)
@@ -113,7 +113,7 @@ public struct SettingsView: View {
             }
 
             Section("Battery history") {
-                Text("MacPulse records the battery level about once a minute while it is running and keeps \(viewModel.batteryHistoryRetentionDays) days of history on this Mac. Old history is removed automatically.")
+                Text("MacPulse records the battery level \(viewModel.preferencesAtLaunch.batteryInterval.title.lowercased()) while it is running and keeps \(viewModel.batteryHistoryRetentionDays) days of history on this Mac. Old history is removed automatically.")
                     .foregroundStyle(.secondary)
                 HStack {
                     Button("Clear Battery History…", role: .destructive) {
@@ -132,18 +132,7 @@ public struct SettingsView: View {
                     } message: {
                         Text("Charts and charging sessions start again from now. Your battery itself is not affected.")
                     }
-                    switch viewModel.clearBatteryHistoryState {
-                    case .idle:
-                        EmptyView()
-                    case .clearing:
-                        ProgressView().controlSize(.small)
-                    case .cleared:
-                        Label("History cleared", systemImage: "checkmark.circle")
-                            .foregroundStyle(.secondary)
-                    case .failed(let error):
-                        Label(error.userMessage, systemImage: "exclamationmark.triangle")
-                            .foregroundStyle(.secondary)
-                    }
+                    ClearStateLabel(state: viewModel.clearBatteryHistoryState)
                 }
             }
 
@@ -168,18 +157,7 @@ public struct SettingsView: View {
                         } message: {
                             Text("Per-app trends start again from now.")
                         }
-                        switch viewModel.clearUsageHistoryState {
-                        case .idle:
-                            EmptyView()
-                        case .clearing:
-                            ProgressView().controlSize(.small)
-                        case .cleared:
-                            Label("History cleared", systemImage: "checkmark.circle")
-                                .foregroundStyle(.secondary)
-                        case .failed(let error):
-                            Label(error.userMessage, systemImage: "exclamationmark.triangle")
-                                .foregroundStyle(.secondary)
-                        }
+                        ClearStateLabel(state: viewModel.clearUsageHistoryState)
                     }
                 }
             }
@@ -220,7 +198,7 @@ public struct SettingsView: View {
                 case .loaded(let info):
                     KeyValueRow("Version", value: info.appVersionDescription)
                     KeyValueRow("macOS", value: info.macOSVersion)
-                    KeyValueRow("Model", value: info.hardwareModel ?? "Unknown")
+                    KeyValueRow("Model", value: info.hardwareModel ?? String(localized: "Unknown"))
                     KeyValueRow("Processor", value: "\(info.architectureDescription), \(info.processorCount) cores")
                     KeyValueRow("Memory", value: info.memoryDescription)
                 case .failed(let error):
@@ -238,6 +216,13 @@ public struct SettingsView: View {
         .navigationTitle("Settings")
         .task { await viewModel.load() }
         .task { await viewModel.loadLoginItem() }
+    }
+}
+
+enum SettingsPresentation {
+    /// "30 days", formatted by the locale (plural rules and digits included).
+    static func days(_ count: Int) -> String {
+        Duration.seconds(count * 86_400).formatted(.units(allowed: [.days], width: .wide))
     }
 }
 

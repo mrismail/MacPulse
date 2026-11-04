@@ -386,7 +386,7 @@ public final class CleanerViewModel {
             do {
                 try await historyRepository.replace(updated)
             } catch {
-                Log.logger(.cleanup).log(AppError.wrapping(error, userMessage: "Couldn't update cleanup history."), context: "Put back")
+                Log.logger(.cleanup).log(AppError.wrapping(error, userMessage: String(localized: "Couldn't update cleanup history.")), context: "Put back")
             }
             if case .finished(let current) = phase, current.id == report.id { phase = .finished(updated) }
             await loadHistory()

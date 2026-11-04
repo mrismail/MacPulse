@@ -180,7 +180,7 @@ public struct BatteryView: View {
                 Label(error.userMessage, systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.secondary)
             } else if viewModel.chartPoints.isEmpty {
-                Text("No history yet. MacPulse records the charge level every minute while it is running.")
+                Text("No history yet. MacPulse records the charge level regularly while it is running (Settings → Monitoring).")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, minHeight: 120)
             } else {
