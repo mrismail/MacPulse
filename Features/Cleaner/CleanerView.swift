@@ -382,9 +382,10 @@ enum CleanerPresentation {
         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
     }
 
-    /// Opens a folder in Finder (e.g. the Trash). Read-only.
+    /// Shows a folder in a Finder window (e.g. the Trash). Read-only: unlike
+    /// `NSWorkspace.open`, it never launches an app or runs a script.
     @MainActor
     static func open(_ path: String) {
-        NSWorkspace.shared.open(URL(fileURLWithPath: path, isDirectory: true))
+        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: path)
     }
 }
