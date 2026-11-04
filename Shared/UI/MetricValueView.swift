@@ -37,16 +37,16 @@ public struct MetricValueView<Value: Sendable & Equatable>: View {
             HStack(spacing: Spacing.small) {
                 Text(title)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                 ProvenanceBadge(metric.provenance)
             }
             Text(valueText ?? "—")
                 .font(valueFont)
-                .foregroundStyle(metric.isAvailable ? Color.primary : Color.secondary)
+                .foregroundStyle(metric.isAvailable ? Color.primary : Palette.secondaryText)
             if case .unavailable = metric.provenance {
                 Text(metric.provenance.explanation)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }

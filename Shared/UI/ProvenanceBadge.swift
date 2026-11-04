@@ -16,7 +16,7 @@ public struct ProvenanceBadge: View {
         let kind = provenance.kind
         Label(provenance.badgeTitle, systemImage: kind.symbolName)
             .font(.caption2.weight(.medium))
-            .foregroundStyle(kind == .unavailable ? Color.secondary : Color.primary)
+            .foregroundStyle(kind == .unavailable ? Palette.secondaryText : Color.primary)
             .labelStyle(.titleAndIcon)
             .lineLimit(1)
             .fixedSize()  // never wrap or hyphenate ("Mea-sured") in narrow columns

@@ -178,10 +178,10 @@ public struct BatteryView: View {
 
             if let error = viewModel.historyError {
                 Label(error.userMessage, systemImage: "exclamationmark.triangle")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
             } else if viewModel.chartPoints.isEmpty {
                 Text("No history yet. MacPulse records the charge level regularly while it is running (Settings → Monitoring).")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                     .frame(maxWidth: .infinity, minHeight: 120)
             } else {
                 chart
@@ -205,7 +205,7 @@ public struct BatteryView: View {
                     .accessibilityIdentifier("battery.legend.onPower")
                     Spacer()
                     Text("Gaps mean MacPulse wasn't running or the Mac was asleep.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Palette.secondaryText)
                         .accessibilityIdentifier("battery.legend.gaps")
                 }
                 .font(.caption)
@@ -251,7 +251,7 @@ public struct BatteryView: View {
                         VStack(spacing: 2) {
                             Text(NumberFormatting.percent(selectedPoint.percentage)).bold()
                             Text(selectedPoint.timestamp.formatted(date: .abbreviated, time: .shortened))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Palette.secondaryText)
                         }
                         .font(.caption)
                         .padding(Spacing.xSmall)
@@ -286,7 +286,7 @@ public struct BatteryView: View {
         Card("Charging sessions", systemImage: "powerplug") {
             if viewModel.recentSessions.isEmpty {
                 Text("No charging sessions in this range.")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                     .accessibilityIdentifier("battery.sessions.empty")
             } else {
                 ForEach(viewModel.recentSessions.prefix(8)) { session in
@@ -308,7 +308,7 @@ private struct TopAppsCard: View {
                 ProgressView("Measuring app activity…").controlSize(.small)
             } else if energy.topApps.isEmpty {
                 Text("No app has used noticeable CPU in the last \(energy.status?.recentWindowMinutes ?? 10) minutes.")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
             } else {
                 ForEach(energy.topApps) { app in
                     HStack {
@@ -316,7 +316,7 @@ private struct TopAppsCard: View {
                         Spacer()
                         Text(EnergyPresentation.cpuText(app.cpuPercent))
                             .monospacedDigit()
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Palette.secondaryText)
                         ImpactBadge(impact: app.impact)
                             .frame(minWidth: 110, alignment: .leading)
                     }
@@ -347,14 +347,14 @@ private struct ChargingSessionRow: View {
                 Text(session.start.formatted(date: .abbreviated, time: .shortened))
                 Text(durationText)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
             }
             Spacer()
             if let start = session.startPercentage, let end = session.endPercentage {
                 HStack(spacing: Spacing.xSmall) {
                     Text(NumberFormatting.percent(start))
                     // `arrow.forward` mirrors automatically in right-to-left languages.
-                    Image(systemName: "arrow.forward").foregroundStyle(.secondary)
+                    Image(systemName: "arrow.forward").foregroundStyle(Palette.secondaryText)
                     Text(NumberFormatting.percent(end))
                 }
                 .monospacedDigit()
