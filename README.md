@@ -15,7 +15,8 @@ locally: no account, no uploads.
   confirm, re-checking each item first (ADR-015).
 - Use the network, run other programs, ask for admin rights or Full Disk Access (ADR-010).
 - Read your documents' contents, except to compare files you asked the Duplicate Finder
-  to compare; it never downloads iCloud files to do so (ADR-014).
+  to compare. Files that are only in iCloud are skipped, and reads run with macOS told
+  not to download placeholders, so a search doesn't download them (ADR-014, ADR-018).
 
 ## Requirements
 

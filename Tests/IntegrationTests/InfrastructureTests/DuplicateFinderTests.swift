@@ -205,4 +205,34 @@ struct DuplicateChangeTests {
         #expect(DuplicateSearch.isDataless(flags: 0x4000_0000))
         #expect(!DuplicateSearch.isDataless(flags: 0x0000_0020))
     }
+
+    /// The flag test above only checks a bit; this proves every read runs with macOS told
+    /// not to download placeholders, and that the thread's policy is put back afterwards.
+    @Test func readsNeverDownloadICloudPlaceholders() async throws {
+        let root = try Tree.makeRoot()
+        defer { Tree.cleanUp(root) }
+        let content = Self.bytes(200_000, seed: 9)
+        try Self.write(root + "/a/x.bin", content)
+        try Self.write(root + "/b/x.bin", content)
+        final class Seen: @unchecked Sendable {
+            let lock = NSLock()
+            var policies: [Int32] = []
+            func add(_ value: Int32) { lock.withLock { policies.append(value) } }
+        }
+        let seen = Seen()
+        let finder = DuplicateFinder(beforeReading: { _ in
+            seen.add(getiopolicy_np(IOPOL_TYPE_VFS_MATERIALIZE_DATALESS_FILES, IOPOL_SCOPE_THREAD))
+        })
+        let policy = ScanPathPolicy(homePath: "/nonexistent-home", approvedRoots: [root])
+        let result = await finder.findDuplicates(DuplicateScanRequest(roots: [root], policy: policy)) { _ in }
+        #expect(result.groups.count == 1)
+        #expect(!seen.policies.isEmpty)
+        #expect(seen.policies.allSatisfy { $0 == IOPOL_MATERIALIZE_DATALESS_FILES_OFF }, "\(seen.policies)")
+
+        let before = getiopolicy_np(IOPOL_TYPE_VFS_MATERIALIZE_DATALESS_FILES, IOPOL_SCOPE_THREAD)
+        let saved = DuplicateSearch.stopDownloadsOnThisThread()
+        #expect(saved == before)
+        DuplicateSearch.restoreDownloads(saved)
+        #expect(getiopolicy_np(IOPOL_TYPE_VFS_MATERIALIZE_DATALESS_FILES, IOPOL_SCOPE_THREAD) == before)
+    }
 }
