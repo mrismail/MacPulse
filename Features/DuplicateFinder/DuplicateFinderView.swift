@@ -193,7 +193,9 @@ private struct DuplicateGroupsCard: View {
                     .frame(maxWidth: 260)
                     .accessibilityIdentifier("duplicates.locationFilter")
             }
-            if viewModel.groups.isEmpty {
+            // Filtered once per update, not once per use.
+            let groups = viewModel.groups
+            if groups.isEmpty {
                 ContentUnavailableView(
                     "No Duplicates",
                     systemImage: "checkmark.circle",
@@ -201,7 +203,7 @@ private struct DuplicateGroupsCard: View {
                 )
             }
             LazyVStack(alignment: .leading, spacing: Spacing.medium) {
-                ForEach(viewModel.groups) { group in
+                ForEach(groups) { group in
                     DuplicateGroupView(group: group, viewModel: viewModel, preview: preview)
                 }
             }
@@ -224,7 +226,10 @@ private struct DuplicateGroupView: View {
                     .foregroundStyle(.secondary)
                 Spacer()
                 if let savings = group.potentialSavings.value {
-                    Text("Saves \(ByteFormatting.string(fromByteCount: savings))\(group.potentialSavings.isMeasured ? "" : " (estimate)")")
+                    let size = ByteFormatting.string(fromByteCount: savings)
+                    Text(group.potentialSavings.isMeasured
+                        ? String(localized: "Saves \(size)")
+                        : String(localized: "Saves about \(size) (estimate)"))
                         .monospacedDigit()
                 }
             }
@@ -252,22 +257,32 @@ private struct DuplicateFileRow: View {
             )) {
                 Text("Remove")
             }
+            // Copies usually share a name: VoiceOver and tests need the folder too.
+            .accessibilityLabel(String(localized: "Remove \(file.name) in \(file.folder)"))
             .toggleStyle(.checkbox)
             .disabled(!viewModel.canMark(file, in: group))
             .help(viewModel.canMark(file, in: group)
                 ? String(localized: "Mark this copy for removal")
                 : String(localized: "At least one copy is always kept"))
-            .accessibilityIdentifier("duplicates.mark.\(file.name)")
+            .accessibilityIdentifier(DuplicatePresentation.markIdentifier(file))
             FileThumbnail(path: file.path, category: file.category)
             VStack(alignment: .leading, spacing: 0) {
-                Text(file.name)
+                // Marked copies are struck through and labelled, not just dimmed.
+                HStack(spacing: Spacing.xSmall) {
+                    Text(file.name).strikethrough(viewModel.isMarked(file))
+                    if viewModel.isMarked(file) {
+                        Text("Marked for removal").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
                 Text(file.folder)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 if !file.hardLinkPaths.isEmpty {
-                    Text("Also linked at \(file.hardLinkPaths.count) other place(s); removing this path alone frees nothing.")
+                    Text(file.hardLinkPaths.count == 1
+                        ? String(localized: "Also linked at 1 other place; removing this path alone frees nothing.")
+                        : String(localized: "Also linked at \(file.hardLinkPaths.count) other places; removing this path alone frees nothing."))
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }
@@ -279,7 +294,6 @@ private struct DuplicateFileRow: View {
             }
             Text(ByteFormatting.string(fromByteCount: file.allocatedBytes)).monospacedDigit()
         }
-        .opacity(viewModel.isMarked(file) ? 0.6 : 1)
         .contextMenu {
             Button("Quick Look") { preview(file.path) }
             Button("Reveal in Finder") { DuplicatePresentation.reveal([file.path]) }
@@ -308,6 +322,7 @@ private struct FileThumbnail: View {
             guard category == .images || category == .video else { return }
             image = await DuplicatePresentation.thumbnail(for: path)
         }
+        // Leaving the screen (or scrolling past in a lazy stack) cancels the request.
     }
 }
 
@@ -338,11 +353,21 @@ enum DuplicatePresentation {
         NSWorkspace.shared.activateFileViewerSelecting(paths.map { URL(fileURLWithPath: $0) })
     }
 
-    /// A Quick Look thumbnail. Quick Look reads the file in its own process.
+    /// "duplicates.mark.<folder>/<name>": unique within a group even when names repeat.
+    static func markIdentifier(_ file: DuplicateFile) -> String {
+        "duplicates.mark.\((file.folder as NSString).lastPathComponent)/\(file.name)"
+    }
+
+    @MainActor private static let thumbnails = NSCache<NSString, NSImage>()
+
+    /// A Quick Look thumbnail, cached. Quick Look reads the file in its own process.
     @MainActor
     static func thumbnail(for path: String) async -> NSImage? {
+        if let cached = thumbnails.object(forKey: path as NSString) { return cached }
         let box = await thumbnailImage(for: path)
-        return box.image.map { NSImage(cgImage: $0, size: .zero) }
+        guard !Task.isCancelled, let image = box.image.map({ NSImage(cgImage: $0, size: .zero) }) else { return nil }
+        thumbnails.setObject(image, forKey: path as NSString)
+        return image
     }
 
     /// Quick Look calls back on its own queue, so the callback must not be main-actor
@@ -351,15 +376,27 @@ enum DuplicatePresentation {
         let request = QLThumbnailGenerator.Request(
             fileAt: URL(fileURLWithPath: path), size: CGSize(width: 72, height: 72), scale: 2, representationTypes: .thumbnail
         )
-        return await withCheckedContinuation { (continuation: CheckedContinuation<ImageBox, Never>) in
-            QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { @Sendable representation, _ in
-                continuation.resume(returning: ImageBox(representation?.cgImage))
+        let box = RequestBox(request)
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { (continuation: CheckedContinuation<ImageBox, Never>) in
+                QLThumbnailGenerator.shared.generateBestRepresentation(for: box.request) { @Sendable representation, _ in
+                    continuation.resume(returning: ImageBox(representation?.cgImage))
+                }
             }
+        } onCancel: {
+            // Quick Look then calls back with no image, which ends the wait.
+            QLThumbnailGenerator.shared.cancel(box.request)
         }
     }
 }
 
 /// Carries a thumbnail out of Quick Look's callback.
+/// Lets the cancellation handler reach the request.
+final class RequestBox: @unchecked Sendable {
+    let request: QLThumbnailGenerator.Request
+    init(_ request: QLThumbnailGenerator.Request) { self.request = request }
+}
+
 final class ImageBox: @unchecked Sendable {
     let image: CGImage?
     init(_ image: CGImage?) { self.image = image }
