@@ -57,6 +57,11 @@ public protocol TrashService: Sendable {
 }
 
 /// Why an item couldn't be put back.
+public enum CleanupHistoryError: Error, Equatable {
+    /// `replace` found no stored report with that id.
+    case reportNotFound
+}
+
 public enum PutBackFailure: Error, Sendable, Equatable {
     /// It is no longer in the Trash (emptied or moved).
     case notInTrash
@@ -79,7 +84,8 @@ public enum PutBackFailure: Error, Sendable, Equatable {
 public protocol CleanupHistoryRepository: Sendable {
     func append(_ report: CleanupReport) async throws
     func reports() async throws -> [CleanupReport]
-    /// Replaces a stored report (e.g. after an item was put back).
+    /// Replaces a stored report (e.g. after an item was put back). Throws
+    /// `CleanupHistoryError.reportNotFound` when no stored report has its id.
     func replace(_ report: CleanupReport) async throws
     func deleteAll() async throws
 }
@@ -89,8 +95,9 @@ public actor InMemoryCleanupHistory: CleanupHistoryRepository {
     public init(_ reports: [CleanupReport] = []) { stored = reports }
     public func append(_ report: CleanupReport) { stored.append(report) }
     public func reports() -> [CleanupReport] { stored }
-    public func replace(_ report: CleanupReport) {
-        if let index = stored.firstIndex(where: { $0.id == report.id }) { stored[index] = report }
+    public func replace(_ report: CleanupReport) throws {
+        guard let index = stored.firstIndex(where: { $0.id == report.id }) else { throw CleanupHistoryError.reportNotFound }
+        stored[index] = report
     }
     public func deleteAll() { stored.removeAll() }
 }

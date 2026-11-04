@@ -70,9 +70,21 @@ struct DailyJSONLinesFiles {
             payload.append(0x0A)
         }
         let url = fileURL(forDay: day)
+        removeStaleTemporaryFiles()
         let temporary = directory.appendingPathComponent(".\(prefix)\(day).\(UUID().uuidString).tmp")
-        guard fileManager.createFile(atPath: temporary.path, contents: payload, attributes: [.posixPermissions: 0o600]) else {
-            throw CocoaError(.fileWriteUnknown)
+        // Written and flushed to disk before it replaces the day file, so a crash leaves
+        // either the old file or the complete new one.
+        let descriptor = open(temporary.path, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0o600)
+        guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+        let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
+        do {
+            try handle.write(contentsOf: payload)
+            try handle.synchronize()
+            try handle.close()
+        } catch {
+            try? handle.close()
+            try? fileManager.removeItem(at: temporary)
+            throw error
         }
         if fileManager.fileExists(atPath: url.path) {
             _ = try fileManager.replaceItemAt(url, withItemAt: temporary)
@@ -95,6 +107,17 @@ struct DailyJSONLinesFiles {
     }
 
     // MARK: Private
+
+    /// Temporary files left by a crash during `replace` (older than a minute).
+    private func removeStaleTemporaryFiles() {
+        guard let names = try? fileManager.contentsOfDirectory(atPath: directory.path) else { return }
+        let cutoff = Date().addingTimeInterval(-60)
+        for name in names where name.hasPrefix("." + prefix) && name.hasSuffix(".tmp") {
+            let url = directory.appendingPathComponent(name)
+            let modified = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantFuture
+            if modified < cutoff { try? fileManager.removeItem(at: url) }
+        }
+    }
 
     private func ensureDirectory() throws {
         if !fileManager.fileExists(atPath: directory.path) {
