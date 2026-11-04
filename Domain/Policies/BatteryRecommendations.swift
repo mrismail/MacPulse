@@ -35,7 +35,7 @@ public enum BatteryRecommendations {
         if let issue = status.historyIssue {
             result.append(Recommendation(
                 id: "history",
-                title: "Battery history isn't being saved",
+                title: String(localized: "Battery history isn't being saved"),
                 detail: issue.userMessage,
                 severity: .warning
             ))
@@ -44,7 +44,7 @@ public enum BatteryRecommendations {
         if case .serviceRecommended(let text)? = reading.condition.value {
             result.append(Recommendation(
                 id: "condition",
-                title: "Your battery may need service",
+                title: String(localized: "Your battery may need service"),
                 detail: "macOS reports the battery condition as “\(text)”. Consider checking it with Apple Support.",
                 severity: .warning
             ))
@@ -55,8 +55,8 @@ public enum BatteryRecommendations {
            charge <= lowChargeThreshold {
             result.append(Recommendation(
                 id: "lowCharge",
-                title: "Battery is low",
-                detail: "Connect to power soon.",
+                title: String(localized: "Battery is low"),
+                detail: String(localized: "Connect to power soon."),
                 severity: .warning
             ))
         }
@@ -64,8 +64,8 @@ public enum BatteryRecommendations {
         if let health = reading.healthPercentage.value, health < reducedHealthThreshold {
             result.append(Recommendation(
                 id: "health",
-                title: "Battery capacity has dropped",
-                detail: "Estimated health is \(Int(health.rounded()))% of the original capacity, so a full charge lasts less than it used to.",
+                title: String(localized: "Battery capacity has dropped"),
+                detail: String(localized: "Estimated health is \(Int(health.rounded()))% of the original capacity, so a full charge lasts less than it used to."),
                 severity: .info
             ))
         }
@@ -73,8 +73,8 @@ public enum BatteryRecommendations {
         if let temperature = reading.temperatureCelsius.value, temperature >= warmTemperatureThreshold {
             result.append(Recommendation(
                 id: "temperature",
-                title: "Battery is warm",
-                detail: "Heat ages batteries faster. Avoid heavy work on soft surfaces or in direct sun.",
+                title: String(localized: "Battery is warm"),
+                detail: String(localized: "Heat ages batteries faster. Avoid heavy work on soft surfaces or in direct sun."),
                 severity: .info
             ))
         }

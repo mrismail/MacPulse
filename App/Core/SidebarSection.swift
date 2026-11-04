@@ -12,13 +12,13 @@ public enum SidebarSection: String, CaseIterable, Identifiable, Hashable, Sendab
 
     public var title: String {
         switch self {
-        case .overview: "Overview"
-        case .battery: "Battery"
-        case .energy: "Energy"
-        case .spaceAnalyzer: "Space Analyzer"
-        case .duplicateFinder: "Duplicate Finder"
-        case .cleaner: "Cleaner"
-        case .settings: "Settings"
+        case .overview: String(localized: "Overview")
+        case .battery: String(localized: "Battery")
+        case .energy: String(localized: "Energy")
+        case .spaceAnalyzer: String(localized: "Space Analyzer")
+        case .duplicateFinder: String(localized: "Duplicate Finder")
+        case .cleaner: String(localized: "Cleaner")
+        case .settings: String(localized: "Settings")
         }
     }
 
@@ -66,8 +66,8 @@ public enum SidebarGroup: String, CaseIterable, Identifiable, Sendable {
     public var title: String? {
         switch self {
         case .general: nil
-        case .power: "Power"
-        case .storage: "Storage"
+        case .power: String(localized: "Power")
+        case .storage: String(localized: "Storage")
         case .app: nil
         }
     }

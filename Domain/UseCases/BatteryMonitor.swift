@@ -93,7 +93,7 @@ public actor BatteryMonitor: BatteryMonitoring {
         if !configuration.historyIsPersistent {
             historyIssue = AppError(
                 kind: .io,
-                userMessage: "Battery history can't be saved on this Mac, so it will be lost when MacPulse quits."
+                userMessage: String(localized: "Battery history can't be saved on this Mac, so it will be lost when MacPulse quits.")
             )
         }
     }
@@ -242,7 +242,7 @@ public actor BatteryMonitor: BatteryMonitoring {
                 parameters: configuration.estimatorParameters
             )
         } else {
-            let connected = UnavailabilityReason.notApplicable("Connected to power.")
+            let connected = UnavailabilityReason.notApplicable(String(localized: "Connected to power."))
             estimate = RuntimeEstimator.Estimate(
                 runtime: .unavailable(connected),
                 ratePercentPerHour: .unavailable(connected)
@@ -258,7 +258,7 @@ public actor BatteryMonitor: BatteryMonitoring {
                 historyIssue = nil
             }
         } catch {
-            fail(AppError.wrapping(error, userMessage: "Couldn't save battery history."))
+            fail(AppError.wrapping(error, userMessage: String(localized: "Couldn't save battery history.")))
         }
         await pruneIfDue(at: timestamp)
 
@@ -279,7 +279,7 @@ public actor BatteryMonitor: BatteryMonitoring {
         do {
             recentWindow = try await historyStore.snapshots(from: windowStart, to: timestamp)
         } catch {
-            fail(AppError.wrapping(error, userMessage: "Couldn't read battery history."))
+            fail(AppError.wrapping(error, userMessage: String(localized: "Couldn't read battery history.")))
         }
     }
 
@@ -291,7 +291,7 @@ public actor BatteryMonitor: BatteryMonitoring {
         do {
             try await historyStore.prune(olderThan: timestamp.addingTimeInterval(-configuration.historyRetention))
         } catch {
-            fail(AppError.wrapping(error, userMessage: "Couldn't remove old battery history."))
+            fail(AppError.wrapping(error, userMessage: String(localized: "Couldn't remove old battery history.")))
         }
     }
 

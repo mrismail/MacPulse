@@ -37,7 +37,7 @@ public struct UserNotificationDrainNotifier: DrainAlertNotifier {
             return try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
         } catch {
             Log.logger(.energy).log(
-                AppError.wrapping(error, userMessage: "Couldn't ask for notification permission."),
+                AppError.wrapping(error, userMessage: String(localized: "Couldn't ask for notification permission.")),
                 context: "Notifications"
             )
             return false
@@ -53,7 +53,7 @@ public struct UserNotificationDrainNotifier: DrainAlertNotifier {
             try await UNUserNotificationCenter.current().add(request)
         } catch {
             Log.logger(.energy).log(
-                AppError.wrapping(error, userMessage: "Couldn't show a notification."),
+                AppError.wrapping(error, userMessage: String(localized: "Couldn't show a notification.")),
                 context: "Notifications"
             )
         }

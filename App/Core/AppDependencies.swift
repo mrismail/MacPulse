@@ -94,7 +94,7 @@ public struct AppDependencies: Sendable {
             return JSONLinesCleanupHistoryStore(directory: try JSONLinesCleanupHistoryStore.defaultDirectory())
         } catch {
             Log.logger(.persistence).log(
-                AppError.wrapping(error, userMessage: "Cleanup history can't be saved."),
+                AppError.wrapping(error, userMessage: String(localized: "Cleanup history can't be saved.")),
                 context: "Cleanup history store"
             )
             return InMemoryCleanupHistory()
@@ -106,7 +106,7 @@ public struct AppDependencies: Sendable {
             return JSONLinesScanHistoryStore(directory: try JSONLinesScanHistoryStore.defaultDirectory())
         } catch {
             Log.logger(.persistence).log(
-                AppError.wrapping(error, userMessage: "Scan history can't be saved."),
+                AppError.wrapping(error, userMessage: String(localized: "Scan history can't be saved.")),
                 context: "Scan history store"
             )
             return InMemoryScanHistory()
@@ -122,7 +122,7 @@ public struct AppDependencies: Sendable {
             history = JSONLinesBatteryHistoryStore(directory: directory)
         } catch {
             logger.log(
-                AppError.wrapping(error, userMessage: "Battery history can't be saved."),
+                AppError.wrapping(error, userMessage: String(localized: "Battery history can't be saved.")),
                 context: "Battery history store"
             )
             history = InMemoryBatteryHistoryRepository()
@@ -174,7 +174,7 @@ extension AppDependencies {
             history = JSONLinesAppUsageStore(directory: try JSONLinesAppUsageStore.defaultDirectory())
         } catch {
             Log.logger(.energy).log(
-                AppError.wrapping(error, userMessage: "App usage history can't be saved."),
+                AppError.wrapping(error, userMessage: String(localized: "App usage history can't be saved.")),
                 context: "Usage history store"
             )
             history = InMemoryAppUsageHistory()
