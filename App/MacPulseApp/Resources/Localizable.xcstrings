@@ -1,7 +1,1363 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {
 
+    },
+    "%@ CPU" : {
+
+    },
+    "%@ has averaged %@ CPU for the last %lld minutes. Sustained CPU use is a common cause of faster battery drain." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ has averaged %2$@ CPU for the last %3$lld minutes. Sustained CPU use is a common cause of faster battery drain."
+          }
+        }
+      }
+    },
+    "%@ is using a lot of CPU" : {
+
+    },
+    "%@ items · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ items · %2$@"
+          }
+        }
+      }
+    },
+    "%@ per hour" : {
+
+    },
+    "%@ to %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ to %2$@"
+          }
+        }
+      }
+    },
+    "%@ · %@ read" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@ read"
+          }
+        }
+      }
+    },
+    "%@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "%@, still on power" : {
+
+    },
+    "%@: %@ used of %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@ used of %3$@"
+          }
+        }
+      }
+    },
+    "%@: %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$lld"
+          }
+        }
+      }
+    },
+    "%lld copies · %@ each" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld copies · %2$@ each"
+          }
+        }
+      }
+    },
+    "%lld failed" : {
+
+    },
+    "%lld files considered · %lld shared a size · %lld fully hashed · %lld verified identical byte by byte." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld files considered · %2$lld shared a size · %3$lld fully hashed · %4$lld verified identical byte by byte."
+          }
+        }
+      }
+    },
+    "%lld files in iCloud that aren't downloaded were skipped, so nothing was downloaded." : {
+
+    },
+    "%lld files were left out because they couldn't be read or changed during the search." : {
+
+    },
+    "%lld hard links were counted once." : {
+
+    },
+    "%lld items are in the Trash. Empty it in Finder to free their space; MacPulse never deletes permanently." : {
+
+    },
+    "%lld items were moved to the Trash since this scan. Totals are from before; scan again to update them." : {
+
+    },
+    "%lld marked" : {
+
+    },
+    "%lld moved to the Trash (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld moved to the Trash (%2$@)"
+          }
+        }
+      }
+    },
+    "%lld put back" : {
+
+    },
+    "%lld selected · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld selected · %2$@"
+          }
+        }
+      }
+    },
+    "%lld skipped" : {
+
+    },
+    "%lld small files directly in this folder aren't listed." : {
+
+    },
+    "%lld smaller files" : {
+
+    },
+    "+%@ since last scan" : {
+
+    },
+    "1 file in iCloud that isn't downloaded was skipped, so nothing was downloaded." : {
+
+    },
+    "1 file was left out because it couldn't be read or changed during the search." : {
+
+    },
+    "1 hard link was counted once." : {
+
+    },
+    "1 item was moved to the Trash since this scan. Totals are from before; scan again to update them." : {
+
+    },
+    "1 year" : {
+
+    },
+    "24 Hours" : {
+
+    },
+    "30 days" : {
+
+    },
+    "7 Days" : {
+
+    },
+    "90 days" : {
+
+    },
+    "A different item now has that name in the Trash, so it was left alone." : {
+
+    },
+    "A folder you chose to clean, not an item in it" : {
+
+    },
+    "A hidden item" : {
+
+    },
+    "A media library; manage it in its app" : {
+
+    },
+    "A standard folder of your account" : {
+
+    },
+    "About" : {
+
+    },
+    "About %@ left (estimate)" : {
+
+    },
+    "Activity (CPU-based)" : {
+
+    },
+    "Add Folders…" : {
+
+    },
+    "Add Folder…" : {
+
+    },
+    "Add Home Folder" : {
+
+    },
+    "Alert me when an app uses a lot of CPU" : {
+
+    },
+    "All types" : {
+
+    },
+    "Also linked at %lld other places; removing this path alone frees nothing." : {
+
+    },
+    "Also linked at 1 other place; removing this path alone frees nothing." : {
+
+    },
+    "Also show a macOS notification" : {
+
+    },
+    "Any size" : {
+
+    },
+    "App" : {
+
+    },
+    "App Caches" : {
+
+    },
+    "App activity in the background" : {
+
+    },
+    "App data in your Library folder" : {
+
+    },
+    "App data in your Library folder can't be chosen." : {
+
+    },
+    "App usage history" : {
+
+    },
+    "App usage history can't be saved on this Mac, so trends will be lost when MacPulse quits." : {
+
+    },
+    "Applications" : {
+
+    },
+    "Apps using the most energy" : {
+
+    },
+    "Apps using the most energy (estimate)" : {
+
+    },
+    "Archives & disk images" : {
+
+    },
+    "At least one copy is always kept" : {
+
+    },
+    "Audio" : {
+
+    },
+    "Available" : {
+
+    },
+    "Average CPU" : {
+
+    },
+    "Average memory" : {
+
+    },
+    "Average over the last %lld minutes" : {
+
+    },
+    "Battery" : {
+
+    },
+    "Battery charge history" : {
+
+    },
+    "Battery history" : {
+
+    },
+    "Battery impact" : {
+
+    },
+    "Battery impact is estimated from the energy macOS reports for each app." : {
+
+    },
+    "Battery level" : {
+
+    },
+    "Bottom" : {
+
+    },
+    "Bytes" : {
+
+    },
+    "CPU" : {
+
+    },
+    "CPU above" : {
+
+    },
+    "CPU is shown per processor core: 100% means one core fully busy. System CPU is the share of all cores together." : {
+
+    },
+    "Cache kept by %@. The app rebuilds it when needed." : {
+
+    },
+    "Caches" : {
+
+    },
+    "Caches, logs, temporary files and Trash found in this scan. Some may be in use, and files that share storage (APFS clones) can free less than their size." : {
+
+    },
+    "Caches, logs, temporary files and Trash found when you scanned %@ on %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Caches, logs, temporary files and Trash found when you scanned %1$@ on %2$@."
+          }
+        }
+      }
+    },
+    "Cancel" : {
+
+    },
+    "Categories marked cleanable are usually safe to clean up. Categories come from file names and locations; contents are never read." : {
+
+    },
+    "Category" : {
+
+    },
+    "Change Folder…" : {
+
+    },
+    "Charge" : {
+
+    },
+    "Charging" : {
+
+    },
+    "Charts and charging sessions start again from now. Your battery itself is not affected." : {
+
+    },
+    "Checking your Mac…" : {
+
+    },
+    "Choose Downloads Folder…" : {
+
+    },
+    "Choose Folder…" : {
+
+    },
+    "Choose a Protected Folder to Scan…" : {
+
+    },
+    "Choose a folder inside your home folder or on an external drive, not a system location or your whole home folder." : {
+
+    },
+    "Choose a folder inside your home folder or on an external drive." : {
+
+    },
+    "Choose a folder on the drive, not the whole drive." : {
+
+    },
+    "Choose a folder to look for empty folders in." : {
+
+    },
+    "Choose the folders to search. Desktop, Documents and Downloads are searched only when you choose them, so macOS can ask you once." : {
+
+    },
+    "Choose your Downloads folder to look for old downloads." : {
+
+    },
+    "Cleaner" : {
+
+    },
+    "Cleanup Finished" : {
+
+    },
+    "Cleanup Stopped" : {
+
+    },
+    "Clear App Usage History…" : {
+
+    },
+    "Clear Battery History…" : {
+
+    },
+    "Clear Cleanup History" : {
+
+    },
+    "Clear Cleanup History…" : {
+
+    },
+    "Clear History" : {
+
+    },
+    "Clear Marks" : {
+
+    },
+    "Clear Scan History" : {
+
+    },
+    "Clear Scan History…" : {
+
+    },
+    "Clear Usage History" : {
+
+    },
+    "Clear all app usage history?" : {
+
+    },
+    "Clear all battery history?" : {
+
+    },
+    "Clear all cleanup history?" : {
+
+    },
+    "Clear all scan history?" : {
+
+    },
+    "Coming soon" : {
+
+    },
+    "Comparing the start and end of same-size files" : {
+
+    },
+    "Comparing whole contents" : {
+
+    },
+    "Connected to power." : {
+
+    },
+    "Contains only a Finder view-settings file (.DS_Store)." : {
+
+    },
+    "Copies you marked in the Duplicate Finder. One copy of each file is always kept." : {
+
+    },
+    "Copy Diagnostics" : {
+
+    },
+    "Couldn't change opening at login." : {
+
+    },
+    "Couldn't clear app usage history." : {
+
+    },
+    "Couldn't clear battery history." : {
+
+    },
+    "Couldn't clear cleanup history." : {
+
+    },
+    "Couldn't clear scan history." : {
+
+    },
+    "Couldn't load app usage history." : {
+
+    },
+    "Couldn't load battery history." : {
+
+    },
+    "Couldn't read app usage history." : {
+
+    },
+    "Couldn't read cleanup history." : {
+
+    },
+    "Couldn't read diagnostics." : {
+
+    },
+    "Couldn't read information about this Mac." : {
+
+    },
+    "Couldn't read scan history." : {
+
+    },
+    "Couldn't read the mounted volumes." : {
+
+    },
+    "Couldn't remove old app usage history." : {
+
+    },
+    "Couldn't remove old cleanup history." : {
+
+    },
+    "Couldn't save app usage history." : {
+
+    },
+    "Couldn't save this cleanup to history." : {
+
+    },
+    "Couldn't save this scan to history." : {
+
+    },
+    "Couldn't update cleanup history." : {
+
+    },
+    "Critical" : {
+
+    },
+    "Data apps keep to work faster. Apps rebuild it when needed, which can make them slower the first time." : {
+
+    },
+    "Data retention" : {
+
+    },
+    "Developer" : {
+
+    },
+    "Diagnostic records written by apps. Rarely needed unless you are troubleshooting." : {
+
+    },
+    "Documents" : {
+
+    },
+    "Done" : {
+
+    },
+    "Double-click a folder to open it. Only the largest files of each folder are listed; the rest are summed as smaller files." : {
+
+    },
+    "Duplicate Finder" : {
+
+    },
+    "Duplicates" : {
+
+    },
+    "Each item is checked again just before it is moved. You can put items back from the Trash until it is emptied." : {
+
+    },
+    "Elevated" : {
+
+    },
+    "Empty Folders" : {
+
+    },
+    "Empty folder." : {
+
+    },
+    "Energy" : {
+
+    },
+    "Estimated from CPU use only. This Mac hasn't reported per-app energy, so this shows activity, not measured battery use." : {
+
+    },
+    "Estimated from the energy macOS attributes to this app's processes." : {
+
+    },
+    "Estimated impact: %@" : {
+
+    },
+    "Every 30 seconds" : {
+
+    },
+    "Every 5 minutes" : {
+
+    },
+    "Every 5 minutes (uses less energy)" : {
+
+    },
+    "Every minute" : {
+
+    },
+    "Exclude a Folder…" : {
+
+    },
+    "Excluded Folders" : {
+
+    },
+    "Excluded Folders (%lld)…" : {
+
+    },
+    "Excluded by you" : {
+
+    },
+    "Excluded folders are skipped by the Space Analyzer and the Duplicate Finder, and the Cleaner never touches anything in them." : {
+
+    },
+    "Figures reported by the file system. Purgeable space (caches and local snapshots) is freed by macOS when space is needed." : {
+
+    },
+    "File size" : {
+
+    },
+    "Files" : {
+
+    },
+    "Files are compared by content: same size, then a SHA-256 of the start and end, then of the whole file, then byte by byte. Names and dates are never used. Nothing is changed." : {
+
+    },
+    "Files in a Downloads folder you choose that haven't changed for a while." : {
+
+    },
+    "Filter by location" : {
+
+    },
+    "Find Duplicates" : {
+
+    },
+    "Finding files" : {
+
+    },
+    "First scan" : {
+
+    },
+    "Folder" : {
+
+    },
+    "Folders with nothing in them, in a folder you choose." : {
+
+    },
+    "For at least %lld minutes" : {
+
+    },
+    "Free space" : {
+
+    },
+    "Fully charged" : {
+
+    },
+    "Gaps mean MacPulse wasn't running or the Mac was asleep." : {
+
+    },
+    "Go" : {
+
+    },
+    "Hidden folders can't be chosen." : {
+
+    },
+    "High" : {
+
+    },
+    "History cleared" : {
+
+    },
+    "History keeps totals and the five biggest folders of each scan for 180 days, never file names." : {
+
+    },
+    "Hour" : {
+
+    },
+    "How this is estimated" : {
+
+    },
+    "Identical to %@ in %@, verified byte by byte. That copy is kept." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Identical to %1$@ in %2$@, verified byte by byte. That copy is kept."
+          }
+        }
+      }
+    },
+    "Idle wake-ups/s" : {
+
+    },
+    "Images" : {
+
+    },
+    "In a folder you excluded" : {
+
+    },
+    "It is no longer in the Trash." : {
+
+    },
+    "Item" : {
+
+    },
+    "Items already in the Trash stay there, but MacPulse can no longer put them back for you. Finder's Put Back still works." : {
+
+    },
+    "Items already in the Trash. Space is freed when the Trash is emptied." : {
+
+    },
+    "Keep app usage history for" : {
+
+    },
+    "Keep battery history for" : {
+
+    },
+    "Keep the Newest in Each Group" : {
+
+    },
+    "Keep the Oldest in Each Group" : {
+
+    },
+    "Kept for 30 days on this Mac, including where each item went in the Trash." : {
+
+    },
+    "Large Files" : {
+
+    },
+    "Last %lld minutes" : {
+
+    },
+    "Last cleanup: %lld items moved to the Trash (%@), %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last cleanup: %1$lld items moved to the Trash (%2$@), %3$@"
+          }
+        }
+      }
+    },
+    "Last cleanup: 1 item moved to the Trash (%@), %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last cleanup: 1 item moved to the Trash (%1$@), %2$@"
+          }
+        }
+      }
+    },
+    "Last scan: %@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last scan: %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "Latest sample" : {
+
+    },
+    "Links and already-counted folders" : {
+
+    },
+    "Logs" : {
+
+    },
+    "Logs written by %@." : {
+
+    },
+    "Low" : {
+
+    },
+    "MacPulse" : {
+
+    },
+    "MacPulse can't put items back in that place." : {
+
+    },
+    "MacPulse couldn't read that folder." : {
+
+    },
+    "MacPulse couldn't read this folder." : {
+
+    },
+    "MacPulse keeps %lld days of hourly CPU and energy use per app, to show trends. It stores app names and locations only — never documents, window titles or what you do in an app." : {
+
+    },
+    "MacPulse records the battery level %@ while it is running and keeps %lld days of history on this Mac. Old history is removed automatically." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "MacPulse records the battery level %1$@ while it is running and keeps %2$lld days of history on this Mac. Old history is removed automatically."
+          }
+        }
+      }
+    },
+    "MacPulse works entirely on this Mac." : {
+
+    },
+    "MacPulse's own data" : {
+
+    },
+    "Mark Copies" : {
+
+    },
+    "Mark copies in the Duplicate Finder first." : {
+
+    },
+    "Mark this copy for removal" : {
+
+    },
+    "Marked for removal" : {
+
+    },
+    "Marking is a plan: nothing is removed here. The Cleaner shows the marked copies, asks you to confirm, checks each file again and moves it to the Trash." : {
+
+    },
+    "Measuring app activity…" : {
+
+    },
+    "Memory" : {
+
+    },
+    "Minimum size" : {
+
+    },
+    "Moderate" : {
+
+    },
+    "Modified" : {
+
+    },
+    "Monitoring" : {
+
+    },
+    "Most active apps" : {
+
+    },
+    "Most active apps (CPU)" : {
+
+    },
+    "Mostly on battery" : {
+
+    },
+    "Mostly on power" : {
+
+    },
+    "Move %lld items (%@) to the Trash?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Move %1$lld items (%2$@) to the Trash?"
+          }
+        }
+      }
+    },
+    "Move 1 item (%@) to the Trash?" : {
+
+    },
+    "Move to Trash" : {
+
+    },
+    "Move to Trash…" : {
+
+    },
+    "Moved to the Trash." : {
+
+    },
+    "Name" : {
+
+    },
+    "No Activity" : {
+
+    },
+    "No Battery" : {
+
+    },
+    "No Duplicates" : {
+
+    },
+    "No Volumes" : {
+
+    },
+    "No account is required. File names, file contents and usage data are never uploaded." : {
+
+    },
+    "No app has used noticeable CPU in the last %lld minutes." : {
+
+    },
+    "No app is using noticeable CPU right now." : {
+
+    },
+    "No app used measurable CPU in this period." : {
+
+    },
+    "No battery" : {
+
+    },
+    "No change" : {
+
+    },
+    "No charging sessions in this range." : {
+
+    },
+    "No files with identical contents match." : {
+
+    },
+    "No folders are excluded." : {
+
+    },
+    "No history yet. MacPulse records the charge level regularly while it is running (Settings > Monitoring)." : {
+
+    },
+    "No hourly history yet for this app. Trends build up while MacPulse is running." : {
+
+    },
+    "No permission to read" : {
+
+    },
+    "Normal" : {
+
+    },
+    "Not available" : {
+
+    },
+    "Not changed for more than %lld days." : {
+
+    },
+    "Not moved" : {
+
+    },
+    "Not scanned" : {
+
+    },
+    "Nothing needs your attention right now." : {
+
+    },
+    "Nothing to clean here." : {
+
+    },
+    "Notifications" : {
+
+    },
+    "Notifications are turned off for MacPulse in System Settings > Notifications." : {
+
+    },
+    "Old Downloads" : {
+
+    },
+    "Old downloads are files unchanged for" : {
+
+    },
+    "On another volume" : {
+
+    },
+    "On battery" : {
+
+    },
+    "On power" : {
+
+    },
+    "One of the largest files in your last Space Analyzer scan." : {
+
+    },
+    "Only while on battery" : {
+
+    },
+    "Open" : {
+
+    },
+    "Open MacPulse" : {
+
+    },
+    "Open MacPulse at login" : {
+
+    },
+    "Open Space Analyzer" : {
+
+    },
+    "Open Trash in Finder" : {
+
+    },
+    "Other" : {
+
+    },
+    "Outside your home folder" : {
+
+    },
+    "Over 1 GB" : {
+
+    },
+    "Over 1 MB" : {
+
+    },
+    "Over 10 MB" : {
+
+    },
+    "Over 100 KB" : {
+
+    },
+    "Over 100 MB" : {
+
+    },
+    "Overview" : {
+
+    },
+    "Part" : {
+
+    },
+    "Part of an app or another package" : {
+
+    },
+    "Partial Results (stopped)" : {
+
+    },
+    "Per-app trends start again from now." : {
+
+    },
+    "Plugged in" : {
+
+    },
+    "Plugged in, not charging" : {
+
+    },
+    "Power" : {
+
+    },
+    "Privacy" : {
+
+    },
+    "Processes: %lld" : {
+
+    },
+    "Protected by macOS privacy (choose them to scan)" : {
+
+    },
+    "Purgeable" : {
+
+    },
+    "Put Back" : {
+
+    },
+    "Put back where it was." : {
+
+    },
+    "Quick Look" : {
+
+    },
+    "Quit" : {
+
+    },
+    "Range" : {
+
+    },
+    "Read the battery now (⌘R)" : {
+
+    },
+    "Read-only" : {
+
+    },
+    "Reading battery…" : {
+
+    },
+    "Refresh" : {
+
+    },
+    "Remove" : {
+
+    },
+    "Remove %@" : {
+
+    },
+    "Remove %@ in %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove %1$@ in %2$@"
+          }
+        }
+      }
+    },
+    "Results" : {
+
+    },
+    "Reveal Marked in Finder" : {
+
+    },
+    "Reveal in Finder" : {
+
+    },
+    "Review" : {
+
+    },
+    "Review Large Files in Cleaner…" : {
+
+    },
+    "Review Marked in Cleaner…" : {
+
+    },
+    "Right now" : {
+
+    },
+    "Saves %@" : {
+
+    },
+    "Saves about %@ (estimate)" : {
+
+    },
+    "Scan %@" : {
+
+    },
+    "Scan Home Folder" : {
+
+    },
+    "Scan Results" : {
+
+    },
+    "Scan a folder in Space Analyzer to estimate this." : {
+
+    },
+    "Scan a folder in the Space Analyzer first." : {
+
+    },
+    "Scan and cleanup history" : {
+
+    },
+    "Scan history is kept 180 days and cleanup history 30 days. Everything stays on this Mac." : {
+
+    },
+    "Scans and cleanup" : {
+
+    },
+    "Scans only read file sizes; nothing is changed. Desktop, Documents, Downloads and other apps' data are skipped unless you choose them, so macOS doesn't ask for permission unexpectedly." : {
+
+    },
+    "Scans skip these folders and everything inside them." : {
+
+    },
+    "Segment" : {
+
+    },
+    "Select %@" : {
+
+    },
+    "Select All" : {
+
+    },
+    "Select None" : {
+
+    },
+    "Select an app to see its details and trend." : {
+
+    },
+    "Selected" : {
+
+    },
+    "Settings" : {
+
+    },
+    "Show" : {
+
+    },
+    "Show All Apps" : {
+
+    },
+    "Show Battery Details" : {
+
+    },
+    "Show Energy Details" : {
+
+    },
+    "Show MacPulse in the menu bar" : {
+
+    },
+    "Size" : {
+
+    },
+    "Size comparisons start again from your next scan. No files are touched." : {
+
+    },
+    "Size on disk" : {
+
+    },
+    "Size on disk is the space files occupy; file size is what the files contain. Files that share storage (APFS clones, hard links) are counted once where macOS reports it, so removing a file can free less than its size." : {
+
+    },
+    "Sizes from the preview. The space is freed when the Trash is emptied." : {
+
+    },
+    "Skipped: MacPulse never removes this kind of item." : {
+
+    },
+    "Skipped: it changed since the preview, so it was left alone." : {
+
+    },
+    "Skipped: it no longer exists." : {
+
+    },
+    "Skipped: the copy that was to be kept is gone or changed, so this one was kept too." : {
+
+    },
+    "Skipped: the folder isn't empty anymore." : {
+
+    },
+    "Some copies share storage with other files (APFS clones), so removing them can free less than their size." : {
+
+    },
+    "Something else now has its name in the original folder." : {
+
+    },
+    "Something else reached the Trash in its place and couldn't be moved back. It's in the Trash as “%@”." : {
+
+    },
+    "Space Analyzer" : {
+
+    },
+    "Startup" : {
+
+    },
+    "Status unknown" : {
+
+    },
+    "Stop" : {
+
+    },
+    "Stopped" : {
+
+    },
+    "System locations" : {
+
+    },
+    "System processes not included: %lld" : {
+
+    },
+    "Takes effect the next time MacPulse starts." : {
+
+    },
+    "Temporary files" : {
+
+    },
+    "That folder is on your startup disk. Choose it from your home folder instead." : {
+
+    },
+    "The biggest files from your last Space Analyzer scan." : {
+
+    },
+    "The folder it came from no longer exists." : {
+
+    },
+    "The space is freed when you empty the Trash. Until then you can put items back." : {
+
+    },
+    "This Mac doesn't report per-app energy, so apps are ranked by CPU activity. That isn't a battery measurement." : {
+
+    },
+    "This Mac runs on external power only, so there is no battery to monitor." : {
+
+    },
+    "This app had no activity in the selected period." : {
+
+    },
+    "This app is running. Quit it first so it doesn't recreate files while they are moved." : {
+
+    },
+    "This cleanup is from an older version of MacPulse, which didn't record exactly which item it moved. Use Put Back in the Trash in Finder." : {
+
+    },
+    "Time" : {
+
+    },
+    "To find apps that drain your battery, MacPulse reads the list of your running apps and how much CPU, memory and energy each uses — the same information Activity Monitor shows. It never reads what's inside your apps or documents, and it can't see other users' or system processes." : {
+
+    },
+    "Top" : {
+
+    },
+    "Trash" : {
+
+    },
+    "Trend" : {
+
+    },
+    "Type" : {
+
+    },
+    "Unchanged for" : {
+
+    },
+    "Unknown" : {
+
+    },
+    "Unplugged" : {
+
+    },
+    "Up" : {
+
+    },
+    "Updated %@" : {
+
+    },
+    "Used" : {
+
+    },
+    "Used by macOS" : {
+
+    },
+    "Verifying byte by byte" : {
+
+    },
+    "Video" : {
+
+    },
+    "Volume" : {
+
+    },
+    "While MacPulse is in the menu bar, closing its window keeps it running so battery and app activity are still recorded. Opening at login is off unless you turn it on; you can also change it in System Settings > General > Login Items." : {
+
+    },
+    "While the Energy screen is open, app activity is measured every 10 seconds." : {
+
+    },
+    "cleanable" : {
+
+    },
+    "every 30 seconds" : {
+
+    },
+    "every 5 minutes" : {
+
+    },
+    "every minute" : {
+
+    },
+    "macOS & background" : {
+
+    },
+    "macOS didn't move it back: %@" : {
+
+    },
+    "macOS didn't move it: %@" : {
+
+    },
+    "macOS doesn't let MacPulse look inside the Trash. Use Put Back in the Trash in Finder, or allow Full Disk Access in System Settings." : {
+
+    },
+    "macOS lets only apps with Full Disk Access look inside the Trash. Open it in Finder to see and empty it." : {
+
+    },
+    "macOS moved the item but didn't say where; look for it in the Trash." : {
+
+    },
+    "macOS needs your approval: turn MacPulse on in System Settings > General > Login Items." : {
+
+    },
+    "—" : {
+
+    },
+    "“%@” is a standard folder of your account. Choose a folder inside it instead." : {
+
+    },
+    "−%@ since last scan" : {
+
+    }
   },
   "version" : "1.0"
 }
