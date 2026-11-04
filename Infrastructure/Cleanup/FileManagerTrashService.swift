@@ -114,7 +114,12 @@ public struct FileManagerTrashService: TrashService {
 
     static func isInTrashFolder(_ path: String, homePath: String) -> Bool {
         let path = ScanPathPolicy.comparable(path)
-        if ScanPathPolicy.path(path, isInside: ScanPathPolicy.comparable(homePath + "/.Trash")) { return true }
+        // This user's Trash, as macOS reports it (and as the home folder implies).
+        var trashes = [homePath + "/.Trash"]
+        if let userTrash = try? FileManager.default.url(for: .trashDirectory, in: .userDomainMask, appropriateFor: nil, create: false) {
+            trashes.append(userTrash.resolvingSymlinksInPath().path)
+        }
+        if trashes.contains(where: { ScanPathPolicy.path(path, isInside: ScanPathPolicy.comparable($0)) }) { return true }
         // External drives: /Volumes/<name>/.Trashes/<uid>/...
         let components = path.split(separator: "/")
         return components.count >= 5 && components[0] == "volumes" && components[2] == ".trashes"
