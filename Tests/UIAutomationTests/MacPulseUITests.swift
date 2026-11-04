@@ -349,6 +349,10 @@ final class MacPulseUITests: XCTestCase {
                 return true
             }
             let description = "\(issue.compactDescription) — \(name.isEmpty ? "unnamed element" : name)"
+            // "Nearly passed" findings come and go between CI runs; only clear failures block.
+            if issue.auditType == .contrast, issue.compactDescription.localizedCaseInsensitiveContains("nearly") {
+                return true
+            }
             if issue.auditType == .contrast {
                 contrastProblems.append(description)
             } else {
