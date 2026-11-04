@@ -528,3 +528,44 @@ could move the wrong item, and the Duplicate Finder could download iCloud files.
 CI on the hardening branch: overhead 1.9 ms for 266 processes; scan of 200k files in
 13.2 s, 76 MB peak, 26 ms longest stall; duplicates 502/502 groups found, 0 look-alikes
 grouped, 5.2 s, 42 MB peak, 34 ms longest stall.
+
+## ADR-018: Second review hardening (picks, Trash access, history, reads)
+
+**Status:** Accepted (second review of `main`, after PR #14)
+
+**Context.** The second round of reviews (team lead, front end, platform/security)
+found a path hole through `/Volumes/<startup disk>`, unverified behaviour without Full
+Disk Access, history writes that grew with the square of the number of items, a hidden
+failed move-back, old-download folders not re-checked, and gaps in the CI guardrails.
+
+**Decision.**
+- **Picks:** a picked folder is judged by its `realpath`; a `/Volumes/…` path on the
+  startup disk's devices is refused; hidden folders on drives are refused. Empty Folders
+  may start in a standard folder (the folder itself stays protected).
+- **External drives:** the folder scanned by the Space Analyzer or searched for
+  duplicates counts as picked for those categories, if it could be picked.
+- **Trash without access:** if `lstat` inside the Trash is refused, a successful
+  `trashItem` counts as moved with the identity checked before the move, and nothing is
+  moved back. Put Back then says to use Finder. Put Back refuses history without an
+  identity and other users' `.Trashes` folders.
+- **Failed move-back:** reported as failed, naming the item in the Trash.
+- **Old downloads:** folders get `CleanupRequirement.unchangedSince(cutoff)` and are
+  checked again just before moving; a folder too large to check (20,000 items) or with
+  unreadable items is never old.
+- **History:** item results go through one ordered stream; saves are batched (50 items or
+  one second) and chained so an older version never overwrites a newer one. `replace`
+  throws `reportNotFound`; `append` doesn't throw after writing. Day files are fsynced
+  before replacing the old file. Report times are whole milliseconds so ids survive JSON.
+- **iCloud placeholders:** hashing and byte comparison run with the thread's
+  `IOPOL_TYPE_VFS_MATERIALIZE_DATALESS_FILES` policy off, so a file evicted after listing
+  fails to read instead of downloading (public API in `<sys/resource.h>`).
+- **Guardrails:** dynamic lookup (`NSClassFromString`, `dlsym`, `Selector(())`),
+  `NSWorkspace` open calls, module-qualified `remove`/`rename` and file-writing APIs are
+  forbidden outside MacPulse's own stores and benchmarks; the binary check adds `remove`,
+  `truncate`, `dlopen`, `dlsym`, `NSClassFromString` and `sel_registerName`. "Open Trash in
+  Finder" uses `selectFile`, which never launches anything.
+- **CI:** the overhead budget is 0.03 ms per process (about 2× CI); runs are no longer
+  cancelled by the next push.
+
+**Consequences.** No new entitlements, network code or private APIs. Behaviour without
+Full Disk Access still needs checking on a signed build (DEFERRED).
