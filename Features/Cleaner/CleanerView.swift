@@ -86,7 +86,7 @@ private struct CategoryReviewCard: View {
         let category = viewModel.selectedCategory
         Card(category.title, systemImage: category.systemImage) {
             Text(category.summary)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Palette.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
             options(for: category)
             if category == .trash {
@@ -110,10 +110,10 @@ private struct CategoryReviewCard: View {
             }
             if let list = viewModel.list {
                 if let reason = list.unavailableReason {
-                    Label(reason, systemImage: "info.circle").foregroundStyle(.secondary)
+                    Label(reason, systemImage: "info.circle").foregroundStyle(Palette.secondaryText)
                 }
                 if let note = list.note {
-                    Text(note).font(.caption).foregroundStyle(.secondary)
+                    Text(note).font(.caption).foregroundStyle(Palette.secondaryText)
                 }
                 if !list.candidates.isEmpty {
                     CandidateTable(viewModel: viewModel)
@@ -136,7 +136,7 @@ private struct CategoryReviewCard: View {
                 Button(viewModel.downloadsFolder == nil ? "Choose Downloads Folder…" : "Change Folder…", action: pickFolder)
                     .accessibilityIdentifier("cleaner.chooseFolder")
                 if let folder = viewModel.downloadsFolder {
-                    Text(folder).lineLimit(1).truncationMode(.middle).foregroundStyle(.secondary)
+                    Text(folder).lineLimit(1).truncationMode(.middle).foregroundStyle(Palette.secondaryText)
                 }
                 Spacer()
                 Picker("Unchanged for", selection: Binding(get: { viewModel.minimumAgeDays }, set: { viewModel.setMinimumAgeDays($0) })) {
@@ -151,7 +151,7 @@ private struct CategoryReviewCard: View {
                 Button(viewModel.emptyFoldersRoot == nil ? "Choose Folder…" : "Change Folder…", action: pickFolder)
                     .accessibilityIdentifier("cleaner.chooseFolder")
                 if let folder = viewModel.emptyFoldersRoot {
-                    Text(folder).lineLimit(1).truncationMode(.middle).foregroundStyle(.secondary)
+                    Text(folder).lineLimit(1).truncationMode(.middle).foregroundStyle(Palette.secondaryText)
                 }
             }
         default:
@@ -171,7 +171,7 @@ private struct CategoryReviewCard: View {
             } else {
                 Text("\(viewModel.selectedCandidates.count) selected · \(ByteFormatting.string(fromByteCount: viewModel.selectedBytes.value ?? 0))")
                     .monospacedDigit()
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                     .accessibilityIdentifier("cleaner.selectionSummary")
                 Button("Move to Trash…") { viewModel.requestCleanup() }
                     .buttonStyle(.borderedProminent)
@@ -205,7 +205,7 @@ private struct CandidateTable: View {
                     Label(candidate.name, systemImage: candidate.isFolder ? "folder" : "doc")
                     Text(candidate.reason)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Palette.secondaryText)
                         .lineLimit(2)
                     if let warning = candidate.warning {
                         Label(warning, systemImage: "exclamationmark.triangle")
@@ -222,7 +222,7 @@ private struct CandidateTable: View {
             .width(min: 70, ideal: 90)
             TableColumn("Modified") { candidate in
                 Text(candidate.modified?.formatted(date: .abbreviated, time: .omitted) ?? "—")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
             }
             .width(min: 80, ideal: 110)
         }
@@ -249,14 +249,14 @@ private struct CleanupResultCard: View {
                 .accessibilityIdentifier("cleaner.result.summary")
             Text("The space is freed when you empty the Trash. Until then you can put items back.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Palette.secondaryText)
             if !report.notMoved.isEmpty {
                 Text("Not moved").font(.subheadline.weight(.semibold))
                 ForEach(report.notMoved) { item in
                     Label {
                         VStack(alignment: .leading, spacing: 0) {
                             Text((item.path as NSString).lastPathComponent)
-                            Text(CleanerPresentation.explanation(item.outcome)).font(.caption).foregroundStyle(.secondary)
+                            Text(CleanerPresentation.explanation(item.outcome)).font(.caption).foregroundStyle(Palette.secondaryText)
                         }
                     } icon: {
                         Image(systemName: "exclamationmark.circle").foregroundStyle(.orange)
@@ -295,26 +295,26 @@ private struct CleanupHistoryCard: View {
                                 Button("Put Back") { Task { await viewModel.putBack(item, in: report) } }
                                     .accessibilityIdentifier("cleaner.putBack.\(PathPresentation.relative(item.path, to: viewModel.homeFolder))")
                             } else {
-                                Text(CleanerPresentation.explanation(item.outcome)).font(.caption).foregroundStyle(.secondary)
+                                Text(CleanerPresentation.explanation(item.outcome)).font(.caption).foregroundStyle(Palette.secondaryText)
                             }
                         }
                         .help(item.path)
                     }
                 } label: {
                     HStack {
-                        Image(systemName: report.category.systemImage).foregroundStyle(.secondary)
+                        Image(systemName: report.category.systemImage).foregroundStyle(Palette.secondaryText)
                         VStack(alignment: .leading, spacing: 0) {
                             Text(report.category.title)
                             Text(report.finishedAt.formatted(date: .abbreviated, time: .shortened))
-                                .font(.caption).foregroundStyle(.secondary)
+                                .font(.caption).foregroundStyle(Palette.secondaryText)
                         }
                         Spacer()
-                        Text(CleanerPresentation.summary(report)).font(.caption).foregroundStyle(.secondary)
+                        Text(CleanerPresentation.summary(report)).font(.caption).foregroundStyle(Palette.secondaryText)
                     }
                 }
             }
             Text("Kept for 30 days on this Mac, including where each item went in the Trash.")
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.caption).foregroundStyle(Palette.secondaryText)
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("cleaner.history")

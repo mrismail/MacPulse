@@ -36,13 +36,13 @@ public struct SettingsView: View {
                 ))
                 .accessibilityIdentifier("settings.openAtLogin")
                 if let error = viewModel.loginItemError {
-                    Label(error.userMessage, systemImage: "exclamationmark.triangle").foregroundStyle(.secondary)
+                    Label(error.userMessage, systemImage: "exclamationmark.triangle").foregroundStyle(Palette.secondaryText)
                 }
                 Toggle("Show MacPulse in the menu bar", isOn: preference(\.showsMenuBarExtra))
                     .accessibilityIdentifier("settings.menuBar")
                 Text("While MacPulse is in the menu bar, closing its window keeps it running so battery and app activity are still recorded. Opening at login is off unless you turn it on; you can also change it in System Settings → General → Login Items.")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
             }
 
             Section("Monitoring") {
@@ -54,10 +54,10 @@ public struct SettingsView: View {
                     ForEach(AppPreferences.ActivityInterval.allCases) { Text($0.title).tag($0) }
                 }
                 Text("While the Energy screen is open, app activity is measured every 10 seconds.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(Palette.secondaryText)
                 if viewModel.needsRestart {
                     Label("Takes effect the next time MacPulse starts.", systemImage: "arrow.clockwise")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Palette.secondaryText)
                         .accessibilityIdentifier("settings.restartNeeded")
                 }
             }
@@ -71,7 +71,7 @@ public struct SettingsView: View {
             if let spaceAnalyzer {
                 Section("Scans and cleanup") {
                     Text("Excluded folders are skipped by the Space Analyzer and the Duplicate Finder, and the Cleaner never touches anything in them.")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(Palette.secondaryText)
                     ForEach(spaceAnalyzer.exclusions, id: \.self) { path in
                         HStack {
                             Label(path, systemImage: "folder.badge.minus").lineLimit(1).truncationMode(.middle)
@@ -101,20 +101,20 @@ public struct SettingsView: View {
                     ForEach(AppPreferences.usageRetentionChoices, id: \.self) { Text(SettingsPresentation.days($0)).tag($0) }
                 }
                 Text("Scan history is kept 180 days and cleanup history 30 days. Everything stays on this Mac.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(Palette.secondaryText)
             }
 
             Section("Privacy") {
                 Label("MacPulse works entirely on this Mac.", systemImage: "lock.shield")
                 Text("No account is required. File names, file contents and usage data are never uploaded.")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                 Text("To find apps that drain your battery, MacPulse reads the list of your running apps and how much CPU, memory and energy each uses — the same information Activity Monitor shows. It never reads what's inside your apps or documents, and it can't see other users' or system processes.")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
             }
 
             Section("Battery history") {
                 Text("MacPulse records the battery level \(viewModel.preferencesAtLaunch.batteryInterval.title.lowercased()) while it is running and keeps \(viewModel.batteryHistoryRetentionDays) days of history on this Mac. Old history is removed automatically.")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Palette.secondaryText)
                 HStack {
                     Button("Clear Battery History…", role: .destructive) {
                         isConfirmingClearHistory = true
@@ -139,7 +139,7 @@ public struct SettingsView: View {
             if viewModel.canClearUsageHistory {
                 Section("App usage history") {
                     Text("MacPulse keeps \(viewModel.usageHistoryRetentionDays) days of hourly CPU and energy use per app, to show trends. It stores app names and locations only — never documents, window titles or what you do in an app.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Palette.secondaryText)
                     HStack {
                         Button("Clear App Usage History…", role: .destructive) {
                             isConfirmingClearUsage = true
@@ -233,8 +233,8 @@ private struct ClearStateLabel: View {
         switch state {
         case .idle: EmptyView()
         case .clearing: ProgressView().controlSize(.small)
-        case .cleared: Label("History cleared", systemImage: "checkmark.circle").foregroundStyle(.secondary)
-        case .failed(let error): Label(error.userMessage, systemImage: "exclamationmark.triangle").foregroundStyle(.secondary)
+        case .cleared: Label("History cleared", systemImage: "checkmark.circle").foregroundStyle(Palette.secondaryText)
+        case .failed(let error): Label(error.userMessage, systemImage: "exclamationmark.triangle").foregroundStyle(Palette.secondaryText)
         }
     }
 }

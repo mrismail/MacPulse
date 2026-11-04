@@ -99,10 +99,10 @@ struct VolumeUsageView: View {
             HStack(spacing: Spacing.small) {
                 Text(volume.name).font(.title3.weight(.semibold))
                 if let format = volume.fileSystem {
-                    Text(format).foregroundStyle(.secondary)
+                    Text(format).foregroundStyle(Palette.secondaryText)
                 }
                 if volume.isReadOnly {
-                    Text("Read-only").font(.caption).foregroundStyle(.secondary)
+                    Text("Read-only").font(.caption).foregroundStyle(Palette.secondaryText)
                 }
             }
             if let segments = VolumePresentation.segments(volume) {
@@ -129,7 +129,7 @@ struct VolumeUsageView: View {
             }
             Text("Figures reported by the file system. Purgeable space (caches and local snapshots) is freed by macOS when space is needed.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Palette.secondaryText)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }

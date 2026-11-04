@@ -273,6 +273,7 @@ public struct BatteryView: View {
                 AxisValueLabel {
                     if let percent = value.as(Double.self) {
                         Text(NumberFormatting.percent(percent))
+                            .foregroundStyle(Palette.secondaryText)
                     }
                 }
             }
