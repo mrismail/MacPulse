@@ -507,8 +507,9 @@ could move the wrong item, and the Duplicate Finder could download iCloud files.
     Mac 0.025 ms.
 - **Diagnostics:** the run loop now turns in 5 ms slices, so the measured main-thread stall
   is the app's.
-- **Contrast:** card text uses `Palette.secondaryText` (72 % primary). The audit reports no
-  contrast issues and is blocking again.
+- **Contrast:** card text uses `Palette.secondaryText` (72 % primary). This did **not** clear
+  the Battery-screen audit findings, which stay non-blocking until they are inspected on a
+  real Mac (DEFERRED).
 
 **Evidence.** New tests cover:
 - a kept copy that was edited or deleted after the comparison (the last copy is never
