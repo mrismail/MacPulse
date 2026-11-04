@@ -10,7 +10,9 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Every pushed batch is verified (not cancelled by the next push), so no commit on a
+  # PR reaches main unchecked. Batches queue instead.
+  cancel-in-progress: false
 
 jobs:
   build-and-test:
@@ -156,10 +158,11 @@ jobs:
           processes = max(1, r["processCount"])
           per_process = ms / processes
           # Budget per process read, so Macs with more processes are not held to the VM
-          # total: 0.04 ms per process (CI VM about 0.01; owner Intel MacBook Pro 0.025).
+          # total: 0.03 ms per process, about 2x the CI VM (0.007-0.016) so a regression shows; the
+          # owner Intel MacBook Pro measured 0.025 and is checked by hand.
           # Also a hard ceiling: 0.1 % of one core at the 60 s background rate.
-          if per_process > 0.04:
-              print("::error::Monitoring costs %.3f ms CPU per process per sample (budget 0.04 ms)" % per_process)
+          if per_process > 0.03:
+              print("::error::Monitoring costs %.3f ms CPU per process per sample (budget 0.03 ms)" % per_process)
               sys.exit(1)
           if r["cpuPercentAtBackgroundRate"] > 0.1:
               print("::error::Monitoring uses %.3f%% of a core in the background (budget 0.1%%)" % r["cpuPercentAtBackgroundRate"])
@@ -218,7 +221,7 @@ jobs:
       - name: Guardrails — no networking, no process control (ADR-010)
         run: |
           # Source: APIs MacPulse must never use without a new ADR.
-          if grep -RInE '\b(URLSession|NWConnection|NWListener|import Network|task_for_pid|kill *\(|AuthorizationExecuteWithPrivileges|SMJobBless|NSAppleScript)' \
+          if grep -RInE '\b(URLSession|NWConnection|NWListener|import Network|task_for_pid|kill *\(|AuthorizationExecuteWithPrivileges|SMJobBless|NSAppleScript|NSClassFromString|sel_registerName|dlsym|dlopen|NSWorkspace\.shared\.open\b|openFile\b|openURLs|openApplication)|Selector\(\(' \
                --include='*.swift' App Domain Features Infrastructure Shared; then
             echo "::error::Forbidden API found in sources (see ADR-010)"; exit 1
           fi
@@ -239,6 +242,14 @@ jobs:
                | grep -vE '^Infrastructure/Cleanup/FileManagerTrashService\.swift:[0-9]+: *try FileManager\.default\.moveItem\(atPath: trash, toPath: original\)'; then
             echo "::error::File-changing API outside the allowed files (see ADR-013/015/016)"; exit 1
           fi
+          # Module-qualified C calls (Darwin.remove) and APIs that overwrite or rename
+          # files are limited to the same files.
+          if grep -RInE '\b(Darwin|Foundation|Glibc)\.(remove|rename|unlink|rmdir|truncate)\(|\bcreateFile\(|FileHandle\(for(Writing|Updating)|\bO_(TRUNC|WRONLY|RDWR)\b|\.write\(to(File)?:|setResourceValues' \
+               --include='*.swift' App Domain Features Infrastructure Shared \
+               | grep -vE '^[^:]+:[0-9]+: *//' \
+               | grep -vE "$ALLOWED"; then
+            echo "::error::File-writing API outside the allowed files (see ADR-013/015/016)"; exit 1
+          fi
           # No running other programs (an rm or osascript would bypass every rule above).
           if grep -RInE '\b(Process\(|NSTask|posix_spawn|execv|execve|popen\(|launchApplication|openApplication)|(^|[^.[:alnum:]_])system\(' \
                --include='*.swift' App Domain Features Infrastructure Shared | grep -vE '^[^:]+:[0-9]+: *//'; then
@@ -246,7 +257,7 @@ jobs:
           fi
           # Binary: no direct references to socket, process-control, spawning or unlink symbols.
           BIN=build-release/Build/Products/Release/MacPulse.app/Contents/MacOS/MacPulse
-          if nm -u "$BIN" | grep -E '^_(socket|connect|task_for_pid|kill|ptrace|posix_spawn|posix_spawnp|execve|execv|execvp|system|popen|fork|vfork|unlink|unlinkat|rmdir|removefile|rename|renameat|renamex_np|renameatx_np|exchangedata)$'; then
+          if nm -u "$BIN" | grep -E '^_(socket|connect|task_for_pid|kill|ptrace|posix_spawn|posix_spawnp|execve|execv|execvp|system|popen|fork|vfork|unlink|unlinkat|rmdir|remove|removefile|rename|renameat|renamex_np|renameatx_np|exchangedata|truncate|dlopen|dlsym|NSClassFromString|sel_registerName)$'; then
             echo "::error::Forbidden symbol linked in the Release binary (see ADR-010/015)"; exit 1
           fi
           echo "Guardrails OK"
