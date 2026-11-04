@@ -152,6 +152,21 @@ struct CleanerViewModelTests {
         #expect(model.pickError == nil, "A pick error doesn't follow you to another category")
     }
 
+    @Test func filesFoundOnADriveCanBeCleaned() async {
+        let model = CleanerViewModel(source: PreviewCleanupSource(), trash: CleanerRecordingTrash(), homePath: home, appDataPath: nil)
+        model.connect(
+            largeFiles: { [] }, duplicates: { [] },
+            searchRoots: { $0 == .largeFiles ? ["/Volumes/Backup/Media", "/Applications"] : [] },
+            didClean: { _ in }
+        )
+        model.select(.largeFiles)
+        #expect(model.policy.pickedFolders == ["/Volumes/Backup/Media"], "Only a root that could be picked counts")
+        #expect(model.policy.verdict(for: "/Volumes/Backup/Media/big.mov") == .allowed)
+        #expect(model.policy.verdict(for: "/Applications/Xcode.app") != .allowed)
+        model.select(.duplicates)
+        #expect(model.policy.pickedFolders.isEmpty)
+    }
+
     @Test func realLinksAreResolved() throws {
         let base = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let real = base.appendingPathComponent("real")

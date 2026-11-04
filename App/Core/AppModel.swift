@@ -68,6 +68,13 @@ public final class AppModel {
             largeFiles: { spaceAnalyzer.largeFilesForCleanup },
             duplicates: { duplicateFinder.markedCopies },
             exclusions: { scanSettings.loadExclusions() },
+            searchRoots: { category in
+                switch category {
+                case .largeFiles: [spaceAnalyzer.result?.rootPath].compactMap { $0 }
+                case .duplicates: duplicateFinder.result?.roots ?? []
+                default: []
+                }
+            },
             ageDays: (
                 get: { settings.preferences.cleanupDownloadsAgeDays },
                 set: { days in settings.update { $0.cleanupDownloadsAgeDays = days } }

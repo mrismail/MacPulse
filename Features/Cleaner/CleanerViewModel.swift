@@ -62,6 +62,7 @@ public final class CleanerViewModel {
     @ObservationIgnored private var didClean: @MainActor (CleanupReport) async -> Void = { _ in }
     @ObservationIgnored private var didPutBack: @MainActor (Set<String>) async -> Void = { _ in }
     @ObservationIgnored private var exclusions: @MainActor () -> [String] = { [] }
+    @ObservationIgnored private var searchRoots: @MainActor (CleanupCategory) -> [String] = { _ in [] }
     @ObservationIgnored private var ageDays: @MainActor () -> Int = { 30 }
     @ObservationIgnored private var saveAgeDays: @MainActor (Int) -> Void = { _ in }
     @ObservationIgnored private let resolvePick: @Sendable (String) -> PickResolution
@@ -94,6 +95,7 @@ public final class CleanerViewModel {
         largeFiles: @escaping @MainActor () -> [(path: String, allocatedBytes: Int64)],
         duplicates: @escaping @MainActor () -> [MarkedDuplicate],
         exclusions: @escaping @MainActor () -> [String] = { [] },
+        searchRoots: @escaping @MainActor (CleanupCategory) -> [String] = { _ in [] },
         ageDays: (get: @MainActor () -> Int, set: @MainActor (Int) -> Void)? = nil,
         didClean: @escaping @MainActor (CleanupReport) async -> Void,
         didPutBack: @escaping @MainActor (Set<String>) async -> Void = { _ in }
@@ -101,6 +103,7 @@ public final class CleanerViewModel {
         self.largeFiles = largeFiles
         self.duplicates = duplicates
         self.exclusions = exclusions
+        self.searchRoots = searchRoots
         if let ageDays {
             self.ageDays = ageDays.get
             saveAgeDays = ageDays.set
@@ -199,6 +202,13 @@ public final class CleanerViewModel {
             switch category {
             case .oldDownloads: [downloadsFolder].compactMap { $0 }
             case .emptyFolders: [emptyFoldersRoot].compactMap { $0 }
+            // Large files and duplicates found on an external drive: the folder that was
+            // scanned counts as picked, if it could have been picked here.
+            case .largeFiles, .duplicates:
+                searchRoots(category).filter { root in
+                    !ScanPathPolicy.path(root, isInside: homePath)
+                        && CleanupSafetyPolicy(homePath: homePath).verdict(forPick: root) == .allowed
+                }
             default: []
             }
         }()
