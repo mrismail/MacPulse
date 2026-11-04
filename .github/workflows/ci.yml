@@ -155,8 +155,8 @@ jobs:
           ms = r["cpuMillisecondsPerSample"]
           processes = max(1, r["processCount"])
           per_process = ms / processes
-          # Budget per process read, so Macs with more processes aren't held to the VM's
-          # total: 0.04 ms per process (CI VM ~0.01; owner's Intel MacBook Pro 0.025).
+          # Budget per process read, so Macs with more processes are not held to the VM
+          # total: 0.04 ms per process (CI VM about 0.01; owner Intel MacBook Pro 0.025).
           # Also a hard ceiling: 0.1 % of one core at the 60 s background rate.
           if per_process > 0.04:
               print("::error::Monitoring costs %.3f ms CPU per process per sample (budget 0.04 ms)" % per_process)
