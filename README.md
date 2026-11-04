@@ -4,10 +4,18 @@ A native macOS utility that helps MacBook users understand battery health and en
 see what is filling their disk, find duplicate files and clean up safely. Everything runs
 locally: no account, no uploads.
 
-> **Status:** Phases 1–7 done, Phase 8 (signed, notarized release) next.
+> **Status:** 1.0.0 release candidate (Phase 8).
 > Battery Monitor, Energy (per-app activity and drain alerts), Space Analyzer,
 > Duplicate Finder (content-verified), Cleaner (Trash only, always confirmed, Put Back),
-> menu bar companion and Settings. Not yet signed with a Developer ID.
+> menu bar companion and Settings, in English and draft Arabic. Builds are ad-hoc signed
+> until the Developer ID is in place.
+
+## Install
+
+Download the DMG from [Releases](https://github.com/mrismail/MacPulse/releases), open it and
+drag MacPulse to Applications. Until builds are notarized, right-click MacPulse and choose
+**Open** the first time. See [release notes](Documentation/RELEASE_NOTES.md) and
+[known limitations](Documentation/KNOWN_LIMITATIONS.md).
 
 ## What MacPulse never does
 
@@ -34,6 +42,13 @@ open MacPulse.xcodeproj    # then ⌘R
 ```
 
 Run `xcodegen generate` again whenever `project.yml` changes.
+
+## Release and localization
+
+- [Releasing](Documentation/RELEASE.md): signing, notarization, DMG and the Release workflow.
+- [Owner checklist](Documentation/OWNER_CHECKLIST.md): checks on a real Mac before publishing.
+- [Test report](Documentation/TEST_REPORT.md).
+- Strings: `scripts/sync-strings.sh` regenerates `Localizable.xcstrings` from the source.
 
 ## Diagnostics
 
