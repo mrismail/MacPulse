@@ -62,7 +62,7 @@ final class MacPulseUITests: XCTestCase {
     /// Arabic (draft translation, ADR-019): the app runs right to left, shows translated
     /// text and every screen opens.
     @MainActor
-    func testArabicRunsRightToLeft() {
+    func testRightToLeftInArabic() {
         let app = XCUIApplication()
         // Saved window state from other launches (the CI smoke test kills the app) must not
         // decide whether the window opens.
