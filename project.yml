@@ -26,6 +26,11 @@ targets:
     platform: macOS
     sources:
       - path: App/MacPulseApp
+        excludes:
+          - Resources
+      # Icon, privacy manifest and String Catalog.
+      - path: App/MacPulseApp/Resources
+        buildPhase: resources
     dependencies:
       - package: MacPulse
         product: MacPulseAppCore
@@ -33,8 +38,10 @@ targets:
       path: App/MacPulseApp/Info.plist
       properties:
         CFBundleDisplayName: MacPulse
-        CFBundleShortVersionString: "0.1.0"
-        CFBundleVersion: "1"
+        # Set in settings below; scripts/release/bump-version.sh changes the version and
+        # release builds pass the build number (git commit count).
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         LSApplicationCategoryType: public.app-category.utilities
         LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
     # ADR-010: no App Sandbox (direct distribution, Developer ID + notarization).
@@ -43,6 +50,9 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mrismail.MacPulse
         PRODUCT_NAME: MacPulse
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ENABLE_HARDENED_RUNTIME: YES
         # Ad-hoc signing for local development and CI. Set DEVELOPMENT_TEAM and
         # CODE_SIGN_STYLE: Automatic once an Apple Developer account is configured.
