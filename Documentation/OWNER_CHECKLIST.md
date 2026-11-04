@@ -26,6 +26,9 @@ CI runs on macOS 15 virtual machines with Xcode installed and full disk access. 
 - [ ] Turn on Open at login, log out and back in: MacPulse starts in the menu bar. Turn it off again.
 - [ ] Drain alerts: allow notifications, then run a CPU-heavy app; one alert appears.
 - [ ] Closing the window keeps the menu bar companion running; Quit stops it.
+- [ ] Close the window, quit from the menu bar, then open MacPulse from Finder: the window
+      appears (CI once saw a launch with no window after the app had been killed; the menu
+      bar's "Open MacPulse" and a Dock click must bring it back).
 
 ## Accessibility and language
 - [ ] Use Accessibility Inspector's audit on the Battery screen and note any contrast findings (DEFERRED).
