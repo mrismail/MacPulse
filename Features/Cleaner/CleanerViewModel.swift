@@ -322,12 +322,20 @@ public final class CleanerViewModel {
         let running = CleanupReport(category: category, finishedAt: Date(), items: [], isComplete: false, pickedFolders: policy.pickedFolders)
         runningReport = running
         runningIsStored = false
-        let report: @Sendable (CleanupItemResult) -> Void = { result in
-            Task { @MainActor in await self.record(result, total: items.count) }
-        }
+        lastSave = ContinuousClock.now
+        unsavedItems = 0
+        // One consumer applies results in the order they were reported, so a late result
+        // can never land after the final report.
+        let (results, continuation) = AsyncStream.makeStream(of: CleanupItemResult.self)
+        let report: @Sendable (CleanupItemResult) -> Void = { continuation.yield($0) }
         cleanupTask = Task {
             await self.saveRunning()
+            let recorder = Task { @MainActor in
+                for await result in results { await self.record(result, total: items.count) }
+            }
             let result = await trash.moveToTrash(items, category: category, policy: policy, progress: report)
+            continuation.finish()
+            await recorder.value
             await self.finish(result)
         }
     }
@@ -353,14 +361,54 @@ public final class CleanerViewModel {
             isComplete: false, pickedFolders: running.pickedFolders
         )
         phase = .cleaning(done: items.count, total: total)
-        await saveRunning()
+        // Saved in batches: rewriting the history after every item would grow with the
+        // square of the number of items.
+        unsavedItems += 1
+        if unsavedItems >= Self.itemsPerSave || ContinuousClock.now - lastSave >= .seconds(1) {
+            await saveRunning()
+        } else if pendingSave == nil {
+            // Whatever moved is in history within a second, even if nothing else follows.
+            pendingSave = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled, let self else { return }
+                self.pendingSave = nil
+                if self.isCleaning, self.unsavedItems > 0 { await self.saveRunning() }
+            }
+        }
     }
 
+    @ObservationIgnored private var pendingSave: Task<Void, Never>?
+
+    static let itemsPerSave = 50
+    @ObservationIgnored private var unsavedItems = 0
+    @ObservationIgnored private var lastSave = ContinuousClock.now
+
+    /// Saves run one after another, each writing the newest report, so an older version
+    /// can never overwrite a newer one.
     private func saveRunning() async {
+        let previous = savingTask
+        let task = Task { @MainActor in
+            await previous?.value
+            await self.writeRunning()
+        }
+        savingTask = task
+        await task.value
+    }
+
+    @ObservationIgnored private var savingTask: Task<Void, Never>?
+
+    private func writeRunning() async {
         guard let running = runningReport else { return }
+        unsavedItems = 0
+        lastSave = ContinuousClock.now
         do {
             if runningIsStored {
-                try await historyRepository.replace(running)
+                do {
+                    try await historyRepository.replace(running)
+                } catch CleanupHistoryError.reportNotFound {
+                    // Cleared from Settings meanwhile (or never written): store it again.
+                    try await historyRepository.append(running)
+                }
             } else {
                 try await historyRepository.append(running)
                 runningIsStored = true
@@ -380,6 +428,8 @@ public final class CleanerViewModel {
             isComplete: result.isComplete, pickedFolders: result.pickedFolders
         )
         runningReport = report
+        pendingSave?.cancel()
+        pendingSave = nil
         await saveRunning()
         runningReport = nil
         cleanupTask = nil

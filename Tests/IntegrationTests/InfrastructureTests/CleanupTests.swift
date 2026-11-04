@@ -383,4 +383,23 @@ struct CleanupHistoryStoreTests {
         try await store.append(report)
         #expect(try await store.reports() == [report])
     }
+
+    @Test func replacesARunningReportWithAFractionalTime() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("macpulse-cleanup-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = JSONLinesCleanupHistoryStore(directory: directory)
+        // Date() has sub-second precision; the id must survive the JSON round trip.
+        let started = Date()
+        let running = CleanupReport(category: .appCaches, finishedAt: started, items: [], isComplete: false)
+        try await store.append(running)
+        let item = CleanupItemResult(path: "/a", allocatedBytes: 1, outcome: .movedToTrash(trashPath: "/t/a"))
+        let done = CleanupReport(category: .appCaches, finishedAt: started, items: [item], isComplete: true)
+        try await store.replace(done)
+        #expect(try await store.reports() == [done], "The final report replaces the running one")
+
+        let missing = CleanupReport(category: .logs, finishedAt: started, items: [], isComplete: true)
+        await #expect(throws: CleanupHistoryError.reportNotFound) { try await store.replace(missing) }
+        let leftovers = try FileManager.default.contentsOfDirectory(atPath: directory.path).filter { $0.hasSuffix(".tmp") }
+        #expect(leftovers.isEmpty)
+    }
 }

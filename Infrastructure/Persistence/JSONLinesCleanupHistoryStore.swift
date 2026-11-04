@@ -35,18 +35,27 @@ public actor JSONLinesCleanupHistoryStore: CleanupHistoryRepository {
 
     public func append(_ report: CleanupReport) throws {
         try files.append(lines: [try encoder.encode(report)], toDay: files.dayString(for: report.finishedAt))
+        // The report is stored; a failed retention clean-up must not make the caller think
+        // it wasn't (and write it twice).
         let cutoff = now().addingTimeInterval(-Double(Self.retentionDays) * 86_400)
-        try files.removeDays(before: files.dayString(for: cutoff))
+        do {
+            try files.removeDays(before: files.dayString(for: cutoff))
+        } catch {
+            Log.logger(.persistence).log(AppError.wrapping(error, userMessage: String(localized: "Couldn't remove old cleanup history.")), context: "Cleanup history retention")
+        }
     }
 
     /// Rewrites the day file holding `report` with the new version.
     public func replace(_ report: CleanupReport) throws {
         let day = files.dayString(for: report.finishedAt)
         let lines = try files.lines(fromDay: day, toDay: day)
+        var found = false
         let updated = try lines.map { line -> Data in
             guard let stored = try? decoder.decode(CleanupReport.self, from: line), stored.id == report.id else { return line }
+            found = true
             return try encoder.encode(report)
         }
+        guard found else { throw CleanupHistoryError.reportNotFound }
         try files.replace(day: day, with: updated)
     }
 

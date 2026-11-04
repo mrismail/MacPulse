@@ -132,6 +132,46 @@ private struct EndlessScanner: FileSystemScanning {
     }
 }
 
+/// Counts history writes.
+private actor CountingHistory: CleanupHistoryRepository {
+    private(set) var writes = 0
+    private var stored: [CleanupReport] = []
+    func append(_ report: CleanupReport) { writes += 1; stored.append(report) }
+    func reports() -> [CleanupReport] { stored }
+    func replace(_ report: CleanupReport) throws {
+        writes += 1
+        guard let index = stored.firstIndex(where: { $0.id == report.id }) else { throw CleanupHistoryError.reportNotFound }
+        stored[index] = report
+    }
+    func deleteAll() { stored.removeAll() }
+}
+
+/// Reports every item as moved, as fast as it can.
+private struct InstantTrash: TrashService {
+    func moveToTrash(
+        _ candidates: [CleanupCandidate], category: CleanupCategory, policy: CleanupSafetyPolicy,
+        progress: @escaping @Sendable (CleanupItemResult) -> Void
+    ) async -> CleanupReport {
+        let items = candidates.map { CleanupItemResult(path: $0.path, allocatedBytes: $0.allocatedBytes, outcome: .movedToTrash(trashPath: "/t/" + $0.name), identity: $0.identity) }
+        items.forEach(progress)
+        return CleanupReport(category: category, finishedAt: Date(), items: items, isComplete: true)
+    }
+    func putBack(trashPath: String, to originalPath: String, expected: FileIdentity?, policy: CleanupSafetyPolicy) async -> PutBackFailure? { nil }
+}
+
+private struct ManyItemsSource: CleanupCandidateSource {
+    let count: Int
+    func candidates(for category: CleanupCategory, options: CleanupScanOptions, policy: CleanupSafetyPolicy) async -> CleanupCandidateList {
+        let items = (0..<count).map { index in
+            CleanupCandidate(
+                path: "/Users/preview/Library/Caches/com.example.app\(index)", category: category, reason: "test", allocatedBytes: 1,
+                modified: nil, identity: FileIdentity(device: 1, inode: UInt64(index), size: 0, modifiedSeconds: 0, modifiedNanoseconds: 0, isFolder: true)
+            )
+        }
+        return CleanupCandidateList(category: category, candidates: items)
+    }
+}
+
 @MainActor
 private final class CallLog {
     var cleaned = 0
@@ -148,8 +188,8 @@ struct ReviewRaceTests {
         model.selectAll()
         model.requestCleanup()
         model.confirmCleanup()
-        // Wait until the first item is recorded.
-        for _ in 0..<400 {
+        // Wait until the first item is recorded (saves are batched, at most a second apart).
+        for _ in 0..<800 {
             if (await history.reports().first?.items.count ?? 0) > 0 { break }
             try await Task.sleep(for: .milliseconds(5))
         }
@@ -196,6 +236,22 @@ struct ReviewRaceTests {
         model.scanHomeFolder()
         await model.waitForScan()
         #expect(model.movedSinceScan == 0, "A new scan starts the count again")
+    }
+
+    @Test func historyIsSavedInBatchesAndTheFinalReportWins() async throws {
+        let history = CountingHistory()
+        let model = CleanerViewModel(source: ManyItemsSource(count: 500), trash: InstantTrash(), history: history, homePath: "/Users/preview", appDataPath: nil)
+        await model.open(.appCaches)
+        model.selectAll()
+        model.requestCleanup()
+        model.confirmCleanup()
+        await model.waitForTask()
+        let writes = await history.writes
+        #expect(writes <= 500 / CleanerViewModel.itemsPerSave + 3, "Not one rewrite per item (\(writes) writes)")
+        let stored = try #require(await history.reports().first)
+        #expect(await history.reports().count == 1)
+        #expect(stored.isComplete, "A late item result never marks a finished cleanup incomplete")
+        #expect(stored.items.count == 500)
     }
 
     @Test func putBackRefreshesWithoutCountingAsANewCleanup() async throws {
