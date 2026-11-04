@@ -28,8 +28,14 @@ appear. Each has a target phase and a reason. Update this file whenever scope mo
 | String Catalog extraction and Arabic translation | (owner requirement) | Phase 8 | Needs Xcode's string extraction on a Mac and a native-speaker review; groundwork in ADR-008. |
 | Snapshot tests (light/dark/RTL) | Review finding | After 1.0 | Needs a third-party snapshot library (zero-dependency rule). |
 | macOS 14 launch verification | Phase 1 acceptance | Before Phase 8 | CI runners are macOS 15; verify on a macOS 14 VM before release. |
-| Contrast audit findings on the Battery screen (`battery.health`, `battery.cycleCount` and 4 unnamed elements) | Accessibility (review) | Phase 2 sign-off, local | The CI audit flags them but can't show colors. Inspect with Accessibility Inspector on a real Mac, fix, then make the contrast check blocking again (it is an expected failure in `MacPulseUITests` until then). Badge colors were already moved to label colors. |
+| Contrast audit findings on the Battery screen (`battery.health`, `battery.cycleCount` and 4 unnamed elements) | Accessibility (review) | Delivered (review fixes) | Card text now uses `Palette.secondaryText`; the CI audit reports no contrast issues and is blocking again. |
 | Every commit building on its own (Phase 7) | CLAUDE.md | Not rewritten | "Put items back from the Trash" (commit before "Settings, menu bar companion and Put Back") added an enum case whose exhaustive switch was updated in the next commit, so that one commit doesn't compile alone. History is pushed; kept as is. |
+| One shared safe walker for scanner, duplicate collector and empty folders | Review (team lead) | After 1.0 | The three walks apply the same rules (policy, device + inode, no links), each covered by its own tests; empty folders now also stop on cancellation and accept the Data volume. Merging them is a refactor without a user-visible change. |
+| Package strings in a String Catalog (`bundle: .module`) | Review (front end) | Phase 8 | Needed for the Arabic translation. Concatenated phrases were rewritten as whole localized strings in the review fixes. |
+| UI tests for the menu bar panel, Put Back and adding exclusions | Review (front end) | Phase 8 | XCUITest can't open status items reliably; Put Back and exclusions are covered by unit and integration tests. |
+| Adaptive layouts (`ViewThatFits`) for four-metric rows and large text | Review (front end) | Phase 8 | Polish pass with the release screenshots. |
+| Replacing fixed sleeps in two feature tests | Review (team lead) | Phase 8 | The tests are stable on CI; they will move to explicit waits when touched. |
+| Each review-fix commit building on its own | CLAUDE.md | Not verified | Several review fixes span model, service and view; "Close the Cleaner's safety gaps from the review" is one larger commit for that reason. CI tests the branch tip. |
 
 ## Open risks to decide before the phase starts
 
