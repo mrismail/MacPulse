@@ -2,7 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "" : {
-      "localizations" : {}
+
     },
     "%@ CPU" : {
       "localizations" : {
@@ -670,6 +670,12 @@
         }
       }
     },
+    "App usage history can't be saved." : {
+
+    },
+    "Apple silicon" : {
+
+    },
     "Applications" : {
       "localizations" : {
         "ar" : {
@@ -770,6 +776,9 @@
         }
       }
     },
+    "Based on your discharge rate over the last %lld minutes." : {
+
+    },
     "Battery" : {
       "localizations" : {
         "ar" : {
@@ -779,6 +788,9 @@
           }
         }
       }
+    },
+    "Battery capacity has dropped" : {
+
     },
     "Battery charge history" : {
       "localizations" : {
@@ -800,6 +812,15 @@
         }
       }
     },
+    "Battery history can't be saved on this Mac, so it will be lost when MacPulse quits." : {
+
+    },
+    "Battery history can't be saved." : {
+
+    },
+    "Battery history isn't being saved" : {
+
+    },
     "Battery impact" : {
       "localizations" : {
         "ar" : {
@@ -820,6 +841,12 @@
         }
       }
     },
+    "Battery is low" : {
+
+    },
+    "Battery is warm" : {
+
+    },
     "Battery level" : {
       "localizations" : {
         "ar" : {
@@ -830,6 +857,9 @@
         }
       }
     },
+    "Battery voltage × charging current, as reported by the battery." : {
+
+    },
     "Bottom" : {
       "localizations" : {
         "ar" : {
@@ -839,6 +869,9 @@
           }
         }
       }
+    },
+    "Build %@" : {
+
     },
     "Bytes" : {
       "localizations" : {
@@ -1126,6 +1159,9 @@
         }
       }
     },
+    "Cleanup history can't be saved." : {
+
+    },
     "Clear App Usage History…" : {
       "localizations" : {
         "ar" : {
@@ -1256,6 +1292,9 @@
         }
       }
     },
+    "Coming in a later version of MacPulse." : {
+
+    },
     "Coming soon" : {
       "localizations" : {
         "ar" : {
@@ -1285,6 +1324,9 @@
           }
         }
       }
+    },
+    "Connect to power soon." : {
+
     },
     "Connected to power." : {
       "localizations" : {
@@ -1325,6 +1367,9 @@
           }
         }
       }
+    },
+    "Couldn't ask for notification permission." : {
+
     },
     "Couldn't change opening at login." : {
       "localizations" : {
@@ -1406,6 +1451,9 @@
         }
       }
     },
+    "Couldn't read battery history." : {
+
+    },
     "Couldn't read cleanup history." : {
       "localizations" : {
         "ar" : {
@@ -1466,6 +1514,9 @@
         }
       }
     },
+    "Couldn't remove old battery history." : {
+
+    },
     "Couldn't remove old cleanup history." : {
       "localizations" : {
         "ar" : {
@@ -1486,6 +1537,9 @@
         }
       }
     },
+    "Couldn't save battery history." : {
+
+    },
     "Couldn't save this cleanup to history." : {
       "localizations" : {
         "ar" : {
@@ -1505,6 +1559,9 @@
           }
         }
       }
+    },
+    "Couldn't show a notification." : {
+
     },
     "Couldn't update cleanup history." : {
       "localizations" : {
@@ -1666,6 +1723,9 @@
         }
       }
     },
+    "Estimate" : {
+
+    },
     "Estimated from CPU use only. This Mac hasn't reported per-app energy, so this shows activity, not measured battery use." : {
       "localizations" : {
         "ar" : {
@@ -1686,6 +1746,9 @@
         }
       }
     },
+    "Estimated health is %lld%% of the original capacity, so a full charge lasts less than it used to." : {
+
+    },
     "Estimated impact: %@" : {
       "localizations" : {
         "ar" : {
@@ -1695,6 +1758,9 @@
           }
         }
       }
+    },
+    "Estimated. %@" : {
+
     },
     "Every 30 seconds" : {
       "localizations" : {
@@ -1916,6 +1982,16 @@
         }
       }
     },
+    "Full-charge capacity (%lld mAh) divided by design capacity (%lld mAh). " : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Full-charge capacity (%1$lld mAh) divided by design capacity (%2$lld mAh). "
+          }
+        }
+      }
+    },
     "Fully charged" : {
       "localizations" : {
         "ar" : {
@@ -1945,6 +2021,9 @@
           }
         }
       }
+    },
+    "Heat ages batteries faster. Avoid heavy work on soft surfaces or in direct sun." : {
+
     },
     "Hidden folders can't be chosen." : {
       "localizations" : {
@@ -2051,6 +2130,9 @@
           }
         }
       }
+    },
+    "Intel" : {
+
     },
     "It is no longer in the Trash." : {
       "localizations" : {
@@ -2310,6 +2392,9 @@
         }
       }
     },
+    "MacPulse needs your permission to read this value." : {
+
+    },
     "MacPulse records the battery level %@ while it is running and keeps %lld days of history on this Mac. Old history is removed automatically." : {
       "localizations" : {
         "ar" : {
@@ -2395,6 +2480,9 @@
           }
         }
       }
+    },
+    "Measured" : {
+
     },
     "Measuring app activity…" : {
       "localizations" : {
@@ -2722,6 +2810,9 @@
         }
       }
     },
+    "No power adapter connected." : {
+
+    },
     "Normal" : {
       "localizations" : {
         "ar" : {
@@ -2751,6 +2842,12 @@
           }
         }
       }
+    },
+    "Not charging." : {
+
+    },
+    "Not enough data collected yet." : {
+
     },
     "Not moved" : {
       "localizations" : {
@@ -3172,6 +3269,9 @@
         }
       }
     },
+    "Read directly from macOS." : {
+
+    },
     "Read the battery now (⌘R)" : {
       "localizations" : {
         "ar" : {
@@ -3397,6 +3497,9 @@
           }
         }
       }
+    },
+    "Scan history can't be saved." : {
+
     },
     "Scan history is kept 180 days and cleanup history 30 days. Everything stays on this Mac." : {
       "localizations" : {
@@ -3738,6 +3841,9 @@
         }
       }
     },
+    "Storage" : {
+
+    },
     "System locations" : {
       "localizations" : {
         "ar" : {
@@ -3788,6 +3894,12 @@
         }
       }
     },
+    "The battery is draining too slowly to estimate a runtime." : {
+
+    },
+    "The battery reports no charging current right now." : {
+
+    },
     "The biggest files from your last Space Analyzer scan." : {
       "localizations" : {
         "ar" : {
@@ -3827,6 +3939,12 @@
           }
         }
       }
+    },
+    "This Mac has no battery, so it always runs on external power." : {
+
+    },
+    "This Mac or macOS version doesn't report this value." : {
+
     },
     "This Mac runs on external power only, so there is no battery to monitor." : {
       "localizations" : {
@@ -3927,6 +4045,9 @@
           }
         }
       }
+    },
+    "Unavailable" : {
+
     },
     "Unchanged for" : {
       "localizations" : {
@@ -4048,6 +4169,9 @@
         }
       }
     },
+    "Your battery may need service" : {
+
+    },
     "cleanable" : {
       "localizations" : {
         "ar" : {
@@ -4158,8 +4282,11 @@
         }
       }
     },
+    "macOS returned an unexpected value (%@)." : {
+
+    },
     "—" : {
-      "localizations" : {}
+
     },
     "“%@” is a standard folder of your account. Choose a folder inside it instead." : {
       "localizations" : {
