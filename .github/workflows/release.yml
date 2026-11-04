@@ -1,0 +1,116 @@
+name: Release
+
+# Builds the release DMG.
+#   - Tag v1.2.3: builds, signs and notarizes when the Apple secrets exist (ad-hoc
+#     otherwise), then creates a draft GitHub release with the DMG for the owner to publish.
+#   - Pull requests that change the release scripts: builds an ad-hoc DMG to prove they work.
+#   - Manual run: builds the DMG as a workflow artifact.
+# Secrets (Documentation/RELEASE.md): MACPULSE_TEAM_ID, MACPULSE_CERTIFICATE_P12 (base64),
+# MACPULSE_CERTIFICATE_PASSWORD, MACPULSE_NOTARY_KEY (base64 .p8), MACPULSE_NOTARY_KEY_ID,
+# MACPULSE_NOTARY_ISSUER_ID.
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  pull_request:
+    paths:
+      - "scripts/release/**"
+      - ".github/workflows/release.yml"
+      - "project.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write  # draft release on tags only (see the last step)
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build release DMG
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      HAS_SIGNING: ${{ secrets.MACPULSE_TEAM_ID != '' && secrets.MACPULSE_CERTIFICATE_P12 != '' }}
+      HAS_NOTARY: ${{ secrets.MACPULSE_NOTARY_KEY != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Check the tag matches the app version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          EXPECTED=$(grep -Eo 'MARKETING_VERSION: "[0-9.]+"' project.yml | grep -Eo '[0-9.]+')
+          [ "${GITHUB_REF_NAME#v}" = "$EXPECTED" ] || { echo "::error::Tag $GITHUB_REF_NAME doesn't match MARKETING_VERSION $EXPECTED"; exit 1; }
+
+      - name: Import the Developer ID certificate
+        if: env.HAS_SIGNING == 'true' && github.event_name != 'pull_request'
+        env:
+          P12: ${{ secrets.MACPULSE_CERTIFICATE_P12 }}
+          P12_PASSWORD: ${{ secrets.MACPULSE_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD=$(uuidgen)
+          echo "$P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 3600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          rm "$RUNNER_TEMP/cert.p12"
+          echo "MACPULSE_TEAM_ID=${{ secrets.MACPULSE_TEAM_ID }}" >> "$GITHUB_ENV"
+
+      - name: Build and export the app
+        run: scripts/release/build-release.sh
+
+      - name: Notarize the app
+        if: env.HAS_SIGNING == 'true' && env.HAS_NOTARY == 'true' && github.event_name != 'pull_request'
+        env:
+          NOTARY_KEY: ${{ secrets.MACPULSE_NOTARY_KEY }}
+          MACPULSE_NOTARY_KEY_ID: ${{ secrets.MACPULSE_NOTARY_KEY_ID }}
+          MACPULSE_NOTARY_ISSUER_ID: ${{ secrets.MACPULSE_NOTARY_ISSUER_ID }}
+        run: |
+          echo "$NOTARY_KEY" | base64 --decode > "$RUNNER_TEMP/notary.p8"
+          echo "MACPULSE_NOTARY_KEY_PATH=$RUNNER_TEMP/notary.p8" >> "$GITHUB_ENV"
+          MACPULSE_NOTARY_KEY_PATH="$RUNNER_TEMP/notary.p8" scripts/release/notarize.sh build/release/export/MacPulse.app
+
+      - name: Make the DMG
+        run: scripts/release/make-dmg.sh
+
+      - name: Notarize the DMG
+        if: env.HAS_SIGNING == 'true' && env.HAS_NOTARY == 'true' && github.event_name != 'pull_request'
+        env:
+          MACPULSE_NOTARY_KEY_ID: ${{ secrets.MACPULSE_NOTARY_KEY_ID }}
+          MACPULSE_NOTARY_ISSUER_ID: ${{ secrets.MACPULSE_NOTARY_ISSUER_ID }}
+        run: scripts/release/notarize.sh "build/release/MacPulse-$(cat build/release/VERSION).dmg"
+
+      - name: Summary
+        run: |
+          VERSION=$(cat build/release/VERSION)
+          if [ "$HAS_SIGNING" = true ] && [ "${{ github.event_name }}" != pull_request ]; then KIND="Developer ID"; else KIND="ad-hoc (not notarized)"; fi
+          echo "::notice title=Release DMG::MacPulse $VERSION, $KIND, sha256 $(cut -d' ' -f1 build/release/MacPulse-$VERSION.dmg.sha256)"
+
+      - name: Upload the DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: MacPulse-dmg
+          path: |
+            build/release/MacPulse-*.dmg
+            build/release/MacPulse-*.dmg.sha256
+          if-no-files-found: error
+
+      - name: Draft a GitHub release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(cat build/release/VERSION)
+          gh release create "$GITHUB_REF_NAME" --draft --title "MacPulse $VERSION" \
+            --notes-file Documentation/RELEASE_NOTES.md \
+            "build/release/MacPulse-$VERSION.dmg" "build/release/MacPulse-$VERSION.dmg.sha256"
