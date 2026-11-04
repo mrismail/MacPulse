@@ -368,12 +368,8 @@ final class MacPulseUITests: XCTestCase {
             return true  // collect everything, then report below with element names
         }
         XCTAssertTrue(otherProblems.isEmpty, "Accessibility audit: " + otherProblems.joined(separator: " | "))
-        if !contrastProblems.isEmpty {
-            // Still open (DEFERRED.md): raising card text to Palette.secondaryText did not
-            // clear these. Needs Accessibility Inspector on a real Mac to see which colors.
-            XCTExpectFailure("Contrast findings under investigation (DEFERRED.md)") {
-                XCTFail("Contrast: " + contrastProblems.joined(separator: " | "))
-            }
-        }
+        // Blocking since Phase 8: secondary text at 85 % and neutral badge borders cleared
+        // the findings CI had reported (battery.health, battery.cycleCount, four unnamed).
+        XCTAssertTrue(contrastProblems.isEmpty, "Contrast: " + contrastProblems.joined(separator: " | "))
     }
 }
