@@ -79,6 +79,11 @@ public final class AppModel {
                 spaceAnalyzer.forget(moved)
                 await spaceAnalyzer.loadVolumes()
                 await overview.loadStorage()
+            },
+            didPutBack: { paths in
+                spaceAnalyzer.restored(paths)
+                await spaceAnalyzer.loadVolumes()
+                await overview.loadStorage()
             }
         )
     }
