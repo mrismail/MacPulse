@@ -135,7 +135,7 @@ public final class OverviewViewModel {
             let info = try await systemInfoRepository.currentSystemInfo()
             systemInfo = .loaded(info)
         } catch {
-            let appError = AppError.wrapping(error, userMessage: "Couldn't read information about this Mac.")
+            let appError = AppError.wrapping(error, userMessage: String(localized: "Couldn't read information about this Mac."))
             Log.logger(.system).log(appError, context: "Overview system info")
             systemInfo = .failed(appError)
         }

@@ -166,7 +166,7 @@ public struct OverviewView: View {
                     .controlSize(.small)
             case .loaded(let info):
                 VStack(alignment: .leading, spacing: Spacing.small) {
-                    KeyValueRow("Model", value: info.hardwareModel ?? "Unknown")
+                    KeyValueRow("Model", value: info.hardwareModel ?? String(localized: "Unknown"))
                     KeyValueRow("Processor", value: info.architectureDescription)
                     KeyValueRow("Memory", value: info.memoryDescription)
                     KeyValueRow("macOS", value: info.macOSVersion)

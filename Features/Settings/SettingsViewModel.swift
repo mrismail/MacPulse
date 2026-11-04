@@ -192,7 +192,7 @@ public final class SettingsViewModel {
             Log.logger(.persistence).info("Battery history cleared by the user")
             scheduleConfirmationHide()
         } catch {
-            let appError = AppError.wrapping(error, userMessage: "Couldn't clear battery history.")
+            let appError = AppError.wrapping(error, userMessage: String(localized: "Couldn't clear battery history."))
             Log.logger(.persistence).log(appError, context: "Clear battery history")
             clearBatteryHistoryState = .failed(appError)
         }
@@ -204,7 +204,7 @@ public final class SettingsViewModel {
         do {
             systemInfo = .loaded(try await systemInfoRepository.currentSystemInfo())
         } catch {
-            let appError = AppError.wrapping(error, userMessage: "Couldn't read diagnostics.")
+            let appError = AppError.wrapping(error, userMessage: String(localized: "Couldn't read diagnostics."))
             Log.logger(.system).log(appError, context: "Settings diagnostics")
             systemInfo = .failed(appError)
         }
