@@ -56,6 +56,22 @@ struct CleanupSafetyPolicyTests {
         for allowed in [home + "/Downloads", home + "/Projects", home + "/Documents/Old", "/Volumes/Backup/Inbox"] {
             #expect(policy.verdict(forPick: allowed) == .allowed, "\(allowed) should be pickable")
         }
+        #expect(policy.verdict(forPick: "/Volumes/Backup/.Spotlight-V100") != .allowed, "Hidden folders on drives too")
+    }
+
+    @Test func emptyFolderSearchesMayStartInAStandardFolder() {
+        let policy = CleanupSafetyPolicy(homePath: home)
+        guard case .refused(let reason) = policy.verdict(forPick: home + "/Documents") else {
+            Issue.record("Documents must be refused for Old Downloads")
+            return
+        }
+        #expect(reason.contains("Documents"), "The message names the folder")
+        #expect(policy.verdict(forPick: home + "/Documents", allowsStandardFolders: true) == .allowed)
+        #expect(policy.verdict(forPick: home, allowsStandardFolders: true) != .allowed)
+        // The standard folder itself still can't be moved.
+        let picked = CleanupSafetyPolicy(homePath: home, pickedFolders: [home + "/Documents"])
+        #expect(picked.verdict(for: home + "/Documents") != .allowed)
+        #expect(picked.verdict(for: home + "/Documents/Empty") == .allowed)
     }
 
     @Test func unsafePicksUnlockNothing() {
