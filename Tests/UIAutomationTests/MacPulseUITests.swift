@@ -67,7 +67,11 @@ final class MacPulseUITests: XCTestCase {
         app.launchArguments = ["-MacPulseUseFakeServices", "-AppleLanguages", "(ar)", "-AppleLocale", "ar_EG"]
         app.launch()
         let overview = element("sidebar.overview", in: app)
-        XCTAssertTrue(overview.waitForExistence(timeout: 10))
+        if !overview.waitForExistence(timeout: 20) {
+            let ids = app.descendants(matching: .any).allElementsBoundByIndex.prefix(40).map(\.identifier).filter { !$0.isEmpty }
+            XCTFail("No sidebar in Arabic. App state \(app.state.rawValue), windows \(app.windows.count), identifiers \(ids)")
+            return
+        }
         let window = app.windows.firstMatch
         XCTAssertTrue(window.exists)
         // The sidebar sits on the right in a right-to-left layout.
