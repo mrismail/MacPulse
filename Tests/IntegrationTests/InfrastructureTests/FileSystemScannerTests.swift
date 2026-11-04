@@ -32,6 +32,33 @@ struct FileSystemScannerTests {
         return await FileSystemScanner().scan(ScanRequest(rootPath: root, policy: policy)) { _ in }
     }
 
+    /// Spec §10: files appearing and disappearing while the walk runs. The scan must
+    /// finish, never count a file twice, and never report more than was ever there.
+    @Test func filesChangingDuringTheScanAreHandled() async throws {
+        let root = try Self.makeRoot()
+        defer { Self.cleanUp(root) }
+        for folder in 0..<40 {
+            for file in 0..<25 { try Self.write(root + "/f\(folder)/x\(file).bin", bytes: 1_000) }
+        }
+        let churn = Task.detached {
+            var round = 0
+            while !Task.isCancelled && round < 2_000 {
+                let folder = round % 40
+                try? FileManager.default.removeItem(atPath: root + "/f\(folder)/x\(round % 25).bin")
+                try? Self.write(root + "/f\(folder)/new\(round).bin", bytes: 500)
+                round += 1
+            }
+        }
+        let result = await scan(root)
+        churn.cancel()
+        _ = await churn.value
+        #expect(result.isComplete)
+        // At most the original 1,000 files plus the 2,000 written meanwhile.
+        #expect(result.itemsScanned <= 1_000 + 2_000 + 41)
+        let sizes = result.largestFiles.map(\.id)
+        #expect(Set(sizes).count == sizes.count, "No file is listed twice")
+    }
+
     @Test func sumsFilesAndFolders() async throws {
         let root = try Self.makeRoot()
         defer { Self.cleanUp(root) }
