@@ -59,6 +59,29 @@ final class MacPulseUITests: XCTestCase {
         }
     }
 
+    /// Arabic (draft translation, ADR-019): the app runs right to left, shows translated
+    /// text and every screen opens.
+    @MainActor
+    func testArabicRunsRightToLeft() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-MacPulseUseFakeServices", "-AppleLanguages", "(ar)", "-AppleLocale", "ar_EG"]
+        app.launch()
+        let overview = element("sidebar.overview", in: app)
+        XCTAssertTrue(overview.waitForExistence(timeout: 10))
+        let window = app.windows.firstMatch
+        XCTAssertTrue(window.exists)
+        // The sidebar sits on the right in a right-to-left layout.
+        XCTAssertGreaterThan(overview.frame.midX, window.frame.midX, "Sidebar isn't on the right: \(overview.frame) in \(window.frame)")
+        let text = [overview.label, overview.value as? String ?? ""].joined(separator: " ")
+        XCTAssertFalse(text.contains("Overview"), "Sidebar isn't translated: \(text)")
+        for id in Self.sectionIDs {
+            open(id, in: app)
+            XCTAssertTrue(window.exists, "The window closed after opening \(id)")
+        }
+        open("battery", in: app)
+        XCTAssertTrue(element("battery.charge", in: app).waitForExistence(timeout: 10))
+    }
+
     @MainActor
     func testBatteryScreenShowsLabeledValues() {
         let app = launchApp()
