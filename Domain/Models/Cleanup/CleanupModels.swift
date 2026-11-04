@@ -84,6 +84,8 @@ public enum CleanupRequirement: Sendable, Hashable {
     case keptCopyUnchanged(path: String, identity: FileIdentity)
     /// An empty folder: it must still hold nothing but a `.DS_Store`.
     case stillEmpty
+    /// An old download folder: nothing inside it may have changed since this date.
+    case unchangedSince(Date)
 }
 
 /// A copy marked in the Duplicate Finder, with what both it and the kept copy were when
@@ -134,6 +136,14 @@ public struct CleanupCandidate: Identifiable, Sendable, Hashable {
 
     public var name: String { (path as NSString).lastPathComponent }
     public var isFolder: Bool { identity.isFolder }
+
+    /// The same candidate with a requirement checked again before it is moved.
+    public func requiring(_ requirement: CleanupRequirement) -> CleanupCandidate {
+        CleanupCandidate(
+            path: path, category: category, reason: reason, allocatedBytes: allocatedBytes,
+            modified: modified, identity: identity, warning: warning, requirement: requirement
+        )
+    }
 }
 
 /// Candidates found for a category, plus anything that limited the search.
