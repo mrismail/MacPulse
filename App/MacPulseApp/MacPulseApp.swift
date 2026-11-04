@@ -23,6 +23,7 @@ struct MacPulseApp: App {
         Window("MacPulse", id: AppModel.mainWindowID) {
             RootView(model: model)
                 .frame(minWidth: 860, minHeight: 560)
+                .environment(\.layoutDirection, AppLanguage.layoutDirection)
                 .task {
                     let settings = model.settings
                     appDelegate.keepsRunningWithoutWindows = { settings.preferences.showsMenuBarExtra }
@@ -37,6 +38,7 @@ struct MacPulseApp: App {
         Settings {
             SettingsView(viewModel: model.settings, energy: model.energy, spaceAnalyzer: model.spaceAnalyzer)
                 .frame(width: 600, height: 640)
+                .environment(\.layoutDirection, AppLanguage.layoutDirection)
         }
 
         // The menu bar companion (ADR-016); turned on or off in Settings.
@@ -45,6 +47,7 @@ struct MacPulseApp: App {
             set: { shown in model.settings.update { $0.showsMenuBarExtra = shown } }
         )) {
             MenuBarContent(model: model)
+                .environment(\.layoutDirection, AppLanguage.layoutDirection)
         } label: {
             MenuBarLabel(overview: model.overview)
                 .modifier(OpenMainWindowAtLaunch())
@@ -85,4 +88,14 @@ private struct OpenMainWindowAtLaunch: ViewModifier {
             }
         }
     }
+}
+
+/// The language MacPulse shows (the first of the user's languages it is localized in) and
+/// its writing direction. CI showed the window laid out left to right in Arabic, although
+/// the text was Arabic, so the direction is set from the app's language explicitly.
+enum AppLanguage {
+    static let layoutDirection: LayoutDirection = {
+        let language = Locale.Language(identifier: Bundle.main.preferredLocalizations.first ?? "en")
+        return language.characterDirection == .rightToLeft ? .rightToLeft : .leftToRight
+    }()
 }
