@@ -24,7 +24,9 @@ public struct ProvenanceBadge: View {
             .padding(.vertical, 2)
             .overlay(
                 RoundedRectangle(cornerRadius: Radius.badge)
-                    .strokeBorder(Palette.provenance(kind), lineWidth: 1)
+                    // Neutral border: the badge's text and symbol carry the meaning, and a
+                    // green or orange outline was flagged by the contrast audit.
+                    .strokeBorder(Palette.secondaryText, lineWidth: 1)
             )
         .help(provenance.explanation)
         .accessibilityHidden(true)  // MetricValueView reads provenance as part of the value
