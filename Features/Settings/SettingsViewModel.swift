@@ -104,7 +104,7 @@ public final class SettingsViewModel {
             if enabled, !opensAtLogin {
                 loginItemError = AppError(
                     kind: .permissionDenied,
-                    userMessage: String(localized: "macOS needs your approval: turn MacPulse on in System Settings → General → Login Items.")
+                    userMessage: String(localized: "macOS needs your approval: turn MacPulse on in System Settings > General > Login Items.")
                 )
             }
         } catch {

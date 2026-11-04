@@ -366,15 +366,22 @@ enum DuplicatePresentation {
         "duplicates.mark.\(PathPresentation.relative(file.path, to: home))"
     }
 
-    @MainActor private static let thumbnails = NSCache<NSString, NSImage>()
+    @MainActor private static let thumbnails: NSCache<NSString, NSImage> = {
+        let cache = NSCache<NSString, NSImage>()
+        cache.countLimit = 400
+        return cache
+    }()
 
-    /// A Quick Look thumbnail, cached. Quick Look reads the file in its own process.
+    /// A Quick Look thumbnail, cached by path and modification date (a file replaced at
+    /// the same path gets a new one). Quick Look reads the file in its own process.
     @MainActor
     static func thumbnail(for path: String) async -> NSImage? {
-        if let cached = thumbnails.object(forKey: path as NSString) { return cached }
+        let modified = (try? URL(fileURLWithPath: path).resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
+        let key = "\(path)|\(modified?.timeIntervalSince1970 ?? 0)" as NSString
+        if let cached = thumbnails.object(forKey: key) { return cached }
         let box = await thumbnailImage(for: path)
         guard !Task.isCancelled, let image = box.image.map({ NSImage(cgImage: $0, size: .zero) }) else { return nil }
-        thumbnails.setObject(image, forKey: path as NSString)
+        thumbnails.setObject(image, forKey: key)
         return image
     }
 

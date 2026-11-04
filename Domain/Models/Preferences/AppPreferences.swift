@@ -16,6 +16,15 @@ public struct AppPreferences: Codable, Sendable, Equatable {
             case .fiveMinutes: String(localized: "Every 5 minutes")
             }
         }
+        /// The interval inside a sentence ("records the battery level every minute"), as
+        /// its own phrase so translations don't depend on lowercasing the title.
+        public var inSentence: String {
+            switch self {
+            case .thirtySeconds: String(localized: "every 30 seconds")
+            case .oneMinute: String(localized: "every minute")
+            case .fiveMinutes: String(localized: "every 5 minutes")
+            }
+        }
     }
 
     public enum ActivityInterval: Int, Codable, Sendable, CaseIterable, Identifiable {

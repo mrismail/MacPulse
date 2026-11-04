@@ -40,7 +40,7 @@ public struct SettingsView: View {
                 }
                 Toggle("Show MacPulse in the menu bar", isOn: preference(\.showsMenuBarExtra))
                     .accessibilityIdentifier("settings.menuBar")
-                Text("While MacPulse is in the menu bar, closing its window keeps it running so battery and app activity are still recorded. Opening at login is off unless you turn it on; you can also change it in System Settings → General → Login Items.")
+                Text("While MacPulse is in the menu bar, closing its window keeps it running so battery and app activity are still recorded. Opening at login is off unless you turn it on; you can also change it in System Settings > General > Login Items.")
                     .font(.caption)
                     .foregroundStyle(Palette.secondaryText)
             }
@@ -113,7 +113,7 @@ public struct SettingsView: View {
             }
 
             Section("Battery history") {
-                Text("MacPulse records the battery level \(viewModel.preferencesAtLaunch.batteryInterval.title.lowercased()) while it is running and keeps \(viewModel.batteryHistoryRetentionDays) days of history on this Mac. Old history is removed automatically.")
+                Text("MacPulse records the battery level \(viewModel.preferencesAtLaunch.batteryInterval.inSentence) while it is running and keeps \(viewModel.batteryHistoryRetentionDays) days of history on this Mac. Old history is removed automatically.")
                     .foregroundStyle(Palette.secondaryText)
                 HStack {
                     Button("Clear Battery History…", role: .destructive) {
@@ -168,6 +168,7 @@ public struct SettingsView: View {
                         HStack {
                             Button("Clear Scan History…", role: .destructive) { isConfirmingClearScans = true }
                                 .accessibilityIdentifier("settings.clearScanHistory")
+                                .disabled(viewModel.clearScanHistoryState == .clearing)
                                 .confirmationDialog("Clear all scan history?", isPresented: $isConfirmingClearScans, titleVisibility: .visible) {
                                     Button("Clear Scan History", role: .destructive) { Task { await viewModel.clearScanHistory() } }
                                 } message: {
@@ -180,6 +181,7 @@ public struct SettingsView: View {
                         HStack {
                             Button("Clear Cleanup History…", role: .destructive) { isConfirmingClearCleanups = true }
                                 .accessibilityIdentifier("settings.clearCleanupHistory")
+                                .disabled(viewModel.clearCleanupHistoryState == .clearing)
                                 .confirmationDialog("Clear all cleanup history?", isPresented: $isConfirmingClearCleanups, titleVisibility: .visible) {
                                     Button("Clear Cleanup History", role: .destructive) { Task { await viewModel.clearCleanupHistory() } }
                                 } message: {
