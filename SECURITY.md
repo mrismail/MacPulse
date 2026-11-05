@@ -1,8 +1,35 @@
 # Security
 
+## Supported versions
+| Version | Security fixes |
+|---|---|
+| 1.0.x (latest release) | Yes |
+| Earlier builds, release candidates, branches other than `main` | No — update to the latest release |
+
 ## Reporting a vulnerability
 Please report security issues privately through GitHub's **Report a vulnerability**
 (Security > Advisories) on <https://github.com/mrismail/MacPulse>, not in a public issue.
+Include the MacPulse version, macOS version and Mac model, the steps to reproduce, and
+what you expected to happen. Leave out private file paths unless they are needed.
+
+What to expect (best effort, one maintainer):
+- An acknowledgement within 7 days.
+- An assessment and a plan within 30 days.
+- A fix in a release, with credit in the advisory if you want it. Please keep the issue
+  private until the fix is released or 90 days have passed, whichever is first.
+
+### What counts as a security issue
+- Anything that can make MacPulse move, change or read a file the user didn't approve:
+  a cleanup, Put Back or duplicate removal that affects the wrong item, a way past the
+  confirmation dialog, the re-checks or the protected locations.
+- File contents, file names or paths leaving the Mac, or appearing in public logs.
+- A way to make MacPulse use the network, run another program, or gain entitlements or
+  admin rights.
+- Weaknesses in the release pipeline: signing secrets, tags or workflows that could ship
+  a build that isn't from `main`.
+
+Wrong battery or energy figures and crashes without the effects above are ordinary bugs:
+report them with the bug form.
 
 ## How MacPulse is built to be safe without the App Sandbox
 MacPulse can't use the App Sandbox: the sandbox blocks the per-app CPU and energy figures

@@ -1,8 +1,11 @@
 # Support
 
 ## Getting help
-Open an issue at <https://github.com/mrismail/MacPulse/issues> with your macOS version, Mac
-model and MacPulse version (Settings > About). Never paste file paths you consider private.
+Open an issue at <https://github.com/mrismail/MacPulse/issues> with the bug or feature form,
+and include your macOS version, Mac model and MacPulse version (Settings > About). Never
+paste file paths you consider private. Support is best effort from one maintainer.
+
+Want to fix something yourself? See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Reporting a crash
 MacPulse has no crash reporter, because it has no network access. If it quits unexpectedly:
