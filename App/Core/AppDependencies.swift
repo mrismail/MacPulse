@@ -83,7 +83,10 @@ public struct AppDependencies: Sendable {
     public static func forLaunch(arguments: [String]) -> AppDependencies {
         #if DEBUG
             if arguments.contains(LaunchArgument.useFakeServices) {
-                return .preview()
+                var preferences = AppPreferences()
+                // UI tests of launching without the menu bar companion.
+                if arguments.contains(LaunchArgument.hideMenuBarExtra) { preferences.showsMenuBarExtra = false }
+                return .preview(preferences: InMemoryPreferencesStore(preferences))
             }
         #endif
         return .live()
@@ -149,7 +152,7 @@ public struct AppDependencies: Sendable {
 #if DEBUG
     extension AppDependencies {
         /// Deterministic fake services. Used by previews and UI tests (Debug only).
-        public static func preview() -> AppDependencies {
+        public static func preview(preferences: any PreferencesStore = InMemoryPreferencesStore()) -> AppDependencies {
             AppDependencies(
                 systemInfo: PreviewSystemInfoRepository(),
                 battery: PreviewBatteryMonitor(),
@@ -158,7 +161,8 @@ public struct AppDependencies: Sendable {
                 scanner: PreviewScanner(),
                 duplicates: PreviewDuplicateFinder(),
                 cleanupSource: PreviewCleanupSource(),
-                trash: PreviewTrashService()
+                trash: PreviewTrashService(),
+                preferences: preferences
             )
         }
     }
@@ -200,4 +204,6 @@ extension AppDependencies {
 
 public enum LaunchArgument {
     public static let useFakeServices = "-MacPulseUseFakeServices"
+    /// Debug only, with fake services: start with the menu bar companion turned off.
+    public static let hideMenuBarExtra = "-MacPulseHideMenuBarExtra"
 }

@@ -82,6 +82,18 @@ final class MacPulseUITests: XCTestCase {
         XCTAssertTrue(element("battery.charge", in: app).waitForExistence(timeout: 10))
     }
 
+    /// The window also opens in Arabic with the menu bar companion turned off (the app
+    /// delegate's fallback, not the menu bar label, opens it then).
+    @MainActor
+    func testArabicWithoutMenuBarItemStillOpensTheWindow() {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-MacPulseUseFakeServices", "-MacPulseHideMenuBarExtra", "-AppleLanguages", "(ar)", "-AppleLocale", "ar_EG",
+        ]
+        app.launch()
+        XCTAssertTrue(element("sidebar.overview", in: app).waitForExistence(timeout: 15), "No window in Arabic with the menu bar item off")
+    }
+
     @MainActor
     func testBatteryScreenShowsLabeledValues() {
         let app = launchApp()

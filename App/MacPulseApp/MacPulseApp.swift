@@ -82,8 +82,7 @@ private struct OpenMainWindowAtLaunch: ViewModifier {
             guard !Self.checked else { return }
             Self.checked = true
             try? await Task.sleep(for: .milliseconds(500))
-            let hasWindow = NSApplication.shared.windows.contains { $0.isVisible && $0.styleMask.contains(.titled) }
-            if !hasWindow {
+            if !MainWindowLauncher.hasMainWindow {
                 openWindow(id: AppModel.mainWindowID)
             }
         }
