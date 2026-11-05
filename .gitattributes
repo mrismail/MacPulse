@@ -1,0 +1,10 @@
+* text=auto eol=lf
+
+# Binary
+*.png         binary
+*.icns        binary
+*.car         binary
+*.dmg         binary
+
+# Documentation is not counted as code in GitHub's language bar
+Documentation/** linguist-documentation=true
