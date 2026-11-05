@@ -17,14 +17,29 @@ if [[ "$TARGET" == *.app ]]; then
   ditto -c -k --keepParent "$TARGET" "$SUBMIT"
 fi
 
-xcrun notarytool submit "$SUBMIT" \
-  --key "$MACPULSE_NOTARY_KEY_PATH" --key-id "$MACPULSE_NOTARY_KEY_ID" --issuer "$MACPULSE_NOTARY_ISSUER_ID" \
-  --wait --output-format json | tee "$(dirname "$TARGET")/notarization.json"
-python3 -c 'import json,sys; r=json.load(open(sys.argv[1])); sys.exit(0 if r.get("status")=="Accepted" else 1)' \
-  "$(dirname "$TARGET")/notarization.json" || {
-  echo "Notarization was not accepted; fetch the log with: xcrun notarytool log <id> --key ..." >&2
+LOG_DIR="$(dirname "$TARGET")"
+AUTH=(--key "$MACPULSE_NOTARY_KEY_PATH" --key-id "$MACPULSE_NOTARY_KEY_ID" --issuer "$MACPULSE_NOTARY_ISSUER_ID")
+# A team's first submissions can take long; stop waiting after 30 minutes instead of being
+# killed by the job timeout, and always show Apple's log when it isn't accepted.
+set +e
+xcrun notarytool submit "$SUBMIT" "${AUTH[@]}" --wait --timeout 30m --output-format json > "$LOG_DIR/notarization.json"
+SUBMIT_STATUS=$?
+set -e
+cat "$LOG_DIR/notarization.json"
+STATUS=$(python3 -c 'import json,sys
+try: print(json.load(open(sys.argv[1])).get("status", ""))
+except Exception: print("")' "$LOG_DIR/notarization.json")
+if [ "$SUBMIT_STATUS" -ne 0 ] || [ "$STATUS" != "Accepted" ]; then
+  ID=$(python3 -c 'import json,sys
+try: print(json.load(open(sys.argv[1])).get("id", ""))
+except Exception: print("")' "$LOG_DIR/notarization.json")
+  echo "Notarization status: ${STATUS:-unknown} (notarytool exit $SUBMIT_STATUS)" >&2
+  if [ -n "$ID" ]; then
+    xcrun notarytool log "$ID" "${AUTH[@]}" "$LOG_DIR/notarization-log.json" || true
+    cat "$LOG_DIR/notarization-log.json" >&2 || true
+  fi
   exit 1
-}
+fi
 xcrun stapler staple "$TARGET"
 xcrun stapler validate "$TARGET"
 [[ "$TARGET" == *.app ]] && rm -f "$SUBMIT"
