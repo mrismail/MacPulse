@@ -15,7 +15,8 @@
 	<array/>
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
-		<!-- Modification dates of files and folders the user asked MacPulse to scan, shown in the app. -->
+		<!-- Modification dates of files and folders the user asked MacPulse to scan, shown in the
+		     app (DDA9.1, 3B52.1), and of MacPulse's own history files in its container (C617.1). -->
 		<dict>
 			<key>NSPrivacyAccessedAPIType</key>
 			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
@@ -23,6 +24,7 @@
 			<array>
 				<string>DDA9.1</string>
 				<string>3B52.1</string>
+				<string>C617.1</string>
 			</array>
 		</dict>
 		<!-- Free and total space of disks, shown in the Overview and Space Analyzer. -->

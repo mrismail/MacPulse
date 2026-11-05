@@ -7,7 +7,8 @@ out = sys.argv[1]
 
 def lerp(a, b, t): return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
 
-def master():
+def master(simple=False):
+    """simple=True: artwork for 32 px and smaller (thicker ring, no pulse line)."""
     scale = 4
     W = S * scale
     img = Image.new("RGBA", (W, W), (0, 0, 0, 0))
@@ -31,7 +32,7 @@ def master():
     d = ImageDraw.Draw(img)
     cx, cy = W // 2, int(W * 0.53)
     r = int(270 * scale)
-    w = int(58 * scale)
+    w = int((120 if simple else 58) * scale)
     box = (cx - r, cy - r, cx + r, cy + r)
     # Gauge track (270° open at the bottom) and the filled part.
     track = Image.new("RGBA", (W, W), (0, 0, 0, 0))
@@ -50,6 +51,8 @@ def master():
         rr = r - w / 2
         x, y = cx + rr * math.cos(a), cy + rr * math.sin(a)
         d.ellipse((x - w / 2, y - w / 2, x + w / 2, y + w / 2), fill=(255, 255, 255, 255))
+    if simple:
+        return img.resize((S, S), Image.LANCZOS)
     # Pulse line across the middle of the gauge.
     pts = [(-200, 0), (-80, 0), (-40, -110), (10, 120), (55, -40), (85, 0), (200, 0)]
     line = [(cx + x * scale, cy + y * scale) for x, y in pts]
@@ -60,13 +63,15 @@ def master():
     return img.resize((S, S), Image.LANCZOS)
 
 m = master()
+small = master(simple=True)
 os.makedirs(out, exist_ok=True)
 images = []
 for pt in (16, 32, 128, 256, 512):
     for sc in (1, 2):
         px = pt * sc
         name = f"icon_{pt}x{pt}{'@2x' if sc == 2 else ''}.png"
-        m.resize((px, px), Image.LANCZOS).save(os.path.join(out, name), optimize=True)
+        (small if px <= 32 else m).resize((px, px), Image.LANCZOS).save(os.path.join(out, name), optimize=True)
         images.append({"filename": name, "idiom": "mac", "scale": f"{sc}x", "size": f"{pt}x{pt}"})
 json.dump({"images": images, "info": {"author": "xcode", "version": 1}}, open(os.path.join(out, "Contents.json"), "w"), indent=2)
 m.save("/tmp/icon_preview.png")
+small.resize((32, 32), Image.LANCZOS).resize((256, 256), Image.NEAREST).save("/tmp/icon_small_preview.png")

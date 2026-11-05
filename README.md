@@ -13,9 +13,12 @@ locally: no account, no uploads.
 ## Install
 
 Download the DMG from [Releases](https://github.com/mrismail/MacPulse/releases), open it and
-drag MacPulse to Applications. Until builds are notarized, right-click MacPulse and choose
-**Open** the first time. See [release notes](Documentation/RELEASE_NOTES.md) and
-[known limitations](Documentation/KNOWN_LIMITATIONS.md).
+drag MacPulse to **Applications**, then open it from there (not from the DMG). Until builds
+are notarized, macOS blocks the first launch: open MacPulse once, then go to **System
+Settings > Privacy & Security**, click **Open Anyway** next to the MacPulse message and
+confirm with your password. See [release notes](Documentation/RELEASE_NOTES.md),
+[known limitations](Documentation/KNOWN_LIMITATIONS.md), [privacy](PRIVACY.md) and
+[support and uninstalling](SUPPORT.md).
 
 ## What MacPulse never does
 

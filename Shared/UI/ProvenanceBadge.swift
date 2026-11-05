@@ -3,8 +3,9 @@ import SwiftUI
 
 /// States whether a value is measured, estimated or unavailable.
 ///
-/// Meaning is carried by the glyph shape and the text, both in label colors so they meet
-/// contrast requirements in light and dark mode; a thin colored edge only reinforces it.
+/// Meaning is carried by the glyph shape and the text, in label colors so they meet
+/// contrast requirements in light and dark mode. The border is neutral: color alone never
+/// says whether a value is measured or estimated.
 public struct ProvenanceBadge: View {
     private let provenance: MetricProvenance
 
