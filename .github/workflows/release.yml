@@ -36,7 +36,7 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -51,7 +51,7 @@ jobs:
           VERSION=$(cat build/release/VERSION)
           echo "::notice title=Release DMG::MacPulse $VERSION, ad-hoc (not notarized), sha256 $(cut -d' ' -f1 build/release/MacPulse-$VERSION.dmg.sha256)"
       - name: Upload the DMG
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: MacPulse-dmg-adhoc
           path: |
@@ -75,7 +75,7 @@ jobs:
       HAS_NOTARY: ${{ secrets.MACPULSE_NOTARY_KEY != '' && secrets.MACPULSE_NOTARY_KEY_ID != '' && secrets.MACPULSE_NOTARY_ISSUER_ID != '' }}
       ALLOW_ADHOC: ${{ vars.MACPULSE_ALLOW_ADHOC_RELEASE == 'true' }}
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
