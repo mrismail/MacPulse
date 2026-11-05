@@ -1,0 +1,17 @@
+# The owner reviews every change. The entries below are listed separately so the most
+# sensitive areas stay visible if more maintainers join later.
+*                                   @mrismail
+
+# Repository rules, workflows, release and signing
+/.github/                           @mrismail
+/scripts/                           @mrismail
+/project.yml                        @mrismail
+/App/MacPulseApp/Resources/PrivacyInfo.xcprivacy  @mrismail
+
+# Code that moves user files, and the policies that protect them
+/Infrastructure/Cleanup/            @mrismail
+/Domain/Policies/                   @mrismail
+
+# Licence and contribution terms
+/LICENSE                            @mrismail
+/CLA.md                             @mrismail
