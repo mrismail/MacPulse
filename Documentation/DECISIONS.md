@@ -624,3 +624,25 @@ and the Arabic translation needed decisions.
   - Names and paths inside Arabic sentences are isolated with FSI and PDI.
 - **Launch:** besides the menu bar label, the app delegate opens the main window through its Window-menu item when macOS didn't create it, so a right-to-left launch with the menu bar companion off still shows the window.
 - **Install guidance:** ad-hoc builds are opened with System Settings > Privacy & Security > Open Anyway (macOS 15 removed right-click > Open), from Applications, not the DMG.
+
+## ADR-021: Licence, contributions and repository protection
+
+**Status:** Accepted (owner decisions, 2026-11-05)
+
+**Decision.**
+- **Licence: GPL-3.0-or-later.** `LICENSE` is the unmodified GPL-3.0 text; the app's copyright notice is "Copyright © 2026 Mohamed Ismail". Anyone may use, change and sell copies, but must ship the source under the GPL, so nobody else can take MacPulse closed.
+- **Contributions under a CLA (`CLA.md`).** Contributors keep their copyright and grant the owner, and only the owner, the right to also offer their contributions under other licences. This keeps paid or dual licensing possible without asking every contributor later. The CLA is a template until a lawyer reviews it, before the first outside contribution.
+- **CLA check:** CLA Assistant Lite (pinned) runs on `pull_request_target` without checking out pull request code and stores signatures on the `cla-signatures` branch. The owner, `claude` (the account Claude's commits map to) and the bots are allow-listed.
+- **Rulesets as code** (`.github/rulesets/`, applied by `scripts/repo/apply-protection.sh`, which the owner runs):
+  - `main`: pull request required (0 approvals, because a single maintainer can't approve his own pull requests), conversations resolved, stale reviews dismissed, **merge commits only**, required checks "Build, test and launch", "String Catalog in sync" and "CLA signed" from GitHub Actions, branch up to date, no force pushes or deletion, no bypass.
+  - Release tags `v*.*.*`: only repository admins create, update or delete them.
+  - The repository allows merge commits only and deletes merged branches.
+- **Community files:** CONTRIBUTING, Contributor Covenant 2.1 (reports through GitHub; no email published), SECURITY (supported versions, scope, response times), SUPPORT, CHANGELOG, CODEOWNERS, issue forms and a pull request template with a safety checklist, Dependabot for the pinned actions, `.editorconfig` and `.gitattributes`.
+
+**Why the old ruleset changed.** It required linear history, which forbids merge commits; that is why every PR so far was rebase-merged and its SHAs rewritten, against CLAUDE.md. It also required code-owner review: with the new CODEOWNERS, that would have blocked every pull request the owner opens. It required no status checks.
+
+**Consequences.**
+- The script refuses to run before the CLA workflow is on `main`, because a required check that never runs would block every pull request.
+- Outside contributors wait for a CLA signature; the owner and Claude's sessions don't.
+- No per-file licence headers (they would touch every source file); the README and `LICENSE` carry the notice.
+- Not verified yet: the CLA check on a real outside pull request, and the rules after the script runs (the owner pastes the script's output into the pull request).
