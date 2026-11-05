@@ -1,0 +1,72 @@
+name: Bug report
+description: Something in MacPulse doesn't work as expected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. **Security problems** (a cleanup touching the wrong file, data
+        leaving your Mac) must be reported privately: see SECURITY.md. Don't paste file
+        paths you consider private.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the Space Analyzer
+        2. Scan the home folder
+        3. …
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Overview
+        - Battery
+        - Energy
+        - Space Analyzer
+        - Duplicate Finder
+        - Cleaner or Put Back
+        - Menu bar
+        - Settings
+        - Install or launch
+        - Arabic or right-to-left layout
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: MacPulse version
+      description: Settings > About (for example 1.0.0 (216)).
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: macOS 15.1
+    validations:
+      required: true
+  - type: input
+    id: mac
+    attributes:
+      label: Mac model
+      placeholder: MacBook Air M2, or MacBook Pro 2019 (Intel)
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics or crash report
+      description: Settings > About > Copy Diagnostics (no file names), or a crash report (see SUPPORT.md). Remove anything private.
+      render: text
