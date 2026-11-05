@@ -1,0 +1,55 @@
+name: CLA
+
+# Every outside contributor signs CLA.md once, by posting the sentence below as a comment
+# on their pull request. Signatures are stored on the `cla-signatures` branch, never on
+# main. The owner, Claude (commits by "Claude <noreply@anthropic.com>" map to the
+# GitHub account `claude`) and bots don't need to sign.
+#
+# Security: pull_request_target runs with this repository's token, so this workflow never
+# checks out or runs code from the pull request. It only reads comments and writes the
+# signature file.
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, closed, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cla-signatures
+  cancel-in-progress: false
+
+jobs:
+  cla:
+    name: CLA signed
+    if: >-
+      github.event_name == 'pull_request_target' ||
+      (github.event.issue.pull_request &&
+       (github.event.comment.body == 'recheck' ||
+        github.event.comment.body == 'I have read the MacPulse CLA and I agree to it.'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: write        # re-run the pull request's CLA check after a signature
+      contents: write       # write signatures/cla.json on the cla-signatures branch
+      pull-requests: write  # comment on the pull request
+      statuses: write
+    steps:
+      - uses: contributor-assistant/github-action@ca4a40a7d1004f18d9960b404b97e5f30a505a08  # v2.6.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          path-to-document: https://github.com/mrismail/MacPulse/blob/main/CLA.md
+          path-to-signatures: signatures/cla.json
+          branch: cla-signatures
+          allowlist: mrismail,claude,dependabot[bot],github-actions[bot]
+          custom-pr-sign-comment: I have read the MacPulse CLA and I agree to it.
+          custom-notsigned-prcomment: >-
+            Thank you for your contribution. Before it can be merged, please read the
+            [MacPulse Contributor License Agreement](https://github.com/mrismail/MacPulse/blob/main/CLA.md)
+            and post the sentence below as a new comment on this pull request.
+          custom-allsigned-prcomment: All contributors have signed the MacPulse CLA.
+          lock-pullrequest-aftermerge: false
