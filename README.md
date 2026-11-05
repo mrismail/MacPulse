@@ -1,5 +1,9 @@
 # MacPulse
 
+[![CI](https://github.com/mrismail/MacPulse/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mrismail/MacPulse/actions/workflows/ci.yml)
+[![License: GPL v3 or later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
+![macOS 14+](https://img.shields.io/badge/macOS-14%2B-lightgrey.svg)
+
 A native macOS utility that helps MacBook users understand battery health and energy use,
 see what is filling their disk, find duplicate files and clean up safely. Everything runs
 locally: no account, no uploads.
@@ -96,3 +100,22 @@ does not ask for administrator access. It runs with the Hardened Runtime and no 
 entitlements, and will be distributed as a Developer ID–signed, notarized download
 (Phase 8; see ADR-010). To find battery-draining apps it reads the list of your running
 processes and their CPU, memory and energy use — what Activity Monitor shows.
+
+## Contributing
+
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the
+[Code of Conduct](CODE_OF_CONDUCT.md); your first pull request asks you to sign the
+[Contributor License Agreement](CLA.md). Report security issues privately, as described in
+[SECURITY.md](SECURITY.md). Changes are listed in the [changelog](CHANGELOG.md).
+
+## License
+
+Copyright © 2026 Mohamed Ismail.
+
+MacPulse is free software: you can redistribute it and/or modify it under the terms of the
+GNU General Public License as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version. It is distributed in the hope that
+it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [LICENSE](LICENSE) for details.
+
+SPDX-License-Identifier: GPL-3.0-or-later
