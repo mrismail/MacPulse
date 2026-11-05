@@ -8,7 +8,7 @@ Xcode 16, Release build unless noted). Checks that CI can't run are listed under
 | Suite | Framework | Count | Result |
 |---|---|---|---|
 | Domain, Shared, Features, AppCore unit tests and Infrastructure integration tests (real files in temporary folders) | Swift Testing | 358 | All pass |
-| UI tests: navigation, Battery, Overview, Energy, Space Analyzer, Duplicate Finder, Cleaner (confirm, Escape, Cancel), Settings, accessibility audit, Arabic (window opens, right-to-left layout, translated text) | XCTest/XCUITest | 21 | All pass; the Battery-screen contrast audit is non-blocking (below) |
+| UI tests: navigation, Battery, Overview, Energy, Space Analyzer, Duplicate Finder, Cleaner (confirm, Escape, Cancel), Settings, accessibility audit, Arabic (window opens, right-to-left layout, translated text; also with the menu bar item off) | XCTest/XCUITest | 21 (20 until the review fixes; the first report counted 21 too early) | All pass; the Battery-screen contrast audit is non-blocking (below) |
 | Build with warnings as errors (Swift 6, strict concurrency) | xcodebuild | Debug and Release | Pass |
 | Launch smoke test (app stays running for 10 s, in English and in Arabic with a translated window title) | CI | — | Pass |
 

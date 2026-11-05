@@ -601,3 +601,26 @@ and the Arabic translation needed decisions.
 - No new entitlements, network code or dependencies.
 - Gatekeeper warns about ad-hoc builds until the owner adds the secrets.
 - Signed-build behaviour (privacy prompts, the Trash without Full Disk Access, `SMAppService`) is verified with `Documentation/OWNER_CHECKLIST.md`.
+
+## ADR-020: Phase 8 review fixes (release security, localization, launch)
+
+**Status:** Accepted (review of PR #16)
+
+**Decision.**
+- **Release workflow:**
+  - Pull requests and manual runs build an ad-hoc DMG with no secrets and a read-only token.
+  - Only tags run the signing job, in the `release` environment (owner approval, environment secrets), and only for a tag on `main` whose commit passed CI.
+  - A tag build fails without full signing and notarization unless the repository variable `MACPULSE_ALLOW_ADHOC_RELEASE` is `true`; the draft release then says it is ad-hoc and how to open it.
+  - The Developer ID identity is chosen explicitly (exactly one for the team, or `MACPULSE_SIGNING_IDENTITY`), and only `codesign` may use the key.
+  - notarytool waits at most 30 minutes and prints Apple's log on failure.
+  - The binary must contain arm64 and x86_64.
+  - Actions are pinned to commit SHAs, and XcodeGen to a release checked by SHA-256.
+- **Strings workflow:**
+  - No persisted credentials, and fork PRs are only checked.
+  - After committing a synced catalog, it starts CI for that commit, because pushes with `GITHUB_TOKEN` start no workflows.
+- **Localization:**
+  - Shared label components take `LocalizedStringResource`, so their literals are extracted and translated.
+  - Arabic count sentences use catalog plural variations.
+  - Names and paths inside Arabic sentences are isolated with FSI and PDI.
+- **Launch:** besides the menu bar label, the app delegate opens the main window through its Window-menu item when macOS didn't create it, so a right-to-left launch with the menu bar companion off still shows the window.
+- **Install guidance:** ad-hoc builds are opened with System Settings > Privacy & Security > Open Anyway (macOS 15 removed right-click > Open), from Applications, not the DMG.
