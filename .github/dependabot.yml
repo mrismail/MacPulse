@@ -1,0 +1,14 @@
+# MacPulse has no Swift package dependencies; only the pinned GitHub Actions are updated.
+# Dependabot keeps the SHA pins and their version comments current.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "CI"
