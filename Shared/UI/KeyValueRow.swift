@@ -5,8 +5,9 @@ public struct KeyValueRow: View {
     private let label: String
     private let value: String
 
-    public init(_ label: String, value: String) {
-        self.label = label
+    /// - Parameter label: looked up in the String Catalog.
+    public init(_ label: LocalizedStringResource, value: String) {
+        self.label = String(localized: label)
         self.value = value
     }
 

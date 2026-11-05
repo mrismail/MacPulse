@@ -18,8 +18,20 @@ public struct MetricValueView<Value: Sendable & Equatable>: View {
     private let prominence: Prominence
     private let format: (Value) -> String
 
+    /// - Parameter title: looked up in the String Catalog (a literal is extracted for
+    ///   translation; a plain `String` parameter would show as written).
     public init(
-        _ title: String,
+        _ title: LocalizedStringResource,
+        metric: Metric<Value>,
+        prominence: Prominence = .standard,
+        format: @escaping (Value) -> String
+    ) {
+        self.init(verbatim: String(localized: title), metric: metric, prominence: prominence, format: format)
+    }
+
+    /// For a title that is already localized.
+    public init(
+        verbatim title: String,
         metric: Metric<Value>,
         prominence: Prominence = .standard,
         format: @escaping (Value) -> String
@@ -67,6 +79,6 @@ public struct MetricValueView<Value: Sendable & Equatable>: View {
 
     private var accessibilityText: String {
         let value = valueText ?? String(localized: "Not available")
-        return "\(title): \(value), \(metric.provenance.badgeTitle)"
+        return String(localized: "\(title): \(value), \(metric.provenance.badgeTitle)", comment: "VoiceOver label: metric title, value, provenance")
     }
 }
