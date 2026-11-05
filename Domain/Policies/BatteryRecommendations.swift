@@ -45,7 +45,7 @@ public enum BatteryRecommendations {
             result.append(Recommendation(
                 id: "condition",
                 title: String(localized: "Your battery may need service"),
-                detail: "macOS reports the battery condition as “\(text)”. Consider checking it with Apple Support.",
+                detail: String(localized: "macOS reports the battery condition as “\(text)”. Consider checking it with Apple Support."),
                 severity: .warning
             ))
         }

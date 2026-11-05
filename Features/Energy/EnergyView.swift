@@ -283,7 +283,7 @@ private struct AppDetail: View {
                     ByteFormatting.string(fromBytes: $0)
                 }
                 MetricValueView(
-                    EnergyPresentation.impactTitle(energyDataAvailable: viewModel.energyDataAvailable),
+                    verbatim: EnergyPresentation.impactTitle(energyDataAvailable: viewModel.energyDataAvailable),
                     metric: app.impact.map { EnergyPresentation.levelTitle($0) }
                 ) { $0 }
                 MetricValueView("Share of app activity", metric: .estimated(app.shareOfActivity * 100, basis: app.impact.provenance.explanation)) {

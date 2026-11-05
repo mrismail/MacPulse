@@ -2,7 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "" : {
-
+      "shouldTranslate" : false
     },
     "%@ CPU" : {
       "localizations" : {
@@ -19,7 +19,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "استخدم %1$@ في المتوسط %2$@ من المعالج خلال آخر %3$lld دقيقة. الاستخدام المستمر للمعالج سبب شائع لنفاد البطارية بسرعة."
+            "value" : "استخدم ⁨%1$@⁩ في المتوسط %2$@ من المعالج خلال آخر %3$lld دقيقة. الاستخدام المستمر للمعالج سبب شائع لنفاد البطارية بسرعة."
           }
         },
         "en" : {
@@ -35,7 +35,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "يستخدم %@ قدرًا كبيرًا من المعالج"
+            "value" : "يستخدم ⁨%@⁩ قدرًا كبيرًا من المعالج"
           }
         }
       }
@@ -114,6 +114,16 @@
         }
       }
     },
+    "%@, %lld cores" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@، %2$lld أنوية"
+          }
+        }
+      }
+    },
     "%@, still on power" : {
       "localizations" : {
         "ar" : {
@@ -136,6 +146,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@: %2$@ used of %3$@"
+          }
+        }
+      }
+    },
+    "%@: %@, %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@: %2$@، %3$@"
           }
         }
       }
@@ -201,9 +221,45 @@
     "%lld files in iCloud that aren't downloaded were skipped, so nothing was downloaded." : {
       "localizations" : {
         "ar" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "تم تخطي %lld ملف في iCloud غير منزّلة، لذلك لم يُنزَّل أي شيء."
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "تم تخطي %lld ملفات في iCloud غير منزّلة، لذلك لم يُنزَّل أي شيء."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "تم تخطي %lld ملفًا في iCloud غير منزّلة، لذلك لم يُنزَّل أي شيء."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "تم تخطي ملف واحد في iCloud غير منزّلة، لذلك لم يُنزَّل أي شيء."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "تم تخطي %lld ملف في iCloud غير منزّلة، لذلك لم يُنزَّل أي شيء."
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "تم تخطي ملفان في iCloud غير منزّلة، لذلك لم يُنزَّل أي شيء."
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "تم تخطي %lld ملف في iCloud غير منزّلة، لذلك لم يُنزَّل أي شيء."
+                }
+              }
+            }
           }
         }
       }
@@ -211,9 +267,45 @@
     "%lld files were left out because they couldn't be read or changed during the search." : {
       "localizations" : {
         "ar" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "تم استبعاد %lld ملف لأنه تعذرت قراءتها أو تغيّرت أثناء البحث."
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "تم استبعاد %lld ملفات لأنه تعذرت قراءتها أو تغيّرت أثناء البحث."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "تم استبعاد %lld ملفًا لأنه تعذرت قراءتها أو تغيّرت أثناء البحث."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "تم استبعاد ملف واحد لأنه تعذرت قراءتها أو تغيّرت أثناء البحث."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "تم استبعاد %lld ملف لأنه تعذرت قراءتها أو تغيّرت أثناء البحث."
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "تم استبعاد ملفان لأنه تعذرت قراءتها أو تغيّرت أثناء البحث."
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "تم استبعاد %lld ملف لأنه تعذرت قراءتها أو تغيّرت أثناء البحث."
+                }
+              }
+            }
           }
         }
       }
@@ -231,9 +323,45 @@
     "%lld items are in the Trash. Empty it in Finder to free their space; MacPulse never deletes permanently." : {
       "localizations" : {
         "ar" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "يوجد %lld عنصر في سلة المهملات. أفرغها في Finder لتحرير مساحتها؛ لا يحذف MacPulse أي شيء نهائيًا."
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "يوجد %lld عناصر في سلة المهملات. أفرغها في Finder لتحرير مساحتها؛ لا يحذف MacPulse أي شيء نهائيًا."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "يوجد %lld عنصرًا في سلة المهملات. أفرغها في Finder لتحرير مساحتها؛ لا يحذف MacPulse أي شيء نهائيًا."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "يوجد عنصر واحد في سلة المهملات. أفرغها في Finder لتحرير مساحتها؛ لا يحذف MacPulse أي شيء نهائيًا."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "يوجد %lld عنصر في سلة المهملات. أفرغها في Finder لتحرير مساحتها؛ لا يحذف MacPulse أي شيء نهائيًا."
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "يوجد عنصران في سلة المهملات. أفرغها في Finder لتحرير مساحتها؛ لا يحذف MacPulse أي شيء نهائيًا."
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "يوجد %lld عنصر في سلة المهملات. أفرغها في Finder لتحرير مساحتها؛ لا يحذف MacPulse أي شيء نهائيًا."
+                }
+              }
+            }
           }
         }
       }
@@ -241,9 +369,45 @@
     "%lld items were moved to the Trash since this scan. Totals are from before; scan again to update them." : {
       "localizations" : {
         "ar" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "نُقل %lld عنصر إلى سلة المهملات منذ هذا الفحص. الإجماليات من قبل النقل؛ افحص مرة أخرى لتحديثها."
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "نُقل %lld عناصر إلى سلة المهملات منذ هذا الفحص. الإجماليات من قبل النقل؛ افحص مرة أخرى لتحديثها."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "نُقل %lld عنصرًا إلى سلة المهملات منذ هذا الفحص. الإجماليات من قبل النقل؛ افحص مرة أخرى لتحديثها."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "نُقل عنصر واحد إلى سلة المهملات منذ هذا الفحص. الإجماليات من قبل النقل؛ افحص مرة أخرى لتحديثها."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "نُقل %lld عنصر إلى سلة المهملات منذ هذا الفحص. الإجماليات من قبل النقل؛ افحص مرة أخرى لتحديثها."
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "نُقل عنصران إلى سلة المهملات منذ هذا الفحص. الإجماليات من قبل النقل؛ افحص مرة أخرى لتحديثها."
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "نُقل %lld عنصر إلى سلة المهملات منذ هذا الفحص. الإجماليات من قبل النقل؛ افحص مرة أخرى لتحديثها."
+                }
+              }
+            }
           }
         }
       }
@@ -279,7 +443,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "أُعيد %lld"
+            "value" : "أُرجع %lld"
           }
         }
       }
@@ -313,9 +477,45 @@
     "%lld small files directly in this folder aren't listed." : {
       "localizations" : {
         "ar" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "لم تُدرج %lld ملفات صغيرة موجودة مباشرة في هذا المجلد."
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم تُدرج %lld ملفات صغيرة موجودة مباشرة في هذا المجلد."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم تُدرج %lld ملفًا صغيرة موجودة مباشرة في هذا المجلد."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم تُدرج ملف واحد صغيرة موجودة مباشرة في هذا المجلد."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم تُدرج %lld ملف صغيرة موجودة مباشرة في هذا المجلد."
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم تُدرج ملفان صغيرة موجودة مباشرة في هذا المجلد."
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم تُدرج %lld ملف صغيرة موجودة مباشرة في هذا المجلد."
+                }
+              }
+            }
           }
         }
       }
@@ -323,9 +523,45 @@
     "%lld smaller files" : {
       "localizations" : {
         "ar" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%lld ملفات أصغر"
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "%lld ملفات أصغر"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "%lld ملفًا أصغر"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "ملف واحد أصغر"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "%lld ملف أصغر"
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "ملفان أصغر"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "%lld ملف أصغر"
+                }
+              }
+            }
           }
         }
       }
@@ -681,14 +917,7 @@
       }
     },
     "Apple silicon" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Apple silicon"
-          }
-        }
-      }
+      "shouldTranslate" : false
     },
     "Applications" : {
       "localizations" : {
@@ -765,7 +994,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "متوسط المعالج"
+            "value" : "متوسط استخدام المعالج"
           }
         }
       }
@@ -783,9 +1012,45 @@
     "Average over the last %lld minutes" : {
       "localizations" : {
         "ar" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "المتوسط خلال آخر %lld دقيقة"
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "المتوسط خلال آخر %lld دقائق"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "المتوسط خلال آخر %lld دقيقة"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "المتوسط خلال آخر دقيقة واحدة"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "المتوسط خلال آخر %lld دقيقة"
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "المتوسط خلال آخر دقيقتين"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "المتوسط خلال آخر %lld دقيقة"
+                }
+              }
+            }
           }
         }
       }
@@ -793,9 +1058,45 @@
     "Based on your discharge rate over the last %lld minutes." : {
       "localizations" : {
         "ar" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "بناءً على معدل التفريغ خلال آخر %lld دقيقة."
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "بناءً على معدل التفريغ خلال آخر %lld دقائق."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "بناءً على معدل التفريغ خلال آخر %lld دقيقة."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "بناءً على معدل التفريغ خلال آخر دقيقة واحدة."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "بناءً على معدل التفريغ خلال آخر %lld دقيقة."
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "بناءً على معدل التفريغ خلال آخر دقيقتين."
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "بناءً على معدل التفريغ خلال آخر %lld دقيقة."
+                }
+              }
+            }
           }
         }
       }
@@ -920,6 +1221,16 @@
         }
       }
     },
+    "Battery temperature" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "حرارة البطارية"
+          }
+        }
+      }
+    },
     "Battery voltage × charging current, as reported by the battery." : {
       "localizations" : {
         "ar" : {
@@ -945,7 +1256,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "الإصدار %@"
+            "value" : "رقم البنية %@"
           }
         }
       }
@@ -970,12 +1281,22 @@
         }
       }
     },
+    "CPU (per core)" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المعالج (لكل نواة)"
+          }
+        }
+      }
+    },
     "CPU above" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "المعالج أعلى من"
+            "value" : "استخدام المعالج أعلى من"
           }
         }
       }
@@ -985,7 +1306,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "يُعرض المعالج لكل نواة: 100% تعني نواة واحدة مشغولة بالكامل. معالج النظام هو نسبة جميع الأنوية معًا."
+            "value" : "يُعرض المعالج لكل نواة: 100٪ تعني نواة واحدة مشغولة بالكامل. معالج النظام هو نسبة جميع الأنوية معًا."
           }
         }
       }
@@ -995,7 +1316,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "ذاكرة مؤقتة يحتفظ بها %@. يعيد التطبيق إنشاءها عند الحاجة."
+            "value" : "ذاكرة مؤقتة يحتفظ بها ⁨%@⁩. يعيد التطبيق إنشاءها عند الحاجة."
           }
         }
       }
@@ -1025,7 +1346,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "الذاكرة المؤقتة والسجلات والملفات المؤقتة وسلة المهملات التي وُجدت عند فحص %1$@ في %2$@."
+            "value" : "الذاكرة المؤقتة والسجلات والملفات المؤقتة وسلة المهملات التي وُجدت عند فحص ⁨%1$@⁩ في %2$@."
           }
         },
         "en" : {
@@ -1042,6 +1363,16 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "إلغاء"
+          }
+        }
+      }
+    },
+    "Capacity" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "السعة"
           }
         }
       }
@@ -1092,6 +1423,16 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "يشحن"
+          }
+        }
+      }
+    },
+    "Charging power" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "قدرة الشحن"
           }
         }
       }
@@ -1416,6 +1757,16 @@
         }
       }
     },
+    "Condition" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الحالة"
+          }
+        }
+      }
+    },
     "Connect to power soon." : {
       "localizations" : {
         "ar" : {
@@ -1716,6 +2067,16 @@
         }
       }
     },
+    "Cycle count" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "عدد دورات الشحن"
+          }
+        }
+      }
+    },
     "Data apps keep to work faster. Apps rebuild it when needed, which can make them slower the first time." : {
       "localizations" : {
         "ar" : {
@@ -1736,6 +2097,16 @@
         }
       }
     },
+    "Design capacity" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "سعة التصميم"
+          }
+        }
+      }
+    },
     "Developer" : {
       "localizations" : {
         "ar" : {
@@ -1752,6 +2123,16 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "سجلات تشخيص تكتبها التطبيقات. نادرًا ما تحتاجها إلا عند حل المشكلات."
+          }
+        }
+      }
+    },
+    "Discharge rate" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "معدل التفريغ"
           }
         }
       }
@@ -1792,6 +2173,16 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "البحث عن التكرارات"
+          }
+        }
+      }
+    },
+    "Duplicate groups" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مجموعات التكرارات"
           }
         }
       }
@@ -1891,7 +2282,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "الصحة المقدّرة %lld%% من السعة الأصلية، لذلك يدوم الشحن الكامل مدة أقل من السابق."
+            "value" : "الصحة المقدّرة %lld٪ من السعة الأصلية، لذلك يدوم الشحن الكامل مدة أقل من السابق."
           }
         }
       }
@@ -1902,6 +2293,16 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "التأثير المقدَّر: %@"
+          }
+        }
+      }
+    },
+    "Estimated runtime" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "مدة التشغيل المقدّرة"
           }
         }
       }
@@ -2002,6 +2403,16 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "يتخطى محلل المساحة وأداة البحث عن التكرارات المجلدات المستبعدة، ولا يلمس المنظّف أي شيء بداخلها."
+          }
+        }
+      }
+    },
+    "Extra copies" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "النسخ الزائدة"
           }
         }
       }
@@ -2119,9 +2530,45 @@
     "For at least %lld minutes" : {
       "localizations" : {
         "ar" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "لمدة %lld دقيقة على الأقل"
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لمدة %lld دقائق على الأقل"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لمدة %lld دقيقة على الأقل"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لمدة دقيقة واحدة على الأقل"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لمدة %lld دقيقة على الأقل"
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لمدة دقيقتين على الأقل"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لمدة %lld دقيقة على الأقل"
+                }
+              }
+            }
           }
         }
       }
@@ -2132,6 +2579,26 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "المساحة الحرة"
+          }
+        }
+      }
+    },
+    "From recent discharge" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "من التفريغ الأخير"
+          }
+        }
+      }
+    },
+    "Full-charge capacity" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "سعة الشحن الكامل"
           }
         }
       }
@@ -2172,6 +2639,16 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "انتقال"
+          }
+        }
+      }
+    },
+    "Health" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الصحة"
           }
         }
       }
@@ -2251,7 +2728,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "مطابق لـ %1$@ في %2$@، وتم التحقق بايت ببايت. يُحتفظ بتلك النسخة."
+            "value" : "مطابق لـ ⁨%1$@⁩ في ⁨%2$@⁩، وتم التحقق بايت ببايت. يُحتفظ بتلك النسخة."
           }
         },
         "en" : {
@@ -2293,14 +2770,7 @@
       }
     },
     "Intel" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Intel"
-          }
-        }
-      }
+      "shouldTranslate" : false
     },
     "It is no longer in the Trash." : {
       "localizations" : {
@@ -2405,9 +2875,45 @@
     "Last %lld minutes" : {
       "localizations" : {
         "ar" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "آخر %lld دقيقة"
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "آخر %lld دقائق"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "آخر %lld دقيقة"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "آخر دقيقة واحدة"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "آخر %lld دقيقة"
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "آخر دقيقتين"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "آخر %lld دقيقة"
+                }
+              }
+            }
           }
         }
       }
@@ -2495,7 +3001,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "سجلات كتبها %@."
+            "value" : "سجلات كتبها ⁨%@⁩."
           }
         }
       }
@@ -2511,14 +3017,7 @@
       }
     },
     "MacPulse" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "MacPulse"
-          }
-        }
-      }
+      "shouldTranslate" : false
     },
     "MacPulse can't put items back in that place." : {
       "localizations" : {
@@ -2550,12 +3049,58 @@
         }
       }
     },
-    "MacPulse keeps %lld days of hourly CPU and energy use per app, to show trends. It stores app names and locations only — never documents, window titles or what you do in an app." : {
+    "MacPulse itself" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "يحتفظ MacPulse بـ %lld يومًا من استخدام المعالج والطاقة لكل تطبيق كل ساعة لعرض الاتجاهات. يخزن أسماء التطبيقات ومواقعها فقط — ولا يخزن أبدًا المستندات أو عناوين النوافذ أو ما تفعله داخل التطبيق."
+            "value" : "MacPulse نفسه"
+          }
+        }
+      }
+    },
+    "MacPulse keeps %lld days of hourly CPU and energy use per app, to show trends. It stores app names and locations only — never documents, window titles or what you do in an app." : {
+      "localizations" : {
+        "ar" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "يحتفظ MacPulse بـ %lld أيام من استخدام المعالج والطاقة لكل تطبيق كل ساعة لعرض الاتجاهات. يخزن أسماء التطبيقات ومواقعها فقط — ولا يخزن أبدًا المستندات أو عناوين النوافذ أو ما تفعله داخل التطبيق."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "يحتفظ MacPulse بـ %lld يومًا من استخدام المعالج والطاقة لكل تطبيق كل ساعة لعرض الاتجاهات. يخزن أسماء التطبيقات ومواقعها فقط — ولا يخزن أبدًا المستندات أو عناوين النوافذ أو ما تفعله داخل التطبيق."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "يحتفظ MacPulse بـ يوم واحد من استخدام المعالج والطاقة لكل تطبيق كل ساعة لعرض الاتجاهات. يخزن أسماء التطبيقات ومواقعها فقط — ولا يخزن أبدًا المستندات أو عناوين النوافذ أو ما تفعله داخل التطبيق."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "يحتفظ MacPulse بـ %lld يوم من استخدام المعالج والطاقة لكل تطبيق كل ساعة لعرض الاتجاهات. يخزن أسماء التطبيقات ومواقعها فقط — ولا يخزن أبدًا المستندات أو عناوين النوافذ أو ما تفعله داخل التطبيق."
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "يحتفظ MacPulse بـ يومين من استخدام المعالج والطاقة لكل تطبيق كل ساعة لعرض الاتجاهات. يخزن أسماء التطبيقات ومواقعها فقط — ولا يخزن أبدًا المستندات أو عناوين النوافذ أو ما تفعله داخل التطبيق."
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "يحتفظ MacPulse بـ %lld يوم من استخدام المعالج والطاقة لكل تطبيق كل ساعة لعرض الاتجاهات. يخزن أسماء التطبيقات ومواقعها فقط — ولا يخزن أبدًا المستندات أو عناوين النوافذ أو ما تفعله داخل التطبيق."
+                }
+              }
+            }
           }
         }
       }
@@ -2686,12 +3231,32 @@
         }
       }
     },
+    "Memory pressure" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ضغط الذاكرة"
+          }
+        }
+      }
+    },
     "Minimum size" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "الحد الأدنى للحجم"
+          }
+        }
+      }
+    },
+    "Model" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الطراز"
           }
         }
       }
@@ -2885,9 +3450,45 @@
     "No app has used noticeable CPU in the last %lld minutes." : {
       "localizations" : {
         "ar" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "لم يستخدم أي تطبيق قدرًا ملحوظًا من المعالج خلال آخر %lld دقيقة."
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم يستخدم أي تطبيق قدرًا ملحوظًا من المعالج خلال آخر %lld دقائق."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم يستخدم أي تطبيق قدرًا ملحوظًا من المعالج خلال آخر %lld دقيقة."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم يستخدم أي تطبيق قدرًا ملحوظًا من المعالج خلال آخر دقيقة واحدة."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم يستخدم أي تطبيق قدرًا ملحوظًا من المعالج خلال آخر %lld دقيقة."
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم يستخدم أي تطبيق قدرًا ملحوظًا من المعالج خلال آخر دقيقتين."
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم يستخدم أي تطبيق قدرًا ملحوظًا من المعالج خلال آخر %lld دقيقة."
+                }
+              }
+            }
           }
         }
       }
@@ -3025,9 +3626,45 @@
     "Not changed for more than %lld days." : {
       "localizations" : {
         "ar" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "لم يتغير منذ أكثر من %lld يومًا."
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم يتغير منذ أكثر من %lld أيام."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم يتغير منذ أكثر من %lld يومًا."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم يتغير منذ أكثر من يوم واحد."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم يتغير منذ أكثر من %lld يوم."
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم يتغير منذ أكثر من يومين."
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "لم يتغير منذ أكثر من %lld يوم."
+                }
+              }
+            }
           }
         }
       }
@@ -3372,12 +4009,42 @@
         }
       }
     },
+    "Potential savings" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "التوفير المحتمل"
+          }
+        }
+      }
+    },
+    "Potentially reclaimable" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "قابل للاسترداد على الأرجح"
+          }
+        }
+      }
+    },
     "Power" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "الطاقة الكهربائية"
+          }
+        }
+      }
+    },
+    "Power adapter" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "محوّل الطاقة"
           }
         }
       }
@@ -3398,6 +4065,16 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "العمليات: %lld"
+          }
+        }
+      }
+    },
+    "Processor" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "المعالج"
           }
         }
       }
@@ -3427,7 +4104,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "إعادة"
+            "value" : "إرجاع"
           }
         }
       }
@@ -3437,7 +4114,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "أُعيد إلى مكانه."
+            "value" : "أُرجع إلى مكانه."
           }
         }
       }
@@ -3447,7 +4124,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "النظرة السريعة"
+            "value" : "نظرة سريعة"
           }
         }
       }
@@ -3512,6 +4189,16 @@
         }
       }
     },
+    "Recoverable" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "قابل للاسترداد"
+          }
+        }
+      }
+    },
     "Refresh" : {
       "localizations" : {
         "ar" : {
@@ -3537,7 +4224,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "إزالة %@"
+            "value" : "إزالة ⁨%@⁩"
           }
         }
       }
@@ -3547,7 +4234,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "إزالة %1$@ في %2$@"
+            "value" : "إزالة ⁨%1$@⁩ في ⁨%2$@⁩"
           }
         },
         "en" : {
@@ -3653,7 +4340,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "فحص %@"
+            "value" : "فحص ⁨%@⁩"
           }
         }
       }
@@ -3773,7 +4460,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "تحديد %@"
+            "value" : "تحديد ⁨%@⁩"
           }
         }
       }
@@ -3824,6 +4511,16 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "الإعدادات"
+          }
+        }
+      }
+    },
+    "Share of app activity" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "حصة من نشاط التطبيقات"
           }
         }
       }
@@ -4003,7 +4700,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "وصل عنصر آخر إلى سلة المهملات مكانه وتعذرت إعادته. إنه في سلة المهملات باسم «%@»."
+            "value" : "وصل عنصر آخر إلى سلة المهملات مكانه وتعذرت إعادته. إنه في سلة المهملات باسم «⁨%@⁩»."
           }
         }
       }
@@ -4064,6 +4761,16 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "التخزين"
+          }
+        }
+      }
+    },
+    "System CPU (all cores)" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "معالج النظام (كل الأنوية)"
           }
         }
       }
@@ -4248,6 +4955,16 @@
         }
       }
     },
+    "Time to full" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الوقت حتى الشحن الكامل"
+          }
+        }
+      }
+    },
     "To find apps that drain your battery, MacPulse reads the list of your running apps and how much CPU, memory and energy each uses — the same information Activity Monitor shows. It never reads what's inside your apps or documents, and it can't see other users' or system processes." : {
       "localizations" : {
         "ar" : {
@@ -4343,7 +5060,7 @@
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "أعلى"
+            "value" : "المجلد الأعلى"
           }
         }
       }
@@ -4388,12 +5105,32 @@
         }
       }
     },
+    "Version" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الإصدار"
+          }
+        }
+      }
+    },
     "Video" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "فيديو"
+          }
+        }
+      }
+    },
+    "Voltage" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "الجهد"
           }
         }
       }
@@ -4478,6 +5215,9 @@
         }
       }
     },
+    "macOS" : {
+      "shouldTranslate" : false
+    },
     "macOS & background" : {
       "localizations" : {
         "ar" : {
@@ -4518,6 +5258,16 @@
         }
       }
     },
+    "macOS estimate" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "تقدير macOS"
+          }
+        }
+      }
+    },
     "macOS lets only apps with Full Disk Access look inside the Trash. Open it in Finder to see and empty it." : {
       "localizations" : {
         "ar" : {
@@ -4548,6 +5298,16 @@
         }
       }
     },
+    "macOS reports the battery condition as “%@”. Consider checking it with Apple Support." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "يبلغ macOS عن حالة البطارية بأنها «⁨%@⁩». يُستحسن فحصها مع دعم Apple."
+          }
+        }
+      }
+    },
     "macOS returned an unexpected value (%@)." : {
       "localizations" : {
         "ar" : {
@@ -4559,14 +5319,14 @@
       }
     },
     "—" : {
-
+      "shouldTranslate" : false
     },
     "“%@” is a standard folder of your account. Choose a folder inside it instead." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "«%@» مجلد قياسي في حسابك. اختر مجلدًا بداخله بدلًا من ذلك."
+            "value" : "«⁨%@⁩» مجلد قياسي في حسابك. اختر مجلدًا بداخله بدلًا من ذلك."
           }
         }
       }

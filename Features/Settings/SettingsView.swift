@@ -201,7 +201,7 @@ public struct SettingsView: View {
                     KeyValueRow("Version", value: info.appVersionDescription)
                     KeyValueRow("macOS", value: info.macOSVersion)
                     KeyValueRow("Model", value: info.hardwareModel ?? String(localized: "Unknown"))
-                    KeyValueRow("Processor", value: "\(info.architectureDescription), \(info.processorCount) cores")
+                    KeyValueRow("Processor", value: String(localized: "\(info.architectureDescription), \(info.processorCount) cores"))
                     KeyValueRow("Memory", value: info.memoryDescription)
                 case .failed(let error):
                     Label(error.userMessage, systemImage: "exclamationmark.triangle")
