@@ -45,7 +45,7 @@ targets:
         LSApplicationCategoryType: public.app-category.utilities
         # One MacPulse at a time: two would sample, record history and clean in parallel.
         LSMultipleInstancesProhibited: true
-        NSHumanReadableCopyright: "Copyright © 2026 MacPulse. All rights reserved."  # owner: set the legal name
+        NSHumanReadableCopyright: "Copyright © 2026 Mohamed Ismail. Licensed under the GNU GPL v3 or later."
         LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
     # ADR-010: no App Sandbox (direct distribution, Developer ID + notarization).
     # No entitlements at all; add one only with an ADR.
