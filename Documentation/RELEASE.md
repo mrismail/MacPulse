@@ -28,12 +28,14 @@ auto-update: users download new versions from the Releases page.
 
    If the keychain holds more than one Developer ID Application certificate for the team,
    also set `MACPULSE_SIGNING_IDENTITY` (its full name or SHA-1) when building locally.
-5. In GitHub > Settings > Rules > Rulesets:
-   - **main** (branch ruleset): require a pull request, require the status checks
-     "Build, test and launch" and "String Catalog in sync", block force pushes and deletion.
-   - **Release tags** (tag ruleset, `v*.*.*`): only you may create, update or delete them.
-6. In GitHub > Settings > General > Pull Requests: allow **merge commits** only (turn off
-   squash and rebase merging), as CLAUDE.md requires.
+5. Run `scripts/repo/apply-protection.sh` once (ADR-021). It applies the rulesets in
+   `.github/rulesets/`:
+   - **Protect main** (branch ruleset): pull request required, merge commits only, the
+     checks "Build, test and launch", "String Catalog in sync" and "CLA signed", branch up
+     to date, conversations resolved, no force pushes or deletion.
+   - **Release tags** (tag ruleset, `v*.*.*`): only repository admins may create, update
+     or delete them.
+6. The same script turns off squash and rebase merging, as CLAUDE.md requires.
 
 A tagged build fails unless all six secrets are present. To publish an **ad-hoc** release
 on purpose (before enrolment), set the repository variable `MACPULSE_ALLOW_ADHOC_RELEASE`
