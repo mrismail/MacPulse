@@ -25,8 +25,12 @@ concurrency:
 jobs:
   cla:
     name: CLA signed
+    # Dependabot's commits have no GitHub user as author, so the action would see the
+    # committer "web-flow" and ask it to sign. Skip Dependabot pull requests instead:
+    # a skipped job counts as passed for the required "CLA signed" check.
     if: >-
-      github.event_name == 'pull_request_target' ||
+      (github.event_name == 'pull_request_target' &&
+       github.event.pull_request.user.login != 'dependabot[bot]') ||
       (github.event.issue.pull_request &&
        (github.event.comment.body == 'recheck' ||
         github.event.comment.body == 'I have read the MacPulse CLA and I agree to it.'))
@@ -45,7 +49,7 @@ jobs:
           path-to-document: https://github.com/mrismail/MacPulse/blob/main/CLA.md
           path-to-signatures: signatures/cla.json
           branch: cla-signatures
-          allowlist: mrismail,claude,dependabot[bot],github-actions[bot]
+          allowlist: mrismail,claude,github-actions[bot]
           custom-pr-sign-comment: I have read the MacPulse CLA and I agree to it.
           custom-notsigned-prcomment: >-
             Thank you for your contribution. Before it can be merged, please read the
