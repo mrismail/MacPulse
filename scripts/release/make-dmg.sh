@@ -18,7 +18,7 @@ hdiutil create -volname "MacPulse $VERSION" -srcfolder "$STAGE" -fs HFS+ -format
 rm -rf "$STAGE"
 
 if [ -n "${MACPULSE_TEAM_ID:-}" ]; then
-  codesign --sign "Developer ID Application" --timestamp "$DMG"
+  codesign --sign "$(scripts/release/signing-identity.sh | cut -f1)" --timestamp "$DMG"
 fi
 
 # Check what users will get: the DMG mounts and holds a valid, signed app.
