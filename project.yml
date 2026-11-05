@@ -43,6 +43,9 @@ targets:
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         LSApplicationCategoryType: public.app-category.utilities
+        # One MacPulse at a time: two would sample, record history and clean in parallel.
+        LSMultipleInstancesProhibited: true
+        NSHumanReadableCopyright: "Copyright © 2026 MacPulse. All rights reserved."  # owner: set the legal name
         LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
     # ADR-010: no App Sandbox (direct distribution, Developer ID + notarization).
     # No entitlements at all; add one only with an ADR.
@@ -54,8 +57,9 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ENABLE_HARDENED_RUNTIME: YES
-        # Ad-hoc signing for local development and CI. Set DEVELOPMENT_TEAM and
-        # CODE_SIGN_STYLE: Automatic once an Apple Developer account is configured.
+        # Ad-hoc signing for local development and CI. Release builds are signed with the
+        # Developer ID by scripts/release/build-release.sh (MACPULSE_TEAM_ID); nothing here
+        # changes after enrolment.
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "-"
         DEVELOPMENT_TEAM: ""

@@ -25,12 +25,4 @@ public enum Palette {
     /// 4.5:1 on a card background in the accessibility audit, and CI's audit rated 72 % of
     /// the primary color "nearly passed"; 85 % keeps text visibly secondary.
     public static let secondaryText = Color.primary.opacity(0.85)
-
-    public static func provenance(_ kind: ProvenanceKind) -> Color {
-        switch kind {
-        case .measured: .green
-        case .estimated: .orange
-        case .unavailable: .secondary
-        }
-    }
 }
